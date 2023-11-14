@@ -6,7 +6,15 @@ const cors = require('cors')
 const session = require('express-session');
 
 const app = express()
-const port = 3001
+const port = 8080
+
+// Import Route Files
+const memberRoute = require('./routes/memberRoute');
+const blogRoute = require('./routes/blogRoute');
+
+// Use Routes
+app.use('/api/member-route', memberRoute);
+app.use('/api/blog-route', blogRoute);
 
 dotenv.config()
 
@@ -36,14 +44,6 @@ passport.use(new facebookStrategy({
     done(null, user)
   }
 ))
-
-const db = mysql.createConnection({
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE
-}); 
-
 app.use(cors());
 
 app.use(session({
@@ -104,37 +104,7 @@ app.post('/post-to-facebook', (req, res) => {
   return res.status(200).json({ message: 'Text posted to Facebook successfully' });
 });
 
-app.get('/get', (req,res) => {
-    const sql = "SELECT * FROM account";
-    db.query(sql, (err, data) => {
-        if (err) return res.json(err);
-        return res.json(data)
-    })
-})
 
-app.get('/login', (req, res) => {
-  const { accessKey, password } = req.body;
-
-  try {
-    const sql = "SELECT * FROM account WHERE email = ? AND password = ?";
-    db.query(sql, [accessKey, password], (err, data) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Internal Server Error' });
-      }
-
-      if (data.length === 0) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      // User authenticated successfully
-      return res.status(200).json({ message: 'Login successful', user: data[0] });
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
