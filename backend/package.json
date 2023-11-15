@@ -19,6 +19,7 @@
     "nodemon": "^3.0.1",
     "passport": "^0.6.0",
     "passport-facebook": "^3.0.0",
-    "passport-linkedin": "^1.0.0"
+    "passport-linkedin": "^1.0.0",
+    "validator": "^13.11.0"
   }
 }
