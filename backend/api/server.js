@@ -11,10 +11,12 @@ const port = 8080
 // Import Route Files
 const memberRoute = require('./routes/memberRoute');
 const blogRoute = require('./routes/blogRoute');
+const eventRoute = require('./routes/eventRoute');
 
 // Use Routes
 app.use('/api/member-route', memberRoute);
 app.use('/api/blog-route', blogRoute);
+app.use('/api/event-route', eventRoute);
 
 dotenv.config()
 

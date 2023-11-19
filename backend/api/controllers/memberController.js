@@ -1,16 +1,14 @@
 const db = require('../../database/db');
-const validator = require('validator')
+const sanitizedMemberId = require('../middlewares/querySanitizerMiddleware');
+
 
 // Reusable function to get a member by ID
 const getMemberById = (memberId) => {
     return new Promise((resolve, reject) => {
-        // Validate and sanitize user input
-        const sanitizedMemberId = validator.escape(String(memberId));
-
         // Using parameterized query to prevent SQL injection
         const sql = `
             SELECT * FROM member_i WHERE member_id = ?`;  
-        db.query(sql, [sanitizedMemberId], (err, data) => {
+        db.query(sql, [sanitizedMemberId(memberId)], (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -23,13 +21,10 @@ const getMemberById = (memberId) => {
 // Reusable to fetch profile details
 const getProfileSettings = (settingId) => {
     return new Promise ((resolve, reject) => {
-        // Validate and sanitize user input
-        const sanitizedMemberId = validator.escape(String(settingId));
-
         // Using parameterized query to prevent SQL injection
         const sql = `
             SELECT * FROM member_settings WHERE setting_id = ?`;  
-        db.query(sql, [sanitizedMemberId], (err, data) => {
+        db.query(sql, [sanitizedMemberId(settingId)], (err, data) => {
             if (err) {
                 reject(err);
             } else {
