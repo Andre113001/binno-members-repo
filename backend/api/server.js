@@ -12,11 +12,15 @@ const port = 8080
 const memberRoute = require('./routes/memberRoute');
 const blogRoute = require('./routes/blogRoute');
 const eventRoute = require('./routes/eventRoute');
+const postRoute = require('./routes/socMedPostRoute');
+const programRoute = require('./routes/programRoute');
 
 // Use Routes
 app.use('/api/member-route', memberRoute);
 app.use('/api/blog-route', blogRoute);
 app.use('/api/event-route', eventRoute);
+app.use('/api/post-route', postRoute);
+app.use('/api/program-route', programRoute);
 
 dotenv.config()
 
