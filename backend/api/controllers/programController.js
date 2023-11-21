@@ -1,5 +1,8 @@
 const db = require('../../database/db');
+
+// Middlewares
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 
 // Reusable function to get a program by ID
 const fetchProgramById = (programId) => {
@@ -106,9 +109,10 @@ const createUpdateProgram = async (req, res) => {
                     }
                 });
         } else {
+            const newId = uniqueId();
              // Create a new blog
-             db.query('INSERT INTO program_i (program_dateadded, program_author, program_heading, program_description) VALUES (NOW(), ?, ?, ?)', 
-             [programAuthor, programHeading, programDescription], (createError, createRes) => {
+             db.query('INSERT INTO program_i (program_id, program_dateadded, program_author, program_heading, program_description) VALUES (?, NOW(), ?, ?, ?)', 
+             [newId, programAuthor, programHeading, programDescription], (createError, createRes) => {
                 if (createError) {
                     return res.status(500).json({ error: 'Failed to create Program', createError });
                 }
@@ -148,9 +152,10 @@ const createUpdatePage = async (req, res) => {
                     }
                 });
         } else {
+            const newId = uniqueId();
              // Create a new blog
-             db.query('INSERT INTO program_pages (program_id, program_pages_dateadded, program_pages_title, program_pages_path) VALUES (?, NOW(), ?, ?)', 
-             [pageProgramId, pageTitle, pagePath], (createError, createRes) => {
+             db.query('INSERT INTO program_pages (program_pages_id, program_id, program_pages_dateadded, program_pages_title, program_pages_path) VALUES (?, ?, NOW(), ?, ?)', 
+             [newId, pageProgramId, pageTitle, pagePath], (createError, createRes) => {
                 if (createError) {
                     return res.status(500).json({ error: 'Failed to create Page', createError });
                 }

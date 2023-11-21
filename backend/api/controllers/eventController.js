@@ -1,5 +1,9 @@
 const db = require('../../database/db');
+
+//Middlewares
 const eventSanitizeInput = require('../middlewares/querySanitizerMiddleware');
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
+
 
 // Event Finder by ID
 const getEventById = async (eventId) => {
@@ -68,7 +72,8 @@ const createUpdateEvent = async (req, res) => {
                 }
             });
         } else {
-            db.query("INSERT INTO event_i (event_author, event_datecreated, event_date, event_title, event_description, event_img) VALUES (?, NOW(), ?, ?, ?, ?)", [eventAuthor, eventDate, eventTitle, eventDescription, eventImg], (eventUploadError, eventUploadResult) => {
+            const newId = uniqueId();
+            db.query("INSERT INTO event_i (event_id, event_author, event_datecreated, event_date, event_title, event_description, event_img) VALUES (?, ?, NOW(), ?, ?, ?, ?)", [newId, eventAuthor, eventDate, eventTitle, eventDescription, eventImg], (eventUploadError, eventUploadResult) => {
                 if (eventUploadError) {
                     console.log(eventUploadError)
                     return res.status(500).json({ error: 'Failed to upload event' });

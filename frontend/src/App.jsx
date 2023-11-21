@@ -1,26 +1,26 @@
-import { useEffect, useState } from 'react'
-import {Routes, Route} from "react-router-dom";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // Pages
-import Home from './pages/Home';
-import Members from './pages/Members';
-import Login from './pages/Login'
-import Facebook from './pages/Facebook';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Blogs from './pages/Blogs/Blogs';
+import Programs from './pages/Programs/Programs';
+import Account from './pages/Account/Account';
 
 function App() {
-
   return (
-    <>
-      <div className='w-screen h-screen'>
+    <Router>
+      <div className="w-screen">
         <Routes>
-          <Route path='/' element={<Login />} />
-          <Route path='/facebook' element={<Facebook />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/members" element={<Members />} />
+          {/* Change the default landing to login once done */}
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/blogs" element={<Blogs />} />
+          <Route path="/programs" element={<Programs />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
       </div>
-    </>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;

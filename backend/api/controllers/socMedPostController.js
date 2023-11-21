@@ -1,5 +1,8 @@
 const db = require('../../database/db');
+
+// Middlewares
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 
 // Reusable function to get a post by ID
 const fetchPostById = (postId) => {
@@ -57,9 +60,10 @@ const updateCreatePost = async (req, res) => {
             }});
 
         } else {
+            const newId = uniqueId();
             // Create a new blog
-            db.query('INSERT INTO post_i (post_dateadded, post_author, post_category, post_heading, post_bodytext) VALUES (NOW(), ?, ?, ?, ?)', 
-                    [postAuthor, postCategory, postHeading, postText], (createError, createRes) => {
+            db.query('INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext) VALUES (?, NOW(), ?, ?, ?, ?)', 
+                    [newId, postAuthor, postCategory, postHeading, postText], (createError, createRes) => {
                 if (createError) {
                     return res.status(500).json({ error: 'Failed to create Post', createError });
                 }

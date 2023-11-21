@@ -1,5 +1,8 @@
 const db = require('../../database/db');
 
+//Middlewares
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
+
 // Reusable function to get a blog by ID
 const getBlogById = async (blogId) => {
     return new Promise((resolve, reject) => {
@@ -51,8 +54,9 @@ const postBlog = async (req, res) => {
             }});
 
         } else {
+            const newId = uniqueId();
             // Create a new blog
-            db.query('INSERT INTO blog_i (blog_author, blog_dateadded, blog_title, blog_content) VALUES (?, NOW(), ?, ?)', [authorId, blogTitle, blogContent], (createError, createRes) => {
+            db.query('INSERT INTO blog_i (blog_id, blog_author, blog_dateadded, blog_title, blog_content) VALUES (?, ?, NOW(), ?, ?)', [newId, authorId, blogTitle, blogContent], (createError, createRes) => {
                 if (createError) {
                     console.log(createError);
                     return res.status(500).json({ error: 'Failed to create blog' });
@@ -73,7 +77,7 @@ const postBlog = async (req, res) => {
 
 // Controller to delete a blog
 const deleteBlog = async (req, res) => {
-    const { blogId } = req.body;
+    const { blogId } = req.params;
 
     try {
         const result = await getBlogById(blogId);

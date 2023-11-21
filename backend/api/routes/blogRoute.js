@@ -7,6 +7,6 @@ router.use(express.urlencoded({ extended: true }));
 
 router.get('/get-blog/:blogId', blogController.getBlog);
 router.post('/post-blog', blogController.postBlog);
-router.post('/delete-blog', blogController.deleteBlog);
+router.get('/delete-blog/:blogId', blogController.deleteBlog);
 
 module.exports = router;
