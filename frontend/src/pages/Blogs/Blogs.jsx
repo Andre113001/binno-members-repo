@@ -1,13 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 // Components 
 import SideBar from '../../components/sidebar/SideBar'
 
 const Blogs = () => {
+  const type = "enabler";
+
   return (
     <div className='App'>
         <SideBar />
         <h1>I'm from Blogs</h1>
+        
     </div>
   )
 }

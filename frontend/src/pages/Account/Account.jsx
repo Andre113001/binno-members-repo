@@ -1,13 +1,18 @@
 import React from 'react'
 
 // Components
-import SideBar from '../../components/sidebar/SideBar'
+import SideBar from '../../components/sidebar/SideBar';
+import Header from '../../components/header/Header';
 
 const Account = () => {
   return (
     <div className='App'>
         <SideBar />
-        <h1>I'm from Account</h1>
+        <div className='layoutContainer'>
+            <div className="Headline">
+              <Header />
+            </div>
+          </div>        
     </div>
   )
 }

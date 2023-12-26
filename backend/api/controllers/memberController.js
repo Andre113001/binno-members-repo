@@ -1,6 +1,13 @@
 const db = require('../../database/db');
 const sanitizedMemberId = require('../middlewares/querySanitizerMiddleware');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const axios = require('axios');
 
+dotenv.config()
+
+//Middlewares
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 
 // Reusable function to get a member by ID
 const getMemberById = (memberId) => {
@@ -9,6 +16,19 @@ const getMemberById = (memberId) => {
         const sql = `
             SELECT * FROM member_i WHERE member_id = ?`;  
         db.query(sql, [sanitizedMemberId(memberId)], (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+const getMemberByEmail = (memberEmail) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM email_i WHERE email_address = ?`;
+        db.query(sql, [sanitizedMemberId(memberEmail)], (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -122,11 +142,76 @@ const changeStatus = async (req, res) => {
     }
 };
 
+const signUp = async (req, res) => {
+    const {email, institution, address, type, classification} = req.body
+
+    const id = uniqueId.appId_generator();
+
+    try {
+        // Check if email already exist in the database 
+        const result = await getMemberByEmail(email);
+        if (result.length > 0) {
+            return res.json({result: "Sorry you are already registered to the platform"});
+        } else {
+            // Check if email is under processing in application
+            db.query("SELECT app_email, app_institution FROM application_i WHERE app_email = ? OR app_institution = ?", [email, institution], (EmailError, EmailResult) => { // this must be modular
+                if (EmailError) {
+                    // console.log(updateError);
+                    return res.status(500).json({ error: 'Failed to retrieve Email from application' });
+                }
+
+                if (EmailResult.length > 0) {
+
+                // Insert Email notif here
+                axios.post(`http://localhost:3002/membership/ongoing/${email}`)
+                .then(response => {
+                    console.log('Response from localhost:3002', response.data);
+                })
+                .catch(error => {
+                    console.error('Error making request', error.message);
+                })
+
+                    return res.status(200).json({ message: 'Currently in processing' });
+                } else {
+                    const tokenPayload = {
+                        userId: id,
+                        userEmail: email,
+                        // You can include additional information in the token payload
+                    };
+                    const tokenExpiration = 3 * 24 * 60 * 60; // 3 days in seconds
+                    const token = jwt.sign(tokenPayload, process.env.SECRET_KEY, {expiresIn: tokenExpiration});
+
+                    // Calculate the date 3 days from now
+                    const currentDate = new Date();
+                    const expirationDate = new Date(currentDate.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 days in milliseconds
+
+                    db.query("INSERT INTO application_i (app_id, app_institution, app_email, app_address, app_type, app_class, app_dateadded, app_token, app_token_valid) VALUES (?,?,?,?,?,?, NOW(), ?, ?)", 
+                    [id, institution, email, address, type, classification, token, expirationDate], (insertError, insertResult) => {
+                        if (insertError) {
+                            console.log(insertError);
+                            return res.status(500).json({ error: insertError });
+                        }
+
+                        if (insertResult.affectedRows > 0) {
+                            return res.status(201).json({ message: 'Application added' });
+                        } else {
+                            return res.status(500).json({ error: 'Failed to apply' });
+                        }
+                    })
+                }
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({error: error});
+    }
+};
 
 module.exports = {
     getMember,
     updateProfile,
     changeStatus,
+    signUp,
 };
 
 
@@ -134,6 +219,9 @@ module.exports = {
 // Get Profile Details ✅
 // Update Profile Details ✅
 // Vacation Mode - Deaactivation / Change visibility ✅ 
+
+// Task: 12/22/2023
+// Create a modular function for checking if email exists in application_i ✅
 
 //INNER JOIN member_type ON member_i.member_type = member_type.user_type_id 
 // INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id 

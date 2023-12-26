@@ -3,6 +3,7 @@ import './SideBar.css'
 import { SideBarData } from './SideBarData'
 import logo from '../../icon.svg'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import { Link } from 'react-router-dom';
 
 function SideBar() {
   return <div className='SideBar'>
@@ -12,17 +13,16 @@ function SideBar() {
         <ul className='SideBarList'>
             {SideBarData.map((val, key)=>{
                 return (
-                <li key={key} 
-                className='row'
-                id={window.location.pathname == val.link ? "active" : " "}
-                onClick={()=> {
-                    window.location.pathname = val.link;
-                }}
-                >
-                <div id='icon'>{val.icon}</div>
-                <div id='title'>{val.title}</div>
-                </li>
-                
+                <>
+                <Link to={val.link} style={{ textDecoration: 'none', color: '#3e3e3e' }}>
+                    <li key={key} 
+                    className='row p-3'
+                    >
+                    <div id='icon'>{val.icon}</div>
+                    <div id='title'>{val.title}</div>
+                    </li>
+                </Link>
+                </>   
                 );   
             })}
         </ul>

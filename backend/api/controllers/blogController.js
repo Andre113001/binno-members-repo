@@ -54,7 +54,7 @@ const postBlog = async (req, res) => {
             }});
 
         } else {
-            const newId = uniqueId();
+            const newId = uniqueId.uniqueIdGenerator();
             // Create a new blog
             db.query('INSERT INTO blog_i (blog_id, blog_author, blog_dateadded, blog_title, blog_content) VALUES (?, ?, NOW(), ?, ?)', [newId, authorId, blogTitle, blogContent], (createError, createRes) => {
                 if (createError) {

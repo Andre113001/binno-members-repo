@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;600;700;800&family=Nunito:wght@300;500&family=Roboto:wght@100;300;700;900&display=swap');
 
+* {
+  font-family: 'Inter', sans-serif;
+}
+
 .App {
   width: 100vw;
   height: 100vh;
@@ -23,8 +27,9 @@ body {
 .layoutContainer {
   display: flex;
   flex-direction: column;
-  height: 100vh;
   overflow-y: scroll;
+  width: 100%;
+  /* border: solid 1px black; */
 }
 
 
@@ -37,11 +42,6 @@ body {
 
 .Headline{
   width: 100%;
-}
-
-h1{
-  font-family: 'Inter', sans-serif;
-  
 }
 
 .blogButtons{
@@ -60,4 +60,6 @@ h1{
   grid-template-columns: repeat(2, 1fr);
   grid-gap: 20px;
 }
+
+
 

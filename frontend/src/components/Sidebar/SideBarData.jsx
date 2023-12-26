@@ -13,9 +13,9 @@ export const SideBarData = [
         link:   "/" //will be change to '/dashboard' once login is added
     },
     {
-        title: "Programs",
+        title: "Guides",
         icon:  <SpaceDashboardRoundedIcon />,
-        link:   "/programs"
+        link:   "/guides"
     },
     {
         title: "Blog Entries",

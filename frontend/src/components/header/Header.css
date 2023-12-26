@@ -4,7 +4,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 20px 100px 0px 100px;
 }
 
 .profileImageContainer {
@@ -16,12 +16,12 @@
 .userProfile {
     border-radius: 40%;
     display: flex;
-    padding: 20px;
+    padding: 10px;
 }
 
 .userProfile img {
-    width: 70px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     object-fit: cover;
 }
 

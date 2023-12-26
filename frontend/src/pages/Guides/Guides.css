@@ -1,0 +1,127 @@
+.list-row {
+    border: solid 1px black;
+    background: white;
+    padding: 0.5em;
+    font-family: sans-serif;
+  
+    display: flex;
+    align-items: center;
+}
+
+.list-row:not(:last-child) {
+    margin-bottom: 3px;
+}
+
+.list-row button {
+    cursor: pointer;
+    height: 2em;
+    margin-left: 0.5em;
+}
+
+.pages {
+    list-style: none;
+    padding: 20px;
+    margin-top: 10px; /* Adjust the top margin to create a gap */
+    text-align: left;
+    /* border: 1px solid black; */
+    text-decoration: underline;
+}
+
+Link {
+    cursor: pointer;
+}
+  
+.page-selector ul {
+    padding: 0;
+}
+
+.page-selector h1 {
+    /* border: 1px solid black; */
+}
+
+.page-view {
+    padding: 0px 70px 0px 70px;
+}
+
+.page-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Add gap between list items */
+    width: 300px;
+    /* border: 1px solid black; */
+}
+
+.add-page-btn {
+    padding: 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+}
+
+.page-body {
+    display: flex;
+    justify-content: space-between;
+    /* border: 1px solid black; */
+    padding: 0px 20px 0px 50px;
+}
+
+.page-edit {
+    margin-left: 20px;;
+}
+
+.cover-photo {
+    background-color: gray;
+    width: 100%;
+    height: 450px;
+    border-radius: 10px;
+}
+
+.page-title-lg {
+    font-size: 20px;
+}
+
+.selected {
+    border-right: 4px solid orange;
+}
+
+.heading {
+    display: flex;
+    /* border: 1px solid black; */
+    flex-direction: row;
+    align-items: center;
+}
+
+.heading .back {
+    /* border: 1px solid black; */
+    width: 250px;
+    padding-left: 45px;
+}
+
+.heading p {
+    /* border: 1px solid black; */
+    flex: 1;
+    width: 66vw;
+}
+
+.heading .page-save-btn {
+    /* border: 1px solid black; */
+}
+
+.heading .page-save-btn button {
+    padding: 12px 20px 12px 20px;
+    border: none;
+    border-radius: 10px;
+}
+
+.page-title-lg {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.page-title-lg .title {
+    width: 70%;
+    flex: 1;
+}
+
+

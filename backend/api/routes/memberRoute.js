@@ -10,5 +10,6 @@ router.use(express.urlencoded({ extended: true }));
 router.get('/member/:member_id', memberController.getMember);
 router.post('/update-profile', memberController.updateProfile);
 router.get('/change-status/:member_id', memberController.changeStatus);
+router.get('/signup', memberController.signUp);
 
 module.exports = router;
