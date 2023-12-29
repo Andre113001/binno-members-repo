@@ -10,18 +10,24 @@ export const SideBarData = [
     {
         title: "Dashboard",
         icon:  <WebRoundedIcon />,
-        link:   "/" //will be change to '/dashboard' once login is added
+        link:   "/  " //will be change to '/dashboard' once login is added
     },
     {
         title: "Guides",
         icon:  <SpaceDashboardRoundedIcon />,
         link:   "/guides"
+    }, 
+    {
+        title: "Events",
+        icon:  <CalendarMonthRoundedIcon />,
+        link:   "/events"
     },
     {
         title: "Blog Entries",
         icon:  <NewspaperRoundedIcon />,
         link:   "/blogs"
     },
+   
     {
         title: "Account",
         icon:  <PersonRoundedIcon />,
