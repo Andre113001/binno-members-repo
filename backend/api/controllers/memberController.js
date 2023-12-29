@@ -1,13 +1,16 @@
 const db = require('../../database/db');
-const sanitizedMemberId = require('../middlewares/querySanitizerMiddleware');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const sha256 = require('sha256');
 const axios = require('axios');
 
 dotenv.config()
 
 //Middlewares
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
+const sanitizedMemberId = require('../middlewares/querySanitizerMiddleware');
+const bcryptConverter = require('../middlewares/bcryptConverter');
+const generateToken = require('../middlewares/generateTokenMiddleware');
 
 // Reusable function to get a member by ID
 const getMemberById = (memberId) => {
@@ -29,6 +32,19 @@ const getMemberByEmail = (memberEmail) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT * FROM email_i WHERE email_address = ?`;
         db.query(sql, [sanitizedMemberId(memberEmail)], (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+const getMemberByAccessKey = (accesskey) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM member_i WHERE member_accesskey = ?`;
+        db.query(sql, [sanitizedMemberId(sha256(accesskey))], (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -207,11 +223,97 @@ const signUp = async (req, res) => {
     }
 };
 
+const verifyChangePassword = async (req, res) => {
+    const { accesskey } = req.body;
+
+    try {
+        const convertedAccessKey = sha256(accesskey);
+        db.query("SELECT email_i.email_address, member_settings.setting_institution FROM member_i INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email INNER JOIN email_i ON member_contact.contact_email = email_i.email_id LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_accesskey = ?", [convertedAccessKey], (err, result) => {
+            if (err) {
+                return res.status(500).json({ err });
+            }
+
+            if (result.length > 0) {
+                const email = result[0].email_address;
+                const name = result[0].setting_institution;
+                const token = generateToken(32);
+                const convertedToken = sha256(token);
+
+                // Assuming you have a MySQL connection named `db`
+                // Make sure to replace 'your_table_name' with the actual table name
+                const query = "UPDATE member_i SET member_resetpassword_token = ?, member_resetpassword_token_valid = DATE_ADD(NOW(), INTERVAL 3 HOUR) WHERE member_accesskey = ?";
+                const values = [convertedToken, convertedAccessKey];
+
+                db.query(query, values, (updateError, updateRes) => {
+                    if (updateError) {
+                        return res.status(500).json({ error: updateError });
+                    }
+
+                    if (updateRes.affectedRows > 0) {
+                        // Email notif here
+                        axios.post(`http://localhost:3002/others/forgotPassword`, {
+                            receiver: email,
+                            name: name,
+                            token: token
+                        })
+                        .then(response => {
+                            console.log('Response from localhost:3002', response.data);
+                            // Add any additional logic here based on the response if needed
+                            return res.status(200).json({ message: "Email Sent" });
+                        })
+                        .catch(error => {
+                            console.error('Error making request', error.message);
+                            // Handle error
+                            return res.status(500).json({ message: "Failed to send email" });
+                        });
+                    } else {
+                        res.status(500).json({ result: "Fields unsuccessfully updated" });
+                    }
+                });
+            } else {
+                return res.status(200).json({ message: "Email cannot be found" });
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error });
+    }
+};
+
+const changePassword = async (req, res) => {
+    const { accesskey, newPassword} = req.body
+    try {
+        const result = await getMemberByAccessKey(accesskey);
+        if (result.length > 0) {
+            const convertedPassword = await bcryptConverter(newPassword);
+            db.query("UPDATE member_i SET member_password = ? WHERE member_id = ?", [convertedPassword, result[0].member_id], (updateError, updateRes) => {
+                if (updateError) {
+                    // console.log(updateError);
+                    return res.status(500).json({ error: 'Failed to change password' });
+                }
+
+                if (updateRes.affectedRows > 0) {
+                    return res.status(200).json({ message: 'Password Changed Successfully' });
+                } else {
+                    return res.status(500).json({ message: 'Failed to change password' });
+                }
+            });
+        } else {
+            return res.status(500).json({invalid: "No user exist"});
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({error: error});
+    }
+};
+
 module.exports = {
     getMember,
     updateProfile,
     changeStatus,
     signUp,
+    verifyChangePassword,
+    changePassword
 };
 
 

@@ -3,10 +3,20 @@ import './SideBar.css'
 import { SideBarData } from './SideBarData'
 import logo from '../../icon.svg'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
+
 
 function SideBar() {
-  return <div className='SideBar'>
+    const navigate = useNavigate();
+
+    function handleDestroyToken() {
+        localStorage.removeItem('access');
+        console.log('Token Destroyed');
+        navigate('/')
+    }
+
+    return <div className='SideBar'>
     <div className="sideBarContent">
         <img src={logo} alt="BiNNO" className='logo'/>
         {/* insert type of user */}
@@ -27,13 +37,11 @@ function SideBar() {
             })}
         </ul>
     </div>
-    <div className="logout">
+    <div className="logout" onClick={handleDestroyToken}>
         <LogoutRoundedIcon />
         <p>Logout</p>
     </div>
     </div>;
-
-  
 }
 
 export default SideBar
