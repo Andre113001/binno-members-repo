@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;600;700;800&family=Nunito:wght@300;500&family=Roboto:wght@100;300;700;900&display=swap');
+
+
+.formPage{
+    padding: 20px;
+    font-family:  'Inter', sans-serif;
+    transition: 0.5s;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid black;
+    align-items: center;
+    box-shadow: 5px 5px 5px 5px rgb(0 0 0 / 30%);
+}
+
+.formPage h1 {
+    margin: 10px;
+    font-size: 50px;
+    font-weight: 700;
+}
+
+.formPage p{
+    margin: 5px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.registerButton{
+    border: none;
+    margin: 20px;
+    padding: 10px 70px;
+    border-radius: 10px;
+    color: white;
+    background-color: #fd7c06;
+}
+
+.registerButton:hover{
+    cursor: pointer;
+}
+
+.formContent{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+
+.formContent .institutionForm, .emailForm, .addressForm{
+    width: 300px;
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid rgb(116, 116, 116);
+    border-radius: 10px;
+    box-shadow: 5px 5px 5px 5px rgb(0 0 0 / 10%);
+}
+
