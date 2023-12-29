@@ -3,7 +3,6 @@ import '../../App.css';
 import Cards from '../../components/blog/Cards';
 import SideBar from '../../components/sidebar/SideBar';
 import Header from '../../components/header/Header';
-import Modal from '../../components/modal/modal';
 import SortContent from '../../components/sortFunction/sortContent';
 
 function Dashboard() {
@@ -18,9 +17,6 @@ function Dashboard() {
               <div className="bodyContainer">
                 <h1>My Entries</h1>
                   <div className="blogButtons"> {/*create button container*/}
-                    <div className="modalButton">
-                      <Modal />
-                    </div>
                     <SortContent />
                   </div>
                     <div className="contents"> {/*conntent section container*/}

@@ -11,5 +11,7 @@ router.get('/member/:member_id', memberController.getMember);
 router.post('/update-profile', memberController.updateProfile);
 router.get('/change-status/:member_id', memberController.changeStatus);
 router.get('/signup', memberController.signUp);
+router.post('/verifyChangePassword', memberController.verifyChangePassword);
+router.post('/changepassword', memberController.changePassword);
 
 module.exports = router;
