@@ -1,0 +1,67 @@
+.EventsPage {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+}
+
+.logo {
+  width: 300px;
+  height: 100px;
+  margin-bottom: 50px;
+  display: flex;
+  justify-content: center;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+
+.layoutContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: scroll;
+}
+
+
+.bodyContainer{
+  display: flex;
+  flex-direction: column;
+  margin: 20px 40px;
+}
+
+
+.Headline{
+  width: 100%;
+}
+
+h1{
+  font-family: 'Inter', sans-serif;
+  margin: 20px 50px;
+  font-size: 40px;
+}
+
+h2{
+  font-family: 'Inter', sans-serif;
+  margin: 40px 0 0 50px;
+  font-size: 40px;
+}
+
+.blogButtons{
+  display: flex;
+  margin: 0 50px;
+}
+
+.modalButton{
+  flex: 1;
+}
+
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  grid-gap: 20px;
+}
+
