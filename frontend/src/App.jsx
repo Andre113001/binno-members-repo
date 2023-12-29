@@ -21,6 +21,7 @@ import MessagePassword from './pages/ForgotPassword/MessagePassword';
 import TokenInvalid from './pages/ForgotPassword/TokenInvalid';
 import PasswordChanged from './pages/ForgotPassword/PasswordChanged';
 import TwoAuth from './pages/Login/TwoAuth';
+import Events from './pages/Events/Events';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/invalid-token" element={<TokenInvalid />} />
           <Route path="/password-changed" element={<PasswordChanged />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/guides" element={<GuideMain />} />
           <Route path="/testing" element={<GuidePage />} />
