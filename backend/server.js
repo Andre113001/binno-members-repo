@@ -33,6 +33,7 @@ const postRoute = require('./api/routes/socMedPostRoute');
 const programRoute = require('./api/routes/programRoute');
 const loginRoute = require('./api/routes/loginRoute');
 const passwordRoute = require('./api/routes/passwordRoute');
+const scheduleRoute = require('./api/routes/scheduleRoute');
 
 // Use Routes
 app.use('/api/member', memberRoute);
@@ -42,6 +43,7 @@ app.use('/api/post', postRoute);
 app.use('/api/program', programRoute);
 app.use('/api/login', loginRoute);
 app.use('/api/password', passwordRoute);
+app.use('/api/schedule', scheduleRoute);
 
 
 app.get('/', (req, res) => {
