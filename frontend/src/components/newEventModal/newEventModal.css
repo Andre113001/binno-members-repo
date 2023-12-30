@@ -1,7 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;600;700;800&family=Nunito:wght@300;500&family=Roboto:wght@100;300;700;900&display=swap');
-
-
-.createBlog{
+.createEvent{
     padding: 10px 20px;
     margin: 0 50px;
     border: none;
@@ -11,7 +8,7 @@
     font-family:  'Inter', sans-serif;
   }
   
-.createBlog:hover{
+.createEvent:hover{
     cursor: pointer;
     background-color: #054eae;
     transition: 0.5ms;

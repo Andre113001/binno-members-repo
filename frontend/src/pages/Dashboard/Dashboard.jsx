@@ -22,7 +22,7 @@ function Dashboard() {
             <div className={styles["blogTitleContainer"]}>
               <h1 className={styles['title']}>Blogs</h1>
                 <div className={styles["createEntryButton"]}>
-                  <NewEntryModal/>
+                  <NewEntryModal />
                 </div>
             </div>
 

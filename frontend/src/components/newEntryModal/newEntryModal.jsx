@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-// import { useDropzone } from 'react-dropzone';
 import styles from "./newEntryModal.module.css"
 
 export default function NewEntryModal() {
@@ -19,7 +18,6 @@ export default function NewEntryModal() {
     const dateYear = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
     return currentDate.toLocaleDateString(undefined, dateYear);
   }; 
-
 
     const [modal, setModal] = useState(false);    
     const toggleModal = () => {
