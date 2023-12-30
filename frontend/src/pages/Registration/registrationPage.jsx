@@ -1,5 +1,5 @@
 import React from 'react'
-import icon from '../../assets/binno.svg'
+// import icon from '../../assets/binno.svg'
 import '../../App.css'
 import { Outlet } from 'react-router-dom'
 

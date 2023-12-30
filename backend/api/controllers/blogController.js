@@ -1,6 +1,7 @@
 const db = require('../../database/db');
 
 //Middlewares
+const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 
 // Reusable function to get a blog by ID

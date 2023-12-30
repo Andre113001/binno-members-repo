@@ -53,23 +53,6 @@ const fetchProgram = async (req, res) => {
     };
 };
 
-// Fetch Program Page
-const fetchPage = async (req, res) => {
-    const {pageId} = req.params;
-
-    try {
-        const result = await fetchProgramPageById(pageId);
-        if (result.length > 0) {
-            return res.status(200).json({ Result: result });
-        } else {
-            return res.status(500).json({ error: 'Page does not exist' });
-        };
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Internal server error', error });
-    };
-};
-
 // Find Program Page
 const fetchProgramPage = async (req, res) => {
     const {pageId} = req.params;

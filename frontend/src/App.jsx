@@ -22,6 +22,7 @@ import TokenInvalid from './pages/ForgotPassword/TokenInvalid';
 import PasswordChanged from './pages/ForgotPassword/PasswordChanged';
 import TwoAuth from './pages/Login/TwoAuth';
 import Events from './pages/Events/Events';
+import FacebookAuth from './pages/FacebookAuth/FacebookAuth';
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
             <Route path="company" element={<RegistrationForm />} />
             <Route path="enabler" element={<EnablerRegForm />} />
           </Route>
+          <Route path="/fb-auth" element={<FacebookAuth />} />
         </Routes>
       </div>
     </Router>
