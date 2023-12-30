@@ -2,6 +2,13 @@
     margin: 50px;
 
   }
+
+  .grid1 {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    grid-gap: 20px;
+  }
+  
   .blogContent .boxItems {
     transition: 0.5s;
     color: white;

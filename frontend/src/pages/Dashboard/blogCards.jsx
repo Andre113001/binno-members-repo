@@ -8,7 +8,7 @@ const BlogCards = () => {
         <section className={styles["blogContent"]}>
             <div className={styles["grid1"]}>
                 {blog.map((item)=> (
-                <div className={styles["box boxItems"]} key={item.id}> 
+                <div className={styles["boxItems"]} key={item.id}> 
                 <div className={styles["img"]}>
                 <img src={item.cover} alt='' />
                     </div>
