@@ -1,31 +1,54 @@
 import React from 'react';
-import '../../App.css';
-import Cards from '../../components/blog/Cards';
+import BlogCards from './blogCards';
+import EventCards from './EventCards';
+
+
+import NewEventModal from '../../components/NewEventModal/NewEventModal.jsx';
+import NewEntryModal from '../../components/NewEntryModal/NewEntryModal.jsx';
 import SideBar from '../../components/sidebar/SideBar';
 import Header from '../../components/header/Header';
-import SortContent from '../../components/sortFunction/sortContent';
+import styles from './Dashboard.module.css'
+
 
 function Dashboard() {
   return (
     <>
-    <div className='App'>
+    <div className={styles['DashboardPage']}>
       <SideBar />
-      <div className='layoutContainer'>
-          <div className="Headline">
-            <Header />
+      <div className={styles['layoutContainer']}>
+        <div className={styles["Headline"]}>
+          <Header />
+          <div className={styles["contentType"]}>
+            <div className={styles["blogTitleContainer"]}>
+              <h1 className={styles['title']}>Blogs</h1>
+                <div className={styles["createEntryButton"]}>
+                  <NewEntryModal/>
+                </div>
+            </div>
+
+            <div className={styles["eventTitleContainer"]}>
+              <h1 className={styles['title']}>Events</h1>
+                <div className={styles["createEventButton"]}>
+                  <NewEventModal />
+                </div>
+            </div>
+            
           </div>
-              <div className="bodyContainer">
-                <h1>My Entries</h1>
-                  <div className="blogButtons"> {/*create button container*/}
-                    <SortContent />
-                  </div>
-                    <div className="contents"> {/*conntent section container*/}
-                      <Cards />
-                    </div>
+          
+            <div className={styles["contents"]}>
+              {/* <Switch>
+                <Route exact path='/' Component={dashboard}/>
+              </Switch> */}
+              <div className={styles["blogContentsContainer"]}>
+                <BlogCards />
               </div>
+              <div className={styles["eventContentsContainer"]}>
+                  <EventCards />
+              </div>
+            </div>
+          </div>
         </div>        
       </div>
-
     </>
   );
 }
