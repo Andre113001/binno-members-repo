@@ -10,7 +10,7 @@ export const SideBarData = [
     {
         title: "Dashboard",
         icon:  <WebRoundedIcon />,
-        link:   "/  " //will be change to '/dashboard' once login is added
+        link:   "/dashboard" //will be change to '/dashboard' once login is added
     },
     {
         title: "Guides",
