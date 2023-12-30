@@ -20,7 +20,7 @@ import Copyright from '../../components/Copyright/Copyright';
 const Login = () => {
     const { handleOpen, handleClose, CustomModal } = useCustomModal(); 
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, setMemberId } = useAuth();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -45,11 +45,14 @@ const Login = () => {
                 const data = await res.json()
                 console.log(data.token);
                 
-                if (data.token) {
+                // Inside the fetchData function in Login.jsx
+                if (data.token) {                    
                     localStorage.setItem('access', data.token);
+                    localStorage.setItem('id', data.user);
                     login(); // Set authenticated to true
-                    navigate('/dashboard'); // change this to /two-auth before accessing dashboard for two-factor auth
-                  } else {
+                    setMemberId(data.user); // Set memberId in the auth context
+                    navigate('/account'); // Redirect to the account page
+                } else {
                     handleOpen();
                 }
             } catch(err) {

@@ -9,7 +9,7 @@ const authenticateUser = async (accessKey, password) => {
 
     return new Promise((resolve, reject) => {
         db.query(
-            `SELECT member_accesskey, member_password FROM member_i WHERE member_accessKey = ?`,
+            `SELECT member_id, member_accesskey, member_password FROM member_i WHERE member_accessKey = ?`,
             [hashedAccesskey],
             async (err, result) => {
                 if (err) {
@@ -29,7 +29,7 @@ const authenticateUser = async (accessKey, password) => {
                 const passwordMatch = await bcrypt.compare(password, DBpassword);
 
                 if (passwordMatch) {
-                    const user = result[0];
+                    const user = result[0].member_id;
 
                     const token = jwt.sign(
                         { userId: user.account_id, username: user.name },
@@ -37,7 +37,7 @@ const authenticateUser = async (accessKey, password) => {
                         { expiresIn: '1h' }
                     );
 
-                    resolve({ token });
+                    resolve({ user ,token });
                 } else {
                     resolve({ error: 'Authentication failed' });
                 }
