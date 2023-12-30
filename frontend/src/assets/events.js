@@ -92,4 +92,11 @@ export const events = [
         cover: "https://media.istockphoto.com/id/1365436662/photo/successful-partnership.jpg?s=612x612&w=0&k=20&c=B1xspe9Q5WMsLc7Hc9clR8MWUL4bsK1MfUdDNVNR2Xg=",
         date: "February 20, 2018",
       },
+      {
+        id: 14,
+        title: "Signing new members",
+        user: "SILI DELI",
+        cover: "https://media.istockphoto.com/id/1365436662/photo/successful-partnership.jpg?s=612x612&w=0&k=20&c=B1xspe9Q5WMsLc7Hc9clR8MWUL4bsK1MfUdDNVNR2Xg=",
+        date: "February 20, 2018",
+      },
 ];
