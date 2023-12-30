@@ -34,9 +34,8 @@ const Login = () => {
 
 
         const fetchData = async() => {
-            console.log(requestData);
             try {
-                const res = await fetch('/api/login', {
+                const res = await fetch('http://localhost:3200/api/login', {
                     method: 'POST',
                     body: JSON.stringify({...requestData}),
                     headers: {

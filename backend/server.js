@@ -34,6 +34,7 @@ const programRoute = require('./api/routes/programRoute');
 const loginRoute = require('./api/routes/loginRoute');
 const passwordRoute = require('./api/routes/passwordRoute');
 const scheduleRoute = require('./api/routes/scheduleRoute');
+const facebookRoute = require('./api/routes/facebookRoute');
 
 // Use Routes
 app.use('/api/member', memberRoute);
@@ -44,6 +45,7 @@ app.use('/api/program', programRoute);
 app.use('/api/login', loginRoute);
 app.use('/api/password', passwordRoute);
 app.use('/api/schedule', scheduleRoute);
+app.use('/api/fb', facebookRoute);
 
 
 app.get('/', (req, res) => {
