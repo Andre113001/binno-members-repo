@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getUserPages, postToPage } = require('./facebookController');
+const { getUserPages, postToPage } = require('../controllers/facebookController');
 
 router.get('/getUserPages', async (req, res) => {
   const userAccessToken = req.query.userAccessToken; // You can pass the access token as a query parameter

@@ -28,10 +28,6 @@ function SideBar() {
                 <Link to={val.link} activeClassName="activeLink" style={{ textDecoration: 'none', color: '#3e3e3e' }}>
                     <li key={key} 
                     className='row p-3'
-                    id={window.location.pathname == val.link ? "active" : " "}
-                        onClick={()=> {
-                        window.location.pathname = val.link;
-                    }}
                     >
                     <div id='icon'>{val.icon}</div>
                     <div id='title'>{val.title}</div>

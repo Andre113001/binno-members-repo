@@ -9,7 +9,7 @@ const authenticateUser = async (accessKey, password) => {
 
     return new Promise((resolve, reject) => {
         db.query(
-            `SELECT * FROM member_i WHERE member_accessKey = ?`,
+            `SELECT member_accesskey, member_password FROM member_i WHERE member_accessKey = ?`,
             [hashedAccesskey],
             async (err, result) => {
                 if (err) {
