@@ -43,8 +43,38 @@ const getMemberByEmail = (memberEmail) => {
 
 const getMemberByAccessKey = (accesskey) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM member_i WHERE member_accesskey = ?`;
+        const sql = `SELECT member_i.member_id FROM member_i WHERE member_accesskey = ?`;
         db.query(sql, [sanitizedMemberId(sha256(accesskey))], (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+const fetchMemberByAccessToken = (accessToken) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT 
+                    member_i.member_id,
+                    member_settings.setting_address,
+                    member_settings.setting_bio, 
+                    member_settings.setting_color,
+                    member_settings.setting_coverpic,
+                    member_settings.setting_institution,
+                    member_settings.setting_profilepic,
+                    member_contact.contact_number, 
+                    member_contact.contact_facebook, 
+                    member_type.user_type,
+                    email_i.email_address
+                    FROM member_i 
+                    INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+                    INNER JOIN member_type ON member_i.member_type = member_type.user_type_id
+                    INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id
+                    INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
+                    WHERE member_i.member_access = ?`;
+        db.query(sql, [sha256(sanitizedMemberId(accessToken))], (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -79,6 +109,24 @@ const getMember = async (req, res) => {
         if (result.length > 0) {
             return res.json(result);
         } else {
+            return res.status(500).json({ error: 'Member does not exist' });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+// Controller to get a member by Access Token
+const fetchProfileByToken = async (req, res) => {
+    const { accessToken } = req.params;
+
+    try {
+        const result = await fetchMemberByAccessToken(accessToken);
+        if (result.length > 0) {
+            return res.json(result);
+        } else {
+            console.log(result);
             return res.status(500).json({ error: 'Member does not exist' });
         }
     } catch (error) {
@@ -309,6 +357,7 @@ const changePassword = async (req, res) => {
 
 module.exports = {
     getMember,
+    fetchProfileByToken,
     updateProfile,
     changeStatus,
     signUp,

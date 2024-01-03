@@ -23,6 +23,8 @@ import PasswordChanged from './pages/ForgotPassword/PasswordChanged';
 import TwoAuth from './pages/Login/TwoAuth';
 import Events from './pages/Events/Events';
 import FacebookAuth from './pages/FacebookAuth/FacebookAuth';
+import AccountSettings from './pages/AccountSettings/AccountSettings';
+import Posts from './pages/Posts/Posts';
 
 function App() {
   return (
@@ -42,9 +44,11 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/events" element={<Events />} />
           <Route path="/blogs" element={<Blogs />} />
+          <Route path="/posts" element={<Posts />} />
           <Route path="/guides" element={<GuideMain />} />
           <Route path="/testing" element={<GuidePage />} />
           <Route path="/account" element={<EnablerAccount />} />
+            <Route path="settings" element={<AccountSettings />} />
           <Route path="/registration" element={<RegistrationPage />}>
             <Route path="company" element={<RegistrationForm />} />
             <Route path="enabler" element={<EnablerRegForm />} />

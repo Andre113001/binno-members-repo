@@ -46,11 +46,15 @@
     flex-direction: column;
 }
 
-.UserInfoContainer p, .UserInfoContainer h2 {
-    margin: 0 20px;
-    font-size: 30px;
+.UserInfoContainer h2 {
+    margin: 0px 20px -20px;
+    font-size: 50px;
     font-weight: 700;
-    font-family: 'Inter', sans-serif;
+}
+
+.UserInfoContainer p {
+    margin: 0 20px 0px;
+    font-size: 20px;
 }
 
 .HeaderButtons{

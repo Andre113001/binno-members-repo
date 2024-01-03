@@ -5,32 +5,10 @@ import SideBar from '../../components/Sidebar/Sidebar.jsx';
 import Header from '../../components/header/Header.jsx';
 import Modal from '../../components/modal/modal.jsx';
 import useAccessToken from '../../hooks/useAccessToken.jsx';
-import axios from 'axios';
+import useLoadProfile from '../../hooks/useLoadProfile.jsx';
 import sha256 from 'sha256';
 
 const GuideMain = () => {
-  const [guides, setGuides] = useState('');
-  const isAccessToken = useAccessToken();
-
-  useEffect(() => {
-    const fetchGuides = async () => {
-      try {
-        const result = await axios.get(`http://localhost:3200/api/program/all/${sha256(isAccessToken)}`);
-        setGuides(result);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    if (isAccessToken) {
-      fetchGuides();
-    }
-  }, [isAccessToken]);
-
-  if (!isAccessToken) {
-    // Access token not available, render loading or placeholder content
-    return <div>Loading...</div>;
-  }
 
   return (
     <>
@@ -41,12 +19,12 @@ const GuideMain = () => {
             <Header />
           </div>
           <div className={styles["bodyContainer"]}>
+            <h1>My Guides</h1>
             <div className={styles["blogButtons"]}>
               <div className={styles["modalButton"]}>
                 <Modal />
               </div>
             </div>
-            <h1>My Guides</h1>
             <div className={styles["contents"]}>
               <GuideCards />
             </div>

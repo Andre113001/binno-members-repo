@@ -3,6 +3,7 @@ const db = require('../../database/db');
 // Middlewares
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
+const sha256 = require('sha256');
 
 // Reusable function to get a program by ID
 const fetchProgramById = (programId) => {
@@ -38,21 +39,20 @@ const fetchProgramPageById = (programPageId) => {
 
 // Fetch All programs
 const fetchAllPrograms = async (req, res) => {
-    const {accessKey} = req.params;
-    try {
-        const sql = `SELECT * FROM program_i INNER JOIN member_i on member_i.member_id = program_iprogram_author WHERE member_access = ?`;
-        db.query(sql, [sanitizeId(accessKey)], (err, data) => {
-            if (err) {
-                res.status(404).json('Error', err);
-            } else {
-                res.status(200).json(data);
-            }
-        });
-    } catch (error) {
-        console.log("Error: " + error);
-        res.status(404).json("Guides are not present in this account");
-    }
+    const { id } = req.params;
+
+    const sql = `SELECT * FROM program_i WHERE program_author = ?`;
+
+    db.query(sql, [sanitizeId(id)], (err, data) => {
+        if (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Error fetching programs', details: err });
+        } else {
+            res.status(200).json(data);
+        }
+    });
 };
+
 
 // Find Program
 const fetchProgram = async (req, res) => {

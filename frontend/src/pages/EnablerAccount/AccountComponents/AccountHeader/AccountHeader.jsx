@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from './AccountHeader.module.css'
 
 import { companyInformation } from '../../../../assets/companyInfo'
@@ -10,8 +10,10 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import { Link } from "react-router-dom";
 
-function AccountHeader() {
+function AccountHeader(props) {
+
     return (
     <>
         <div className={styles["Header"]}>
@@ -23,8 +25,8 @@ function AccountHeader() {
                         <img src={profileImage} alt="User Profile" className={styles["profileImage"]}/>    
                     </div>
                         <div className={styles["UserInfoContainer"]}>
-                                <p>{companyInformation.userType}</p>
-                                <h2>{companyInformation.user}</h2>
+                                <p>{props.userType}</p>
+                                <h2>{props.institution}</h2>
                             </div>
                 </div>
                     <div className={styles["HeaderButtons"]}>
@@ -34,14 +36,16 @@ function AccountHeader() {
                         <button className={styles["ViewPageButton"]}>
                             <VisibilityRoundedIcon/> View Page</button>
 
-                        <div className={styles["SettingsButton"]}>
-                            <SettingsRoundedIcon />
-                        </div>
+                        <Link to={'/settings'}>
+                            <div className={styles["SettingsButton"]}>
+                                <SettingsRoundedIcon />
+                            </div>
+                        </Link>
                         
                         
-                        <div className={styles["NotificationBell"]}>
+                        {/* <div className={styles["NotificationBell"]}>
                             <NotificationsRoundedIcon />
-                        </div>
+                        </div> */}
                     </div>
                         
             </div>

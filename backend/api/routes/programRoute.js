@@ -6,7 +6,7 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 router.get('/:program_id', programController.fetchProgram);
-router.get('/all/:accessKey', programController.fetchAllPrograms);
+router.get('/all/:id', programController.fetchAllPrograms);
 router.get('/page/:pageId', programController.fetchProgramPage);
 
 router.get('/delete-program/:program_id', programController.deleteProgam);

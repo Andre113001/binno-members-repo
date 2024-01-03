@@ -6,31 +6,23 @@ import NewspaperRoundedIcon from '@mui/icons-material/NewspaperRounded';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 
 
-export const SideBarData = [   
+const SideBarData_Company = [   
     {
         title: "Account",
         icon:  <PersonRoundedIcon />,
         link:   "/account"
     },
-    // {
-    //     title: "Dashboard",
-    //     icon:  <WebRoundedIcon />,
-    //     link:   "/dashboard" //will be change to '/dashboard' once login is added
-    // },
     {
-        title: "Guides",
-        icon:  <SpaceDashboardRoundedIcon />,
-        link:   "/guides"
-    }, 
+        title: "Posts",
+        icon:  <NewspaperRoundedIcon />,
+        link:   "/posts"
+    },
     {
         title: "Events",
         icon:  <CalendarMonthRoundedIcon />,
         link:   "/events"
     },
-    {
-        title: "Blog Entries",
-        icon:  <NewspaperRoundedIcon />,
-        link:   "/blogs"
-    },
 
-]
+];
+
+export default SideBarData_Company;
