@@ -1,6 +1,6 @@
 const db = require('../../database/db');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const hash = require('sha256');
 
 // Reusable function to authenticate user and generate token
@@ -16,14 +16,16 @@ const authenticateUser = async (accessKey, password) => {
                     reject({ error: 'Internal server error' });
                 }
 
-                if (result.length === 0 || !result[0].hasOwnProperty('member_password')) {
+                if (!result || result.length === 0) {
                     resolve({ error: 'User not found' });
+                    return;
                 }
 
                 const DBpassword = result[0].member_password;
 
                 if (!DBpassword) {
                     resolve({ error: 'User password not found' });
+                    return;
                 }
 
                 const passwordMatch = await bcrypt.compare(password, DBpassword);
@@ -47,6 +49,7 @@ const authenticateUser = async (accessKey, password) => {
         );
     });
 };
+
 
 // Controller to handle login request
 const login = async (req, res) => {

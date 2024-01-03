@@ -1,10 +1,5 @@
 const dotenv = require('dotenv')
-const mysql = require('mysql')
-
 const express = require('express');
-const cors = require('cors');
-const session = require('express-session');
-const { engine } = require('express-handlebars');
 const path = require('path');
 
 dotenv.config();

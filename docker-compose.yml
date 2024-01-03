@@ -1,0 +1,23 @@
+version: "3"
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3006:3006"
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "3200:3200"
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: marcus113001
+      MYSQL_DATABASE: bicorse_db
+      MYSQL_USER: binno
+      MYSQL_PASSWORD: .Marcus113001 
+    volumes:
+      - ./binno-db.sql:/docker-entrypoint-initdb.d/binno-db.sql
+    ports:
+      - "3301:3306"
