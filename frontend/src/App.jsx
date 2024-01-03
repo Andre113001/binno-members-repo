@@ -9,7 +9,7 @@ import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Blogs from './pages/Blogs/Blogs';
 import GuideMain from './pages/Guides/GuideMain';
-import Account from './pages/Account/Account';
+import EnablerAccount from './pages/EnablerAccount/EnablerAccount';
 import GuidePage from './pages/Guides/GuidePage';
 import RegistrationPage from './pages/Registration/registrationPage';
 import RegistrationForm from './pages/Registration/RegistrationForm';
@@ -44,7 +44,7 @@ function App() {
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/guides" element={<GuideMain />} />
           <Route path="/testing" element={<GuidePage />} />
-          <Route path="/account" element={<Account />} />
+          <Route path="/account" element={<EnablerAccount />} />
           <Route path="/registration" element={<RegistrationPage />}>
             <Route path="company" element={<RegistrationForm />} />
             <Route path="enabler" element={<EnablerRegForm />} />
