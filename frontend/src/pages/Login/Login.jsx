@@ -48,9 +48,7 @@ const Login = () => {
                 // Inside the fetchData function in Login.jsx
                 if (data.token) {                    
                     localStorage.setItem('access', data.token);
-                    localStorage.setItem('id', data.user);
                     login(); // Set authenticated to true
-                    setMemberId(data.user); // Set memberId in the auth context
                     navigate('/account'); // Redirect to the account page
                 } else {
                     handleOpen();

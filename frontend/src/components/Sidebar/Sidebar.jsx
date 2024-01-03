@@ -24,16 +24,16 @@ function SideBar() {
         <ul className='SideBarList'>
             {SideBarData.map((val, key)=>{
                 return (
-                <>
-                <Link to={val.link} style={{ textDecoration: 'none', color: '#3e3e3e' }}>
-                    <li key={key} 
-                    className='row p-3'
-                    >
-                    <div id='icon'>{val.icon}</div>
-                    <div id='title'>{val.title}</div>
-                    </li>
-                </Link>
-                </>   
+                <div key={key}>
+                    <Link to={val.link} style={{ textDecoration: 'none', color: '#3e3e3e' }}>
+                        <li
+                            className='row p-3'
+                        >
+                        <div id='icon'>{val.icon}</div>
+                        <div id='title'>{val.title}</div>
+                        </li>
+                    </Link>
+                </div>
                 );   
             })}
         </ul>
