@@ -36,6 +36,24 @@ const fetchProgramPageById = (programPageId) => {
     });
 };
 
+// Fetch All programs
+const fetchAllPrograms = async (req, res) => {
+    const {accessKey} = req.params;
+    try {
+        const sql = `SELECT * FROM program_i INNER JOIN member_i on member_i.member_id = program_iprogram_author WHERE member_access = ?`;
+        db.query(sql, [sanitizeId(accessKey)], (err, data) => {
+            if (err) {
+                res.status(404).json('Error', err);
+            } else {
+                res.status(200).json(data);
+            }
+        });
+    } catch (error) {
+        console.log("Error: " + error);
+        res.status(404).json("Guides are not present in this account");
+    }
+};
+
 // Find Program
 const fetchProgram = async (req, res) => {
     const {program_id} = req.params;
@@ -217,6 +235,7 @@ const deletePage = async (req, res) => {
 module.exports = {
     fetchProgram,
     fetchProgramPage,
+    fetchAllPrograms,
     createUpdateProgram,
     createUpdatePage,
     deleteProgam,

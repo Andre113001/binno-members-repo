@@ -35,7 +35,9 @@ const authenticateUser = async (accessKey, password) => {
                         { userId: user.account_id, username: user.name },
                         process.env.JWT_SECRET_KEY,
                         { expiresIn: '1h' }
-                    );
+                    );  
+
+                    await db.query("UPDATE member_i SET member_access = ?", [hash(token)]);
 
                     resolve({ user ,token });
                 } else {

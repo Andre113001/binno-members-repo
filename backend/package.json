@@ -27,6 +27,7 @@
     "nodemon": "^3.0.1",
     "passport": "^0.6.0",
     "passport-facebook": "^3.0.0",
+    "passport-facebook-token": "^4.0.0",
     "passport-linkedin": "^1.0.0",
     "path": "^0.12.7",
     "postcss": "^8.4.32",

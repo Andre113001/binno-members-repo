@@ -1,13 +1,14 @@
 import React from 'react'
 
 // Components
-import SideBar from '../../components/sidebar/SideBar';
+import SideBar from '../../components/Sidebar/Sidebar';
 import Header from '../../components/header/Header';
 import { useAuth } from '../../hooks/AuthContext';
+import useAccessToken from '../../hooks/useAccessToken';
 
 const Account = () => {
-  const { memberId } = useAuth();
-  console.log(memberId);
+  const isAccessToken = useAccessToken();
+  console.log(isAccessToken);
 
   return (
     <div className='App'>
