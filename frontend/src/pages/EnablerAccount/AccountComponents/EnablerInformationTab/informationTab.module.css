@@ -1,0 +1,35 @@
+
+.AboutTabContainer{
+    padding: 10px;
+    height: 430px;
+    width: 500px;
+    transition: 0.5s;
+    border-radius: 10px; 
+    margin-right: 10px;
+    background-color: #fff;
+    box-shadow: 5px 5px 5px 5px rgb(0 0 0 / 10%);
+}
+
+.AboutTabContainer h1{
+    margin: 10px 0;
+}
+
+.companyContent p{
+    margin: 20px 0;
+}
+
+.companyLocation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.companyContact {
+    display: flex;
+    flex-direction: column;
+}
+
+.companyContact p{
+    display: flex;
+    align-items: center;
+}

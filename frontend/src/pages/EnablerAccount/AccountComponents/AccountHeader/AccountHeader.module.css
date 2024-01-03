@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;600;700;800&family=Nunito:wght@300;500&family=Roboto:wght@100;300;700;900&display=swap');
+
+.Header {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.profileCoverImage .coverPhoto{
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+.profileImageContainer {
+    display: flex;
+    align-items: center;
+}   
+
+.UserProfileContainer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0 50px;
+    position: absolute;
+    top: 320px;
+    left: 20px;
+}
+
+.userProfile {
+    border-radius: 50%;
+    display: flex;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border: 5px solid #f4f4f4;
+}
+
+.userProfile img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+.UserInfoContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.UserInfoContainer p, .UserInfoContainer h2 {
+    margin: 0 20px;
+    font-size: 30px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+}
+
+.HeaderButtons{
+    display: flex;
+    align-items: center; 
+    justify-content: flex-end;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.profileEditButton{
+    padding: 8px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    background-color: #05ae51;
+    font-family:  'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+}
+
+.profileEditButton:hover{
+    cursor: pointer;
+    background-color: #054eae;
+    transition: 0.5ms;
+}
+
+.ViewPageButton{
+    padding: 8px 20px;
+    margin: 0 20px;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    background-color: #9e9e9e;
+    font-family:  'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+}
+
+.ViewPageButton:hover{
+    cursor: pointer;
+    background-color: #fd7c06;
+    transition: 0.5ms;
+}
+
+
+.SettingsButton {
+    margin: 20px;
+    border-radius: 40%;
+}
+
+.SettingsButton:hover{
+    cursor: pointer;
+    color: #fd7c06;
+}
+
+.NotificationBell {
+    margin: 0;
+    border-radius: 40%;
+}
+
+.NotificationBell:hover{
+    cursor: pointer;
+    color: #fd7c06;
+}
+
