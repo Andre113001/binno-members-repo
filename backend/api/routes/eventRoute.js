@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const storage = multer.memoryStorage(); // Use memory storage for simplicity, adjust as needed
+
+const upload = multer({ storage: storage });
+
 const eventController = require('../controllers/eventController');
 
-router.use(express.json());
-router.use(express.urlencoded({ extended: true }));
-
 router.get('/event/:eventId', eventController.eventFinder);
-router.post('/createUpdateEvent', eventController.createUpdateEvent);
+router.get('/all/:userId', eventController.fetchAllEvents);
+router.post('/post-event', upload.single('image'), eventController.createUpdateEvent);
 router.get('/deleteEvent/:eventId', eventController.deleteEvent);
 
 module.exports = router;
