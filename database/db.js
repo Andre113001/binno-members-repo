@@ -9,6 +9,7 @@ const db = mysql.createConnection({
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASS,
     database: process.env.MYSQL_DB,
+    insecureAuth: true, // Add this line to use older authentication method
 })
 
 db.connect((err) => {
