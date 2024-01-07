@@ -4,9 +4,9 @@ import GuideCards from './GuidesCards.jsx';
 import SideBar from '../../components/Sidebar/Sidebar.jsx';
 import Header from '../../components/header/Header.jsx';
 import Modal from '../../components/modal/modal.jsx';
-import useAccessToken from '../../hooks/useAccessToken.jsx';
-import useLoadProfile from '../../hooks/useLoadProfile.jsx';
-import sha256 from 'sha256';
+// import useAccessToken from '../../hooks/useAccessToken.jsx';
+// import useLoadProfile from '../../hooks/useLoadProfile.jsx';
+// import sha256 from 'sha256';
 
 const GuideMain = () => {
 
