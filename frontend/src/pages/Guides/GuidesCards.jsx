@@ -32,21 +32,21 @@ const GuideCards = () => {
             <section className={styles["content"]}>
                 <div className={styles["grid2"]}>
                     {guides.map((guide)=> (
-                        <div className={styles["guideContent"]} key={guide.program_id}>
-                            <Link to={`/ageguide.program`}></Link>
-                            <div className={styles["guideImage"]}>
-                            <img src='' alt=''/>
-                            </div>
-                            <div className={styles["guideFooter"]}>
-                                <div className={styles["TitleDateContainer"]} >
-                                <h2>{guide.program_heading}</h2>
-                                <span className={styles["guideDate"]}>Last accessed: <Moment >{guide.program_datemodified}</Moment></span>
-                                </div> 
-                                <div className={styles["editButton"]}>
-                                    <button>View and Edit<EditIcon/></button>
-                                    </div>
-                            </div>
-                        </div> 
+                        <Link to={'#'} style={{textDecoration: 'none', color: 'inherit'}}>
+                            <div className={styles["guideContent"]} key={guide.program_id}>
+                                {/* <Link to={`/`}></Link> */}
+                                <div className={styles["guideImage"]}>
+                                <img src='' alt=''/>
+                                </div>
+                                <div className={styles["guideFooter"]}>
+                                    <div className={styles["TitleDateContainer"]} >
+                                        <h2>{guide.program_heading}</h2>
+                                        <span className={styles["guideDate"]}>Last accessed: <Moment >{guide.program_datemodified}</Moment></span>
+                                        </div> 
+                                        <p>Click to View and Edit</p>
+                                </div>
+                            </div> 
+                        </Link>
                     ))} 
                 </div>
             </section>
