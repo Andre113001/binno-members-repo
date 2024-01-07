@@ -1,6 +1,8 @@
 const dotenv = require('dotenv')
 const express = require('express');
 const path = require('path');
+const passport = require('passport');
+const FacebookTokenStrategy = require('passport-facebook-token');
 
 dotenv.config();
 
@@ -19,6 +21,19 @@ app.use(urlencodedMiddleware);
 
 
 app.use("/templates", express.static(path.join(__dirname, "./api/templates")));
+
+// Passport configuration
+passport.use(new FacebookTokenStrategy({
+  clientID: "1503942416857064",
+  clientSecret: "443801be90217c561d6f03d4744c8b06",
+}, (accessToken, refreshToken, profile, done) => {
+  // Use the profile information (e.g., profile.id) to find or create a user in your database
+  // You can customize this part based on your user management system
+  return done(null, profile);
+}));
+
+// Initialize Passport and restore authentication state, if any, from the session.
+app.use(passport.initialize());
 
 // Import Route Files
 const memberRoute = require('./api/routes/memberRoute');

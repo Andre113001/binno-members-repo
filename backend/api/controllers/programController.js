@@ -1,6 +1,7 @@
 const db = require('../../database/db');
 
-// Middlewares
+// Middlewares & Utilities
+const { readElements, saveElements } = require('../utils/elementsUtility');
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 const sha256 = require('sha256');
@@ -131,6 +132,25 @@ const createUpdateProgram = async (req, res) => {
     }
 };
 
+// Reusable function to save elements by ID
+const callSaveElementsById = async (id, newFile) => {
+    return await saveElements(id, newFile);
+}
+
+// Controller to save elements by ID
+const saveElementsController = async (req, res) => {
+    const { id } = req.params;
+    const { newFile } = req.body;
+
+    const result = await callSaveElementsById(id, newFile);
+
+    if (result.success) {
+        res.status(200).json(result);
+    } else {
+        res.status(500).json(result);
+    }
+}
+
 // Create & Update Pages
 const createUpdatePage = async (req, res) => {
     const {pageId, pageProgramId, pageTitle, pagePath} = req.body;
@@ -236,6 +256,7 @@ module.exports = {
     fetchProgram,
     fetchProgramPage,
     fetchAllPrograms,
+    saveElementsController,
     createUpdateProgram,
     createUpdatePage,
     deleteProgam,

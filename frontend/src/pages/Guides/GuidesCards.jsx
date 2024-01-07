@@ -4,6 +4,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import styles from './GuidesCards.module.css'
 import useLoadProfile from '../../hooks/useLoadProfile.jsx';
 import Moment from 'react-moment';
+import { Link } from 'react-router-dom';
 
 
 const GuideCards = () => {
@@ -32,6 +33,7 @@ const GuideCards = () => {
                 <div className={styles["grid2"]}>
                     {guides.map((guide)=> (
                         <div className={styles["guideContent"]} key={guide.program_id}>
+                            <Link to={`/ageguide.program`}></Link>
                             <div className={styles["guideImage"]}>
                             <img src='' alt=''/>
                             </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 
 import SideBar from '../../components/Sidebar/Sidebar';
 import Header from '../../components/header/Header';
@@ -7,7 +7,7 @@ import Back from '../../components/Back/Back';
 import Draggable from '../../components/DND/Draggable';
 import Droppable from '../../components/DND/Droppable';
 
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import {
     DndContext,
@@ -31,6 +31,25 @@ import { BorderRightOutlined } from '@mui/icons-material';
 
 const GuidePage = () => {
     const [items] = useState([1,2,3]);
+    const { pageId } = useParams();
+    const [pageContents, setPageContents] = useState();
+
+    useEffect(() =>  {
+        try {
+            const loadPageData = async () => {
+                const response = await fetch(`/api/program/page/${pageId}`)
+                response.json().then((result) => {
+                    setPageContents(result);
+                });
+            }
+
+            loadPageData();
+        } catch (error) {   
+            console.log('Error Fetching Data: ', error.message);
+        }
+    }, [])
+
+    console.log(pageContents);
 
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -62,7 +81,7 @@ const GuidePage = () => {
                 <div className="page-view">
                     <div className="heading">
                         <div className="back">
-                            <Back link={'/'}/>
+                            <Back link={'/guides'}/>
                         </div>
                         <div className="page-title-sm">
                             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris mi purus, accumsan id eros et.</p>
@@ -104,9 +123,6 @@ const GuidePage = () => {
                                 <div className="title">
                                     <h1>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris mi purus, accumsan id eros et.</h1>
                                 </div>
-                                <div className="collab">
-                                    <button>+ Add Collaborator</button>
-                                </div>
                             </div>
                             <DndContext
                                 sensors={sensors}
@@ -115,7 +131,7 @@ const GuidePage = () => {
                             >
                                 <SortableContext items={items} strategy={verticalListSortingStrategy}>
                                     {items.map((id) => (
-                                    <Sortable key={id} id={id} />
+                                        <Sortable key={id} id={id} />
                                     ))}
                                 </SortableContext>
                             </DndContext>
