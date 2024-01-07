@@ -33,9 +33,9 @@ const GuideCards = () => {
                 <div className={styles["grid2"]}>
                     {guides.map((guide)=> (
                         <div className={styles["guideContent"]} key={guide.program_id}>
-                            <Link to={`/ageguide.program`}></Link>
-                            <div className={styles["guideImage"]}>
-                            <img src='' alt=''/>
+                            <Link to={`/guides/${guide.program_id}`} style={{textDecoration: "none"}}>
+                                <div className={styles["guideImage"]}>
+                                <img src='' alt=''/>
                             </div>
                             <div className={styles["guideFooter"]}>
                                 <div className={styles["TitleDateContainer"]} >
@@ -46,6 +46,7 @@ const GuideCards = () => {
                                     <button>View and Edit<EditIcon/></button>
                                     </div>
                             </div>
+                            </Link>
                         </div> 
                     ))} 
                 </div>

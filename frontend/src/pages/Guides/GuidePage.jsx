@@ -15,7 +15,7 @@ import {
     KeyboardSensor,
     PointerSensor,
     useSensor,
-    useSensors
+    useSensors,
   } from "@dnd-kit/core";
   import {
     arrayMove,
@@ -127,7 +127,7 @@ const GuidePage = () => {
                             <DndContext
                                 sensors={sensors}
                                 collisionDetection={closestCenter}
-                                onDragEnd={handleDragEnd}
+                                onDragEnd={handleDragOver}
                             >
                                 <SortableContext items={items} strategy={verticalListSortingStrategy}>
                                     {items.map((id) => (
@@ -142,6 +142,14 @@ const GuidePage = () => {
         </div>
     </div>
     )
+
+    function handleDragOver(event) {
+        console.log("Drag end called");
+        const {active, over} = event;
+        console.log("ACTIVE: " + active.id);
+        console.log("OVER: " + over.id);
+        setIsDragging(false);
+    };
 }
 
 export default GuidePage
