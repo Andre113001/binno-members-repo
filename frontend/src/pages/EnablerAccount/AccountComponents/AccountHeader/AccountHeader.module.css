@@ -4,28 +4,25 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    margin-bottom: 10px;
 }
 
 .profileCoverImage .coverPhoto{
     width: 100%;
-    height: auto;
+    height: 300px;
     border-radius: 10px;
+    object-fit: cover;
 }
 
 .profileImageContainer {
     display: flex;
     align-items: center;
-}   
-
-.UserProfileContainer{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex: 1;
     margin: 0 50px;
     position: absolute;
-    top: 320px;
-    left: 20px;
-}
+    top: 250px;
+    left: 30px;
+}   
 
 .userProfile {
     border-radius: 50%;
@@ -36,8 +33,9 @@
 }
 
 .userProfile img {
-    width: 100px;
-    height: 100px;
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
     object-fit: cover;
 }
 
@@ -46,21 +44,17 @@
     flex-direction: column;
 }
 
-.UserInfoContainer h2 {
-    margin: 0px 20px -20px;
-    font-size: 50px;
+.UserInfoContainer p, .UserInfoContainer h2 {
+    margin: 0 20px;
+    font-size: 30px;
     font-weight: 700;
-}
-
-.UserInfoContainer p {
-    margin: 0 20px 0px;
-    font-size: 20px;
+    font-family: 'Inter', sans-serif;
 }
 
 .HeaderButtons{
     display: flex;
     align-items: center; 
-    justify-content: flex-end;
+    justify-content: end;
     padding: 10px;
     margin-bottom: 15px;
 }
