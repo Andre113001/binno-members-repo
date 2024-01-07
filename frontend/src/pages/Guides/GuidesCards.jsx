@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { guide } from '../../assets/guide'
-import EditIcon from '@mui/icons-material/Edit';
 import styles from './GuidesCards.module.css'
 import useLoadProfile from '../../hooks/useLoadProfile.jsx';
 import Moment from 'react-moment';
