@@ -15,4 +15,7 @@ router.get('/delete-page/:page_id', programController.deletePage);
 router.post('/create-update-program', programController.createUpdateProgram);
 router.post('/create-update-page', programController.createUpdatePage);
 
+// Save Elements
+router.post('/save-elements/:id', programController.saveElementsController);
+
 module.exports = router;

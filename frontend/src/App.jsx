@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 
 // Hooks
 import { AuthProvider } from './hooks/AuthContext';
@@ -22,7 +22,6 @@ import TokenInvalid from './pages/ForgotPassword/TokenInvalid';
 import PasswordChanged from './pages/ForgotPassword/PasswordChanged';
 import TwoAuth from './pages/Login/TwoAuth';
 import Events from './pages/Events/Events';
-import FacebookAuth from './pages/FacebookAuth/FacebookAuth';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
 import Posts from './pages/Posts/Posts';
 
@@ -45,15 +44,17 @@ function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/posts" element={<Posts />} />
-          <Route path="/guides" element={<GuideMain />} />
-          <Route path="/testing" element={<GuidePage />} />
+          <Route path="/guides" element={<><Outlet/></>}>
+            <Route path="" element={<GuideMain/>}/>
+            <Route path=":pageId" element={<GuidePage/>}/>
+          </Route>
+          <Route path="/guides/:pageId" element={<GuidePage />} />
           <Route path="/account" element={<EnablerAccount />} />
             <Route path="settings" element={<AccountSettings />} />
           <Route path="/registration" element={<RegistrationPage />}>
             <Route path="company" element={<RegistrationForm />} />
             <Route path="enabler" element={<EnablerRegForm />} />
           </Route>
-          <Route path="/fb-auth" element={<FacebookAuth />} />
         </Routes>
       </div>
     </Router>
