@@ -24,7 +24,7 @@ const EventCards = () => {
                                     <div className={styles["eventPostUserProfile"]}>
                                         <img src={profileImage} alt="User Profile" className={styles["profileImage"]}/>
                                         <h2 className={styles["eventPostUsername"]}>SILI DELI</h2>
-                                    </div>
+                                </div>
                                     <a className={styles["eventLink"]} href="#">Read Event
                                     <ArrowForwardRoundedIcon/>
                                     </a>
