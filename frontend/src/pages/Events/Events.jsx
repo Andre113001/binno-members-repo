@@ -27,7 +27,6 @@ function Events() {
               </div>
         </div>        
       </div>
-
     </>
   )
 }

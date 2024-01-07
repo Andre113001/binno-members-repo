@@ -5,7 +5,7 @@ import EventCards from './EventCards';
 
 import NewEventModal from '../../components/NewEventModal/NewEventModal.jsx';
 import NewEntryModal from '../../components/NewEntryModal/NewEntryModal.jsx';
-import SideBar from '../../components/sidebar/SideBar';
+import SideBar from '../../components/Sidebar/Sidebar.jsx';
 import Header from '../../components/header/Header';
 import styles from './Dashboard.module.css'
 

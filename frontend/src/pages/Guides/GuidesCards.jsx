@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { guide } from '../../assets/guide'
-import EditIcon from '@mui/icons-material/Edit';
 import styles from './GuidesCards.module.css'
 import useLoadProfile from '../../hooks/useLoadProfile.jsx';
 import Moment from 'react-moment';
@@ -32,6 +31,7 @@ const GuideCards = () => {
             <section className={styles["content"]}>
                 <div className={styles["grid2"]}>
                     {guides.map((guide)=> (
+<<<<<<< HEAD
                         <div className={styles["guideContent"]} key={guide.program_id}>
                             <Link to={`/guides/${guide.program_id}`} style={{textDecoration: "none"}}>
                                 <div className={styles["guideImage"]}>
@@ -48,6 +48,23 @@ const GuideCards = () => {
                             </div>
                             </Link>
                         </div> 
+=======
+                        <Link to={'#'} style={{textDecoration: 'none', color: 'inherit'}}>
+                            <div className={styles["guideContent"]} key={guide.program_id}>
+                                {/* <Link to={`/`}></Link> */}
+                                <div className={styles["guideImage"]}>
+                                <img src='' alt=''/>
+                                </div>
+                                <div className={styles["guideFooter"]}>
+                                    <div className={styles["TitleDateContainer"]} >
+                                        <h2>{guide.program_heading}</h2>
+                                        <span className={styles["guideDate"]}>Last accessed: <Moment >{guide.program_datemodified}</Moment></span>
+                                        </div> 
+                                        <p>Click to View and Edit</p>
+                                </div>
+                            </div> 
+                        </Link>
+>>>>>>> c6a4ced1576cbb60f086038ed27a8ff6d03ccb75
                     ))} 
                 </div>
             </section>

@@ -60,19 +60,3 @@
     color: black;
 }
 
-
-.editButton button{
-    display: flex;
-    align-items: center;
-    background-color: #fd7c06;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 15px;
-    margin: 20px;
-}
-
-.editButton button:hover{
-    cursor: pointer;
-    background-color: #054eae;
-}
