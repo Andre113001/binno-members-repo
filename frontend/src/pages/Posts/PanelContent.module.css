@@ -1,0 +1,77 @@
+.PostContent{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.PostCards{
+    margin: 10px;
+    border-radius: 10px;
+    max-width: 700px;
+    max-height: 720px;
+    box-shadow: 3px 5px 5px 3px rgb(0 0 0 / 10%);
+}
+
+.ShareCategoryContainer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.ChipsContiner{
+    flex: 1;
+}
+
+.titleImageContainer img{
+    border-radius: 10px;
+    height: 300px;
+    width: 700px;
+    object-fit: cover;
+}
+
+.contentDetail{
+    margin: 20px;
+    max-width: 95%;
+}
+
+.contentHeading{
+    display: flex;
+    align-items: center;
+}
+
+.contentHeading p{
+    font-size: 15px;
+    margin: 0 10px;
+    color: #575757;
+}
+
+.titleContainer, .titleContainer h2{
+    flex: 1;
+    margin: 10px 0;
+    font-size: 30px;
+    max-width: 500px;
+}
+
+.contentFooter{
+    display: flex;
+}
+
+.PostUserProfile{
+    display: flex;
+    flex: 1;
+    align-items: center;
+    margin-right: 60px;
+}
+
+.PostUserProfile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.PostUserProfile h2 {
+    font-size: 15px;
+    margin: 0 10px;
+    color: #575757;
+}
