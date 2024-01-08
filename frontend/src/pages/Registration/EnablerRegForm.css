@@ -36,13 +36,13 @@
     border: 1px solid black;
     box-shadow: 5px 5px 5px 5px rgb(0 0 0 / 10%);
     border-radius: 10px;
-    /* border: 1px solid blue; */
+    margin: 10px;
 }
 
 .dropdown-button {
     background-color: white;
-    width: 320px;
-    padding: 10px 20px;
+    width: 340px;
+    padding: 15px 20px;
     border: black;
     box-shadow: 5px 5px 5px 5px rgb(0 0 0 / 10%);
     border-radius: 10px;
@@ -58,6 +58,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     margin-top: 5px;
+    z-index: 1;
 }
 
 .EnablerTypes p {
@@ -76,22 +77,12 @@
     align-items: center;
     flex-direction: column;
     width: 100%;
-    /* border: 1px solid red; */
-}
-
-
-.formContent .institutionForm, .emailForm, .addressForm{
-    width: 300px;
-    padding: 10px;
-    margin: 5px;
-    border: 1px solid rgb(116, 116, 116);
-    border-radius: 10px;
-    box-shadow: 5px 5px 5px 5px rgb(0 0 0 / 10%);
+    z-index: 0;
 }
 
 .registerButton{
     border: none;
-    margin: 20px;
+    margin: 0px;
     padding: 10px 70px;
     border-radius: 10px;
     color: white;

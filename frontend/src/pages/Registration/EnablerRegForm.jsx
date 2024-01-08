@@ -2,6 +2,9 @@ import React from 'react'
 import './EnablerRegForm.css'
 import  { useState, useEffect, useRef } from 'react';
 import StyledToggleButton from '../../components/ToggleButton/ToggleButton';
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
+
 
 function EnablerRegForm() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -85,49 +88,35 @@ function EnablerRegForm() {
                     </div>    
 
                 <form className='formContent' onSubmit={handleSubmit}>
-                
-                    <div>
-                        <p>Name of Institution</p>
-                            <input
-                                className='institutionForm'
-                                type="text"
-                                placeholder='name of institution...'
-                                id="institute"
-                                name="institute"
-                                value={formData.institute}
-                                onChange={handleChange}
-                                required
-                            />
-                    </div>
-                    <div >
-                        <p>E-mail</p>
-                            <input
-                                type="email"
-                                placeholder='email address here...'
-                                className='emailForm'
-                                id="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                            />
-                    </div>
-                    <div >
-                        <p>Address </p>
-                            <input
-                                type="text"
-                                placeholder='address here...'
-                                className='addressForm'
-                                id="address"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                                required
-                            />
+                    <div className="formFields">
+                        <Box
+                            component="form"
+                            sx={{
+                                '& > :not(style)': { mb: 2, width: '35ch' },
+                            }}
+                            noValidate
+                            autoComplete="off"
+                            >
+                        <div>
+                            <TextField id="institute" label="Name of Institution" 
+                                value={formData.institute} required onChange={handleChange}
+                                style={{width:'100%', borderRadius: '10px', boxShadow: "5px 5px 5px 5px rgb(0 0 0 / 10%)"}}/>
                         </div>
-                    <div>
-                        <button className='registerButton' type="submit">Submit</button>
+                        <div >
+                            <TextField id="email" label="E-mail" 
+                                value={formData.email} required onChange={handleChange}
+                                style={{width:'100%', borderRadius: '10px', boxShadow: "5px 5px 5px 5px rgb(0 0 0 / 10%)"}}/>
+                            </div>
+                            <div >
+                                <TextField id="address" label="Address" 
+                                    value={formData.address} required onChange={handleChange}
+                                    style={{width:'100%', borderRadius: '10px', boxShadow: "5px 5px 5px 5px rgb(0 0 0 / 10%)"}}/>
+                            </div>
+                        </Box>
                     </div>
+                        <div>
+                            <button className='registerButton' type="submit">Submit</button>
+                        </div>
                 </form>
         </div>
     </>

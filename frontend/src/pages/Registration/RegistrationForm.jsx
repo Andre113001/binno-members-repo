@@ -2,7 +2,8 @@ import React from 'react'
 import './RegistrationForm.css'
 import  { useState } from 'react';
 import StyledToggleButton from '../../components/ToggleButton/ToggleButton';
-
+import Box from '@mui/material/Box';
+import TextField from '@mui/material/TextField';
 
 function RegistrationForm() {
     
@@ -31,55 +32,40 @@ function RegistrationForm() {
     <>
         <div className="formPage">
             <h1>Become a Member</h1>
-                <div className="switchUser">
+                <div className="switchUserContainer">
                     <StyledToggleButton currentPage={'Company'}/>
                 </div>
                 <p>Please fill up the required fields. </p>
 
                 <form className='formContent' onSubmit={handleSubmit}>
-                
-                    <div>
-                        <p>Name of Institution</p>
-                            <input
-                                className='institutionForm'
-                                type="text"
-                                placeholder='name of institution...'
-                                id="institute"
-                                name="institute"
-                                value={formData.institute}
-                                onChange={handleChange}
-                                required
-                            />
-                    </div>
-                    <div >
-                        <p>Email</p>
-                            <input
-                                type="email"
-                                placeholder='email address here...'
-                                className='emailForm'
-                                id="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                            />
-                    </div>
-                    <div >
-                        <p>Address </p>
-                            <input
-                                type="text"
-                                placeholder='address here...'
-                                className='addressForm'
-                                id="address"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                                required
-                            />
+                    <Box
+                        component="form"
+                        sx={{
+                            '& > :not(style)': { mb: 3, width: '35ch' },
+                        }}
+                        noValidate
+                        autoComplete="off"
+                        >
+                        <div>
+                            <TextField id="institute" label="Name of Institution" 
+                            value={formData.institute} required onChange={handleChange}
+                            style={{width:'100%', borderRadius: '10px', boxShadow: "5px 5px 5px 5px rgb(0 0 0 / 10%)"}}/>
                         </div>
+                            <div >
+                                <TextField id="email" label="E-mail" 
+                                value={formData.email} required onChange={handleChange}
+                                style={{width:'100%', borderRadius: '10px', boxShadow: "5px 5px 5px 5px rgb(0 0 0 / 10%)"}}/>
+                                </div>
+                                <div >
+                                    <TextField id="address" label="Address" 
+                                    value={formData.address} required onChange={handleChange}
+                            style={{width:'100%', borderRadius: '10px', boxShadow: "5px 5px 5px 5px rgb(0 0 0 / 10%)"}}/>
+                                </div>
+                    </Box>
                     <div>
                         <button className='registerButton' type="submit">Submit</button>
                     </div>
+                    
                 </form>
         </div>
     </>

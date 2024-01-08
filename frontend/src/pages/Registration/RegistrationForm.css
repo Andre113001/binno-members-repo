@@ -20,14 +20,17 @@
 }
 
 .formPage p{
-    margin: 5px;
     font-size: 15px;
     font-weight: 500;
 }
 
+.switchUserContainer{
+    margin: 5px;
+}
+
 .registerButton{
     border: none;
-    margin: 20px;
+    margin: 10px;
     padding: 10px 70px;
     border-radius: 10px;
     color: white;
@@ -43,15 +46,7 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
+    margin: 10px;
 }
 
-
-.formContent .institutionForm, .emailForm, .addressForm{
-    width: 300px;
-    padding: 10px;
-    margin: 5px;
-    border: 1px solid rgb(116, 116, 116);
-    border-radius: 10px;
-    box-shadow: 5px 5px 5px 5px rgb(0 0 0 / 10%);
-}
 
