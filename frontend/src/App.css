@@ -79,5 +79,8 @@ body {
   grid-gap: 20px;
 }
 
-
+.MuiTextField-root > label {
+  background-color: inherit;
+  border: none;
+}
 

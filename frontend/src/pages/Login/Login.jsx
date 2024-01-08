@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import ErrorIcon from '@mui/icons-material/Error'
 
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Fragment } from 'react';
 import { useAuth } from '../../hooks/AuthContext';
 import useCustomModal from '../../hooks/useCustomModal';
