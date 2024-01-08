@@ -6,7 +6,7 @@ import NewspaperRoundedIcon from '@mui/icons-material/NewspaperRounded';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 
 
-const SideBarData_Company = [   
+const SideBarData_Company = [
     {
         title: "Account",
         icon:  <PersonRoundedIcon />,
