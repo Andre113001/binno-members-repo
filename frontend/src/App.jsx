@@ -24,6 +24,7 @@ import TwoAuth from './pages/Login/TwoAuth';
 import Events from './pages/Events/Events';
 import AccountSettings from './pages/AccountSettings/AccountSettings';
 import Posts from './pages/Posts/Posts';
+import BlogPage from './pages/Blogs/BlogPage/BlogPage';
 
 function App() {
   return (
@@ -42,7 +43,10 @@ function App() {
           <Route path="/password-changed" element={<PasswordChanged />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/events" element={<Events />} />
-          <Route path="/blogs" element={<Blogs />} />
+          <Route path="/blogs" element={<><Outlet/></>} >
+            <Route path="" element={<Blogs />}/>
+            <Route path=":blogId" element={<BlogPage />}/>
+          </Route>
           <Route path="/posts" element={<Posts />} />
           <Route path="/guides" element={<><Outlet/></>}>
             <Route path="" element={<GuideMain/>}/>
