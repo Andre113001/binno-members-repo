@@ -1,6 +1,7 @@
 const db = require('../../database/db');
 
 // Middlewares
+const { readElements, saveElements } = require('../utils/elementsUtility');
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 const sha256 = require('sha256');
@@ -10,7 +11,9 @@ const fetchProgramById = (programId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT * FROM program_i WHERE program_id = ?`;  
+            SELECT * FROM program_i
+            INNER JOIN program_pages ON program_pages.program_id = program_i.program_id
+            WHERE program_i.program_id = ?`;  
         db.query(sql, [sanitizeId(programId)], (err, data) => {
             if (err) {
                 reject(err);
@@ -27,11 +30,16 @@ const fetchProgramPageById = (programPageId) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
             SELECT * FROM program_pages WHERE program_pages_id = ?`;  
-        db.query(sql, [sanitizeId(programPageId)], (err, data) => {
+        db.query(sql, [sanitizeId(programPageId)], async (err, data) => {
             if (err) {
                 reject(err);
             } else {
-                resolve(data);
+                if (data.length === 0) {
+                    resolve({ error: 'No data found for the given ID' });
+                } else {
+                    const elementsData = await readElements(data[0].program_pages_path);
+                    resolve([elementsData, data]);
+                }
             }
         });
     });
@@ -61,7 +69,7 @@ const fetchProgram = async (req, res) => {
     try {
         const fetchProgramResult = await fetchProgramById(program_id);
         if (fetchProgramResult.length > 0) {
-            return res.status(200).json({ Result: fetchProgramResult });
+            return res.status(200).json(fetchProgramResult);
         } else {
             return res.status(500).json({ error: 'Program does not exist' });
         };
@@ -71,22 +79,43 @@ const fetchProgram = async (req, res) => {
     };
 };
 
+// Reusable function to save elements by ID
+const saveElementsById = async (id, newFile) => {
+    return await saveElements(id, newFile);
+}
+
+// Controller to save elements by ID
+const saveElementsController = async (req, res) => {
+    const { id } = req.params;
+    const { newFile } = req.body;
+
+    const result = await saveElementsById(id, newFile);
+
+    if (result.success) {
+        res.status(200).json(result);
+    } else {
+        res.status(500).json(result);
+    }
+}
+
 // Find Program Page
+// Fetch Program Page
 const fetchProgramPage = async (req, res) => {
-    const {pageId} = req.params;
+    const { pageId } = req.params;
 
     try {
         const fetchPageResult = await fetchProgramPageById(pageId);
         if (fetchPageResult.length > 0) {
-            return res.status(200).json({ Result: fetchPageResult });
+            return res.status(200).json(fetchPageResult);
         } else {
             return res.status(500).json({ error: 'Page does not exist' });
-        };
+        }
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: 'Internal server error', error });
-    };
+    }
 };
+
 
 // Create & Update program
 const createUpdateProgram = async (req, res) => {
@@ -237,6 +266,7 @@ module.exports = {
     fetchProgramPage,
     fetchAllPrograms,
     createUpdateProgram,
+    saveElementsController,
     createUpdatePage,
     deleteProgam,
     deletePage

@@ -8,6 +8,7 @@ router.use(express.urlencoded({ extended: true }));
 router.get('/:program_id', programController.fetchProgram);
 router.get('/all/:id', programController.fetchAllPrograms);
 router.get('/page/:pageId', programController.fetchProgramPage);
+router.post('/page/save-elements/:id', programController.saveElementsController);
 
 router.get('/delete-program/:program_id', programController.deleteProgam);
 router.get('/delete-page/:page_id', programController.deletePage);
