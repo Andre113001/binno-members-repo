@@ -20,17 +20,17 @@ const readElements = async (fileId) => {
     }
 }
 
-const saveElements = async (fileId, newFile) => {
+const saveElements = async (file, newFile) => {
     try {
-        const filePath = `${process.env.ELEMENT_LOC}${fileId}.json`;
+        const filePath = `./public/guide-pages/${file}.json`;
 
         // Write the updated data to the file
         await fs.writeFile(filePath, JSON.stringify(newFile, null, 2));
 
         return { success: true, message: 'Elements saved successfully' };
-    } catch (error) {
+    } catch (error) {   
         console.error('Error saving elements:', error);
-        return { success: false, error: 'Internal Server Error' };
+        return { success: false, error: error };
     }
 }
 

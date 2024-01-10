@@ -79,17 +79,12 @@ const fetchProgram = async (req, res) => {
     };
 };
 
-// Reusable function to save elements by ID
-const saveElementsById = async (id, newFile) => {
-    return await saveElements(id, newFile);
-}
-
 // Controller to save elements by ID
 const saveElementsController = async (req, res) => {
-    const { id } = req.params;
+    const { pageId } = req.params;
     const { newFile } = req.body;
-
-    const result = await saveElementsById(id, newFile);
+    
+    const result = await saveElements(pageId, newFile);
 
     if (result.success) {
         res.status(200).json(result);
@@ -98,7 +93,6 @@ const saveElementsController = async (req, res) => {
     }
 }
 
-// Find Program Page
 // Fetch Program Page
 const fetchProgramPage = async (req, res) => {
     const { pageId } = req.params;
@@ -264,9 +258,9 @@ const deletePage = async (req, res) => {
 module.exports = {
     fetchProgram,
     fetchProgramPage,
+    saveElementsController,
     fetchAllPrograms,
     createUpdateProgram,
-    saveElementsController,
     createUpdatePage,
     deleteProgam,
     deletePage
