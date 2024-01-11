@@ -17,7 +17,7 @@ const getBlogById = async (blogId) => {
             }
         });
     });
-}
+};
 
 // Controller to get a blog by ID
 const getBlog = async (req, res) => {
@@ -41,6 +41,38 @@ const getBlog = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: 'Internal server error' });
     }
+};
+
+const getImageBlob = (imagePath) => {
+    return fs.readFileSync(imagePath);
+};
+
+const getBlogImage = async (req, res) => {
+    const { blogId } = req.params;
+
+    db.query("SELECT blog_img FROM blog_i WHERE blog_id = ?", [blogId], (err, result) => {
+        if (err) {
+            return res.status(500).json(err)
+        }
+
+        if (result.length > 0) {
+            const imgPath = path.join(__dirname, '../../public/img/blog-pics', result[0].blog_img);
+            try {
+                const imageBlob = getImageBlob(imgPath);
+            
+                // Set the appropriate content type for the image
+                res.setHeader('Content-Type', 'image/jpeg'); // Adjust the content type based on your image format
+            
+                // Send the image binary data as the response
+                res.send(imageBlob);
+            } catch (error) {
+                console.error('Error fetching image:', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            return res.status(500).json(err)
+        }
+    });
 };
 
 const fetchAllBlogs = async (req, res) => {
@@ -155,6 +187,7 @@ const deleteBlog = async (req, res) => {
 
 module.exports = {
     getBlog,
+    getBlogImage,
     fetchAllBlogs,
     postBlog,
     deleteBlog,

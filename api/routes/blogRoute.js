@@ -11,6 +11,7 @@ router.use(express.urlencoded({ extended: true }))
 
 const activityLogging = require('../middlewares/activityLogging')
 router.use(activityLogging)
+router.get('/img/:blogId', blogController.getBlogImage);
 
 router.get('/get-blog/:blogId', blogController.getBlog)
 router.get('/all/:userId', blogController.fetchAllBlogs)
