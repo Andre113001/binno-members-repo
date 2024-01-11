@@ -7,6 +7,8 @@ const uploadHistory = async (author, text) => {
     const newId = uniqueId.uniqueIdGenerator()
 
     const date = new Date()
+    console.log([newId, date, author, text.trim()])
+
     await db.query(
         'INSERT INTO history_i (history_id, history_datecreated, history_author, history_text) VALUES (?, ? , ?, ?)',
         [newId, date, author, text.trim()]
@@ -86,6 +88,8 @@ const activityLogging = (req, res, next) => {
             }
             break
     }
+
+    next()
 }
 
 module.exports = activityLogging
