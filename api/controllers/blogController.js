@@ -27,8 +27,10 @@ const getBlog = async (req, res) => {
         if (result.length > 0) {
             const blog = result[0];
 
+            const blog_pic_path = path.join(__dirname, '../../public/img/blog-pics', blog.blog_img);
+
             // Assuming your image file has the same name as the blog ID with an extension
-            const blog_pic_path = `/static/img/blog-pics/${blog.blog_img}`;
+            // const blog_pic_path = `/static/img/blog-pics/${blog.blog_img}`;
 
             // Add the imageURL to your response
             return res.json({ ...blog, blog_pic_path });
@@ -90,9 +92,10 @@ const postBlog = async (req, res) => {
                 const imagePath = path.join(__dirname, '../../public/img/blog-pics', newImageName);
                 console.log(__dirname);
                 fs.writeFileSync(imagePath, req.file.buffer); // Save the image to the specified path
-            
+
                 // Check if the file exists
                 if (fs.existsSync(imagePath)) {
+                    console.log(imagePath);
                     console.log('File uploaded successfully!');
                 } else {
                     console.error('Error: File not uploaded.');
