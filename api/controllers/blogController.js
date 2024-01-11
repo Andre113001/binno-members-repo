@@ -25,7 +25,13 @@ const getBlog = async (req, res) => {
     try {
         const result = await getBlogById(blogId);
         if (result.length > 0) {
-            return res.json(result);
+            const blog = result[0];
+
+            // Assuming your image file has the same name as the blog ID with an extension
+            const blog_pic_path = `/static/img/blog-pics/${blog.blog_img}`;
+
+            // Add the imageURL to your response
+            return res.json({ ...blog, blog_pic_path });
         } else {
             return res.status(500).json({ error: 'Blog does not exist' });
         }
@@ -33,7 +39,7 @@ const getBlog = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: 'Internal server error' });
     }
-}
+};
 
 const fetchAllBlogs = async (req, res) => {
     const { userId } = req.params;
@@ -76,14 +82,24 @@ const postBlog = async (req, res) => {
         } else {
             const newId = uniqueId.uniqueIdGenerator();
             let newImageName = '';
+            const uploaded = false;
 
             // Handle image upload and renaming
             if (req.file) {
                 const imageExtension = path.extname(req.file.originalname);
                 newImageName = newId + imageExtension;
                 const imagePath = path.join(__dirname, '../../public/img/blog-pics', newImageName);
-    
+            
                 fs.writeFileSync(imagePath, req.file.buffer); // Save the image to the specified path
+            
+                // Check if the file exists
+                if (fs.existsSync(imagePath)) {
+                    console.log('File uploaded successfully!');
+                } else {
+                    console.error('Error: File not uploaded.');
+                }
+            } else {
+                console.error('Error: No file provided.');
             }
 
             // Create a new blog
@@ -94,7 +110,7 @@ const postBlog = async (req, res) => {
                 }
 
                 if (createRes.affectedRows > 0) {
-                    return res.status(201).json({ message: 'Blog created successfully' });
+                    return res.status(201).json({ message: 'Blog created successfully', fileUpload: upload });
                 } else {
                     return res.status(500).json({ error: 'Failed to create blog', createError });
                 }

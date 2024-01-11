@@ -19,6 +19,7 @@ app.use(urlencodedMiddleware);
 
 
 app.use("/templates", express.static(path.join(__dirname, "./api/templates")));
+app.use('/static', express.static('public'));
 
 // Import Route Files
 const memberRoute = require('./api/routes/memberRoute');
@@ -28,7 +29,7 @@ const postRoute = require('./api/routes/socMedPostRoute');
 const programRoute = require('./api/routes/programRoute');
 const loginRoute = require('./api/routes/loginRoute');
 const passwordRoute = require('./api/routes/passwordRoute');
-const facebookRoute = require('./api/routes/facebookRoute');
+const applicationRoute = require('./api/routes/applicationRoute');
 
 // Use Routes
 app.use('/api/member', memberRoute);
@@ -38,7 +39,7 @@ app.use('/api/post', postRoute);
 app.use('/api/program', programRoute);
 app.use('/api/login', loginRoute);
 app.use('/api/password', passwordRoute);
-app.use('/api/fb', facebookRoute);
+app.use('/api/application', applicationRoute);
 
 
 app.get('/', (req, res) => {
