@@ -110,7 +110,7 @@ const postBlog = async (req, res) => {
                 }
 
                 if (createRes.affectedRows > 0) {
-                    return res.status(201).json({ message: 'Blog created successfully', fileUpload: upload });
+                    return res.status(201).json({ message: 'Blog created successfully'});
                 } else {
                     return res.status(500).json({ error: 'Failed to create blog', createError });
                 }
