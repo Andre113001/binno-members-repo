@@ -10,6 +10,7 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 router.get('/get-blog/:blogId', blogController.getBlog);
+router.get('/img/:blogId', blogController.getBlogImage);
 router.get('/all/:userId', blogController.fetchAllBlogs);
 
 router.post('/post-blog', upload.single('image'), blogController.postBlog);
