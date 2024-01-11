@@ -17,7 +17,7 @@ const getBlogById = async (blogId) => {
             }
         });
     });
-}
+};
 
 // Controller to get a blog by ID
 const getBlog = async (req, res) => {

@@ -9,6 +9,7 @@ const eventController = require('../controllers/eventController');
 
 router.get('/event/:eventId', eventController.eventFinder);
 router.get('/all/:userId', eventController.fetchAllEvents);
+router.get('/img/:eventId', eventController.getEventImage);
 router.post('/post-event', upload.single('image'), eventController.createUpdateEvent);
 router.get('/deleteEvent/:eventId', eventController.deleteEvent);
 

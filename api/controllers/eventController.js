@@ -69,6 +69,37 @@ const moveFileToDirectory = (file, newId, destinationDirectory) => {
     }
 };
 
+const getImageBlob = (imagePath) => {
+    return fs.readFileSync(imagePath);
+};
+
+const getEventImage = async (req, res) => {
+    const { eventId } = req.params;
+
+    db.query("SELECT event_img FROM event_i WHERE event_id = ?", [eventId], (err, result) => {
+        if (err) {
+            return res.status(500).json(err)
+        }
+
+        if (result.length > 0) {
+            const imgPath = path.join(__dirname, '../../public/img/event-pics', result[0].event_img);
+            try {
+                const imageBlob = getImageBlob(imgPath);
+
+                // Set the appropriate content type for the image
+                res.setHeader('Content-Type', 'image/jpeg'); // Adjust the content type based on your image format
+            
+                // Send the image binary data as the response
+                res.send(imageBlob);
+            } catch (error) {
+                console.error('Error fetching image:', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            return res.status(500).json(err)
+        }
+    });
+};
 
 
 // Create and Update
@@ -116,7 +147,16 @@ const createUpdateEvent = async (req, res) => {
             const newId = uniqueId.uniqueIdGenerator();
             // Move the file to the specified directory
             const eventImg = moveFileToDirectory(image, newId, '../../public/img/event-pics');
-            db.query("INSERT INTO event_i (event_id, event_author, event_datecreated, event_date, event_title, event_description, event_img) VALUES (?, ?, NOW(), ?, ?, ?, ?)", [newId, eventAuthor, eventDate, eventTitle, eventDescription, eventImg], (eventUploadError, eventUploadResult) => {
+            db.query(`INSERT INTO event_i (
+                    event_id, 
+                    event_author, 
+                    event_datecreated, 
+                    event_date, 
+                    event_title, 
+                    event_description, 
+                    event_img) 
+                    VALUES (?, ?, NOW(), ?, ?, ?, ?)`, 
+                    [newId, eventAuthor, eventDate, eventTitle, eventDescription, eventImg], (eventUploadError, eventUploadResult) => {
                 if (eventUploadError) {
                     console.log(eventUploadError);
                     return res.status(500).json({ error: 'Failed to upload event', eventUploadError });
@@ -170,6 +210,7 @@ const deleteEvent = async (req, res) => {
 module.exports = {
     eventFinder,
     fetchAllEvents,
+    getEventImage,
     createUpdateEvent,
     deleteEvent
 };
