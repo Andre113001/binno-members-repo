@@ -82,14 +82,13 @@ const postBlog = async (req, res) => {
         } else {
             const newId = uniqueId.uniqueIdGenerator();
             let newImageName = '';
-            const uploaded = false;
 
             // Handle image upload and renaming
             if (req.file) {
                 const imageExtension = path.extname(req.file.originalname);
                 newImageName = newId + imageExtension;
                 const imagePath = path.join(__dirname, '../../public/img/blog-pics', newImageName);
-            
+                console.log(__dirname);
                 fs.writeFileSync(imagePath, req.file.buffer); // Save the image to the specified path
             
                 // Check if the file exists
