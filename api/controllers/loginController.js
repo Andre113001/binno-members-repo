@@ -55,7 +55,7 @@ const authenticateUser = async (accessKey, password) => {
                                     username: user[0].setting_institution,
                                 },
                                 process.env.JWT_SECRET_KEY,
-                                { expiresIn: '1M' }
+                                { expiresIn: '1h' }
                             )
 
                             // Update token to database
