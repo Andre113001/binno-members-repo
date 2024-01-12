@@ -6,6 +6,24 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 const fs = require('fs');
 const path = require('path');
 
+const blog = async (req, res) => {
+    try {
+        db.query("SELECT * FROM blog_i", [], (err, result) => {
+            if (err) {
+                return res.status(500).json(err)
+            }
+    
+            if (result.length > 0) {
+                return res.status(200).json(result);
+            } else {
+                return res.status(500).json(err)
+            }
+        });
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
 // Reusable function to get a blog by ID
 const getBlogById = async (blogId) => {
     return new Promise((resolve, reject) => {
@@ -122,12 +140,10 @@ const postBlog = async (req, res) => {
                 const imageExtension = path.extname(req.file.originalname);
                 newImageName = newId + imageExtension;
                 const imagePath = path.join(__dirname, '../../public/img/blog-pics', newImageName);
-                console.log(__dirname);
                 fs.writeFileSync(imagePath, req.file.buffer); // Save the image to the specified path
 
                 // Check if the file exists
                 if (fs.existsSync(imagePath)) {
-                    console.log(imagePath);
                     console.log('File uploaded successfully!');
                 } else {
                     console.error('Error: File not uploaded.');
@@ -164,7 +180,7 @@ const deleteBlog = async (req, res) => {
         const result = await getBlogById(blogId);
 
         if (result.length > 0  && result[0].hasOwnProperty('blog_id')) {
-            db.query("UPDATE FROM blog_i WHERE blog_id = ?", [blogId], (deleteError, deleteRes) => {
+            db.query("UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?", [blogId], (deleteError, deleteRes) => {
                 if (deleteError) {
                     console.log(deleteError);
                     return res.status(500).json({ error: 'Failed to delete blog' });
@@ -186,6 +202,7 @@ const deleteBlog = async (req, res) => {
 };
 
 module.exports = {
+    blog,
     getBlog,
     getBlogImage,
     fetchAllBlogs,

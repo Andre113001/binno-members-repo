@@ -6,6 +6,24 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const fs = require('fs')
 const path = require('path')
 
+const event = async (req, res) => {
+    try {
+        db.query("SELECT * FROM event_i", [], (err, result) => {
+            if (err) {
+                return res.status(500).json(err)
+            }
+    
+            if (result.length > 0) {
+                return res.status(200).json(result);
+            } else {
+                return res.status(500).json(err)
+            }
+        });
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+}
+
 // Event Finder by ID
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
@@ -24,7 +42,7 @@ const getEventById = async (eventId) => {
 }
 
 // Event Reader
-const eventFinder = async (req, res) => {
+const fetchEventById = async (req, res) => {
     const { eventId } = req.params
     try {
         const result = await getEventById(eventId)
@@ -39,7 +57,7 @@ const eventFinder = async (req, res) => {
     }
 }
 
-const fetchAllEvents = async (req, res) => {
+const events_user = async (req, res) => {
     const { userId } = req.params
 
     try {
@@ -72,7 +90,7 @@ const moveFileToDirectory = (file, newId, destinationDirectory) => {
         // Write the file, overwriting if it already exists
         fs.writeFileSync(filePath, file.buffer)
 
-        return newFileName
+        return filePath
     } catch (error) {
         console.error('Error moving file:', error)
         throw error // You might want to handle or log the error appropriately
@@ -119,8 +137,10 @@ const getEventImage = async (req, res) => {
     )
 }
 
+
+
 // Create and Update
-const createUpdateEvent = async (req, res) => {
+const create_update = async (req, res) => {
     const { eventId, eventAuthor, eventDate, eventTitle, eventDescription } =
         req.body
 
@@ -244,7 +264,7 @@ const deleteEvent = async (req, res) => {
             retrieveEvent[0].hasOwnProperty('event_id')
         ) {
             db.query(
-                'DELETE FROM event_i WHERE event_id = ?',
+                'UPDATE event_i SET event_flag = 0 WHERE event_id = ?',
                 [eventId],
                 (eventDeleteError, eventDeleteResult) => {
                     if (eventDeleteError) {
@@ -275,9 +295,10 @@ const deleteEvent = async (req, res) => {
 }
 
 module.exports = {
-    eventFinder,
-    fetchAllEvents,
+    event,
+    events_user,
+    fetchEventById,
     getEventImage,
-    createUpdateEvent,
+    create_update,
     deleteEvent,
 }

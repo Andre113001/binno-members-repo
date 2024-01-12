@@ -34,11 +34,11 @@ const passwordRoute = require('./api/routes/passwordRoute')
 const registerRoute = require('./api/routes/registerRoute');
 
 // Use Routes
-app.use('/api/member', memberRoute)
-app.use('/api/blog', blogRoute)
-app.use('/api/event', eventRoute)
-app.use('/api/post', postRoute)
-app.use('/api/program', programRoute)
+app.use('/api/members', memberRoute)
+app.use('/api/blogs', blogRoute)
+app.use('/api/events', eventRoute)
+app.use('/api/posts', postRoute)
+app.use('/api/programs', programRoute)
 app.use('/api/login', loginRoute)
 app.use('/api/password', passwordRoute)
 app.use('/api/register', registerRoute)

@@ -9,15 +9,16 @@ const blogController = require('../controllers/blogController')
 router.use(express.json())
 router.use(express.urlencoded({ extended: true }))
 
-const activityLogging = require('../middlewares/activityLogging')
-router.use(activityLogging)
+// const activityLogging = require('../middlewares/activityLogging')
+// router.use(activityLogging)
+router.get('/', blogController.blog);
 router.get('/img/:blogId', blogController.getBlogImage);
 
-router.get('/get-blog/:blogId', blogController.getBlog)
-router.get('/all/:userId', blogController.fetchAllBlogs)
+router.get('/:blogId', blogController.getBlog)
+router.get('/user/:userId', blogController.fetchAllBlogs)
 
-router.post('/post-blog', upload.single('image'), blogController.postBlog)
+router.post('/post', upload.single('image'), blogController.postBlog)
 
-router.get('/delete-blog/:blogId', blogController.deleteBlog)
+router.get('/delete/:blogId', blogController.deleteBlog)
 
 module.exports = router

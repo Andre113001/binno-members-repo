@@ -5,11 +5,12 @@ const socMedController = require('../controllers/socMedPostController')
 router.use(express.json())
 router.use(express.urlencoded({ extended: true }))
 
-const activityLogging = require('../middlewares/activityLogging')
-router.use(activityLogging)
+// const activityLogging = require('../middlewares/activityLogging')
+// router.use(activityLogging)
 
+router.get('/', socMedController.post);
 router.get('/:post_id', socMedController.fetchPost)
-router.post('/uploadUpdate', socMedController.updateCreatePost)
-router.get('/delete-post/:post_id', socMedController.deletePost)
+router.post('/upload', socMedController.updateCreatePost)
+router.get('/delete/:post_id', socMedController.deletePost)
 
 module.exports = router

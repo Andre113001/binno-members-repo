@@ -10,14 +10,11 @@ const eventController = require('../controllers/eventController')
 // const activityLogging = require('../middlewares/activityLogging')
 // router.use(activityLogging)
 
-router.get('/event/:eventId', eventController.eventFinder)
-router.get('/all/:userId', eventController.fetchAllEvents)
+router.get('/', eventController.event);
+router.get('/:eventId', eventController.fetchEventById)
+router.get('/user/:userId', eventController.events_user)
 router.get('/img/:eventId', eventController.getEventImage)
-router.post(
-    '/post-event',
-    upload.single('image'),
-    eventController.createUpdateEvent
-)
-router.get('/deleteEvent/:eventId', eventController.deleteEvent)
+router.post('/post', upload.single('image'), eventController.create_update);
+router.get('/delete/:eventId', eventController.deleteEvent)
 
 module.exports = router

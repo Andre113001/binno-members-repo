@@ -4,6 +4,24 @@ const db = require('../../database/db');
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 
+const post = async (req, res) => {
+    try {
+        db.query("SELECT * FROM post_i", [], (err, result) => {
+            if (err) {
+                return res.status(500).json(err)
+            }
+    
+            if (result.length > 0) {
+                return res.status(200).json(result);
+            } else {
+                return res.status(500).json(err)
+            }
+        });
+    } catch (error) {
+        return res.status(500).json(error);
+    }
+};
+
 // Reusable function to get a post by ID
 const fetchPostById = (postId) => {
     return new Promise((resolve, reject) => {
@@ -88,7 +106,7 @@ const deletePost = async (req, res) => {
         const result = await fetchPostById(post_id);
 
         if (result.length > 0  && result[0].hasOwnProperty('post_id')) {
-            db.query("DELETE FROM post_i WHERE post_id = ?", [post_id], (deleteError, deleteRes) => {
+            db.query("UPDATE post_i SET post_flag = 0 WHERE post_id = ?", [post_id], (deleteError, deleteRes) => {
                 if (deleteError) {
                     console.log(deleteError);
                     return res.status(500).json({ error: 'Failed to delete post' });
@@ -111,6 +129,7 @@ const deletePost = async (req, res) => {
 
 
 module.exports = {
+    post,
     fetchPost,
     updateCreatePost,
     deletePost,
