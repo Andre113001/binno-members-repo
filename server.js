@@ -24,27 +24,6 @@ app.use('/static', express.static('public'))
 // app.use(activityLogging)
 
 // Import Route Files
-<<<<<<< HEAD
-const memberRoute = require('./api/routes/memberRoute');
-const blogRoute = require('./api/routes/blogRoute');
-const eventRoute = require('./api/routes/eventRoute');
-const postRoute = require('./api/routes/socMedPostRoute');
-const programRoute = require('./api/routes/programRoute');
-const loginRoute = require('./api/routes/loginRoute');
-const passwordRoute = require('./api/routes/passwordRoute');
-const registerRoute = require('./api/routes/registerRoute');
-
-// Use Routes
-app.use('/api/member', memberRoute);
-app.use('/api/blog', blogRoute);
-app.use('/api/event', eventRoute);
-app.use('/api/post', postRoute);
-app.use('/api/program', programRoute);
-app.use('/api/login', loginRoute);
-app.use('/api/password', passwordRoute);
-app.use('/api/register', registerRoute);
-
-=======
 const memberRoute = require('./api/routes/memberRoute')
 const blogRoute = require('./api/routes/blogRoute')
 const eventRoute = require('./api/routes/eventRoute')
@@ -63,7 +42,6 @@ app.use('/api/program', programRoute)
 app.use('/api/login', loginRoute)
 app.use('/api/password', passwordRoute)
 app.use('/api/application', applicationRoute)
->>>>>>> ea43b514fbe4f9f400f87e2ef41a8e9b8591f51e
 
 app.get('/', (req, res) => {
     console.log('Connected')
