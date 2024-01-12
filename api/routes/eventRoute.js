@@ -7,8 +7,8 @@ const upload = multer({ storage: storage })
 
 const eventController = require('../controllers/eventController')
 
-const activityLogging = require('../middlewares/activityLogging')
-router.use(activityLogging)
+// const activityLogging = require('../middlewares/activityLogging')
+// router.use(activityLogging)
 
 router.get('/event/:eventId', eventController.eventFinder)
 router.get('/all/:userId', eventController.fetchAllEvents)
