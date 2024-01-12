@@ -5,6 +5,10 @@ const programController = require('../controllers/programController');
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
+
+const activityLogging = require('../middlewares/activityLogging')
+router.use(activityLogging)
+
 router.get('/:program_id', programController.fetchProgram);
 router.get('/all/:id', programController.fetchAllPrograms);
 router.get('/page/:pageId', programController.fetchProgramPage);
