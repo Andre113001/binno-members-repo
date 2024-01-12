@@ -5,9 +5,8 @@ const storage = multer.memoryStorage(); // Use memory storage for simplicity, ad
 
 const upload = multer({ storage: storage });
 
-const applicationController = require('../controllers/applicationController');
+const applicationController = require('../controllers/registerController');
 
-router.get('/check', applicationController.applicationChecker);
-router.post('/upload', upload.array('files'), applicationController.uploadDocuments);
+router.post('/check', applicationController.applicationChecker);
 
 module.exports = router;
