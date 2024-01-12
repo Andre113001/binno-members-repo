@@ -46,6 +46,7 @@ const activityLogging = async (req, res, next) => {
 
     const authData = jwt.verify(token, process.env.JWT_SECRET_KEY)
 
+    console.log('url: ', req.url)
     switch (req.url) {
         case '/post-blog':
             console.log(authData.username, ' posted a new blog.')
