@@ -37,7 +37,7 @@ const verifyChangePassword = async (req, res) => {
 
                     if (updateRes.affectedRows > 0) {
                         // Email notif here
-                        axios.post(`http://localhost:3002/others/forgotPassword`, {
+                        axios.post(`https://binno-email-production.up.railway.app/others/forgotPassword`, {
                             receiver: email,
                             name: name,
                             token: token
