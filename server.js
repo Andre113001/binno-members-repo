@@ -31,7 +31,7 @@ const postRoute = require('./api/routes/socMedPostRoute')
 const programRoute = require('./api/routes/programRoute')
 const loginRoute = require('./api/routes/loginRoute')
 const passwordRoute = require('./api/routes/passwordRoute')
-const applicationRoute = require('./api/routes/applicationRoute')
+// const applicationRoute = require('./api/routes/applicationRoute')
 
 // Use Routes
 app.use('/api/member', memberRoute)
