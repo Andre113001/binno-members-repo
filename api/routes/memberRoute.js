@@ -7,8 +7,8 @@ router.use(express.urlencoded({ extended: true }))
 
 // 11/15/2023 - Include specify startup enabler and company
 
-const activityLogging = require('../middlewares/activityLogging')
-router.use(activityLogging)
+// const activityLogging = require('../middlewares/activityLogging')
+// router.use(activityLogging)
 
 router.get('/member/:member_id', memberController.getMember)
 router.get('/profile/:accessToken', memberController.fetchProfileByToken)
