@@ -49,6 +49,31 @@ const fetchProgramPageById = (programPageId) => {
 }
 
 // Function to fetch a program page by ID
+const fetchProgramPageElements = (programPageId) => {
+    return new Promise((resolve, reject) => {
+        // Using parameterized query to prevent SQL injection
+        const sql = `
+            SELECT * FROM program_pages WHERE program_pages_id = ?`
+        db.query(sql, [sanitizeId(programPageId)], async (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                console.log(programPageId)
+                if (data.length === 0) {
+                    resolve([])
+                } else {
+                    const elementsData = await readElements(
+                        data[0].program_pages_path
+                    )
+                    resolve(elementsData)
+                    // resolve({ ...data[0], elements: elementsData })
+                }
+            }
+        })
+    })
+}
+
+// Function to fetch a program page by ID
 const fetchProgramPages = (programPageId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
@@ -61,10 +86,21 @@ const fetchProgramPages = (programPageId) => {
                 if (data.length === 0) {
                     resolve([])
                 } else {
+                    console.log(data)
+
+                    const updatedData = await Promise.all(
+                        (data || []).map(async (program) => {
+                            const elements = await fetchProgramPageElements(
+                                program.program_pages_id
+                            )
+                            return { ...program, elements: elements }
+                        })
+                    )
+
                     const elementsData = await readElements(
                         data[0].program_pages_path
                     )
-                    resolve(data)
+                    resolve(updatedData)
                 }
             }
         })

@@ -12,6 +12,8 @@ router.use(express.urlencoded({ extended: true }))
 
 router.get('/member/:member_id', memberController.getMember)
 router.get('/profile/:accessToken', memberController.fetchProfileByToken)
+router.get('/enablers', memberController.fetchEnablers)
+router.get('/companies', memberController.fetchCompanies)
 router.post('/update-profile', memberController.updateProfile)
 router.get('/change-status/:member_id', memberController.changeStatus)
 router.get('/signup', memberController.signUp)
