@@ -123,6 +123,7 @@ const fetchProfileByToken = async (req, res) => {
 
     try {
         const result = await fetchMemberByAccessToken(accessToken);
+        console.log(result);
         if (result.length > 0) {
             return res.json(result);
         } else {
