@@ -37,8 +37,10 @@ const activityLogging = async (req, res, next) => {
 
     morgan(customFormat, { stream })
 
-    const token = req.headers.authorization.split(' ')[1] // Authorization: 'Bearer TOKEN'
-
+    let token
+    if (req.headers.authorization) {
+        token = req.headers.authorization.split(' ')[1] // Authorization: 'Bearer TOKEN'
+    }
     if (!token) {
         // throw new Error('Request denied!')
         return next()
@@ -46,7 +48,6 @@ const activityLogging = async (req, res, next) => {
 
     const authData = jwt.verify(token, process.env.JWT_SECRET_KEY)
 
-    console.log('url: ', req.url)
     switch (req.url) {
         case '/post-blog':
             console.log(authData.username, ' posted a new blog.')
