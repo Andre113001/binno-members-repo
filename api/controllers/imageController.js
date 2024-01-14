@@ -13,6 +13,11 @@ const moveFileToDirectory = (file, destinationDirectory) => {
         const newFileName = `${newId}${path.extname(file.originalname)}`
         const filePath = path.join(__dirname, destinationDirectory, newFileName)
 
+         // Create the destination directory if it doesn't exist
+         if (!fs.existsSync(path.join(__dirname, destinationDirectory))) {
+            fs.mkdirSync(path.join(__dirname, destinationDirectory), { recursive: true });
+        }
+        
         // Write the file, overwriting if it already exists
         fs.writeFileSync(filePath, file.buffer)
 
@@ -55,6 +60,7 @@ const uploadImage = async (req, res) => {
             image,
             `../../public/img/${file_path}`
         )
+        
 
         return res.status(200).json({
             message: 'File uploaded successfully',
