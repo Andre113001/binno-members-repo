@@ -71,10 +71,6 @@ const resetTokenChecker = async (req, res) => {
         const { token }= req.body;
 
         db.query("SELECT member_id, member_resetpassword_token, member_resetpassword_token_valid FROM member_i WHERE member_resetpassword_token = ?", [sha256(token)], (err, result) => {
-            if (err) {
-                return res.status(500).json({error: err});
-            };
-
             if (result.length > 0) {
                 const tokenData = result[0];
                 const currentTimestamp = new Date().getTime();
@@ -87,7 +83,7 @@ const resetTokenChecker = async (req, res) => {
                     res.status(400).json({ message: 'Token has expired' });
                 }
             } else {
-                return res.status(200).json({message: "Invalid Token"});
+                return res.status(500).json({error: err});
             }
         });
 
