@@ -141,11 +141,11 @@ const verify_twoAuth = async (req, res) => {
                         process.env.JWT_SECRET_KEY
                     );
     
-                    // // Update token to database
-                    // await db.query(
-                    //     'UPDATE member_i SET member_access = ? WHERE member_id = ?',
-                    //     [hash(token), result[0].member_id], 
-                    // );
+                    // Update token to database
+                    db.query(
+                        'UPDATE member_i SET member_access = ? WHERE member_id = ?',
+                        [hash(token), result[0].member_id], 
+                    );
     
                     return res.json({auth: true, token: token});
                 } else {
@@ -162,19 +162,6 @@ const verify_twoAuth = async (req, res) => {
 
         
 };
-
-// const user = result[0]
-
-// const token = jwt.sign(
-//     { userId: user.account_id, username: user.name },
-//     process.env.JWT_SECRET_KEY
-// )
-
-// // Update token to database
-// db.query(
-//     'UPDATE member_i SET member_access = ? WHERE member_id = ?',
-//     [hash(token), result[0].member_id]
-// )
 
 module.exports = {
     login,
