@@ -32,6 +32,7 @@ const programRoute = require('./api/routes/programRoute')
 const loginRoute = require('./api/routes/loginRoute')
 const passwordRoute = require('./api/routes/passwordRoute')
 const registerRoute = require('./api/routes/registerRoute');
+const imageRoute = require('./api/routes/imageRoute');
 
 // Use Routes
 app.use('/api/members', memberRoute)
@@ -39,6 +40,7 @@ app.use('/api/blogs', blogRoute)
 app.use('/api/events', eventRoute)
 app.use('/api/posts', postRoute)
 app.use('/api/programs', programRoute)
+app.use('/api/images', imageRoute)
 app.use('/api/login', loginRoute)
 app.use('/api/password', passwordRoute)
 app.use('/api/register', registerRoute)
