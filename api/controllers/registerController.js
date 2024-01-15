@@ -110,6 +110,7 @@ const account_application = async (req, res) => {
 const upload_documents = async (req, res) => {
     const { email, institution, address, type, classification, id } = req.body
 
+    console.log(req.body)
     const tokenPayload = {
         userId: id,
         userEmail: email,
@@ -139,8 +140,7 @@ const upload_documents = async (req, res) => {
             expirationDate,
         ],
         (insertError, insertResult) => {
-            console.log(insertResult)
-            if (!insertResult.insertId) {
+            if (insertError) {
                 return res.status(201).json({ message: 'Application added' })
             } else {
                 return res.status(500).json({ error: 'Failed to apply' })
