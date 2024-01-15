@@ -139,6 +139,7 @@ const upload_documents = async (req, res) => {
             expirationDate,
         ],
         (insertError, insertResult) => {
+            console.log(insertResult)
             if (!insertResult.insertId) {
                 return res.status(201).json({ message: 'Application added' })
             } else {
