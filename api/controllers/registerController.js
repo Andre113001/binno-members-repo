@@ -110,6 +110,7 @@ const account_application = async (req, res) => {
 const upload_documents = async (req, res) => {
     const { email, institution, address, type, classification, id } = req.body
 
+    console.log(req.body)
     console.log(req.files)
     const tokenPayload = {
         userId: id,

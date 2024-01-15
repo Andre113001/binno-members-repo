@@ -89,8 +89,14 @@ const fetchMemberPosts = async (req, res) => {
 
 // Controller to update or create post
 const updateCreatePost = async (req, res) => {
-    const { post_id, postAuthor, postCategory, postHeading, postText } =
-        req.body
+    const {
+        post_id,
+        postAuthor,
+        postCategory,
+        postHeading,
+        postText,
+        postImg,
+    } = req.body
 
     try {
         const result = await fetchPostById(post_id)
@@ -98,12 +104,13 @@ const updateCreatePost = async (req, res) => {
         if (result.length > 0 && result[0].hasOwnProperty('post_id')) {
             // Update the existing blog
             db.query(
-                'UPDATE post_i SET post_author = ?, post_category = ?, post_heading = ?, post_bodytext = ?, post_datemodified=NOW() WHERE post_id = ?',
+                'UPDATE post_i SET post_author = ?, post_category = ?, post_heading = ?, post_bodytext = ?, post_img = ?, post_datemodified=NOW() WHERE post_id = ?',
                 [
                     postAuthor,
                     postCategory,
                     postHeading,
                     postText,
+                    postImg,
                     result[0].post_id,
                 ],
                 (updateError, updateRes) => {
@@ -131,8 +138,15 @@ const updateCreatePost = async (req, res) => {
             const newId = uniqueId()
             // Create a new blog
             db.query(
-                'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext) VALUES (?, NOW(), ?, ?, ?, ?)',
-                [newId, postAuthor, postCategory, postHeading, postText],
+                'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext, post_img) VALUES (?, NOW(), ?, ?, ?, ?, ?)',
+                [
+                    newId,
+                    postAuthor,
+                    postCategory,
+                    postHeading,
+                    postText,
+                    postImg,
+                ],
                 (createError, createRes) => {
                     if (createError) {
                         return res.status(500).json({
