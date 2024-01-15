@@ -7,6 +7,7 @@ const upload = multer({ storage: storage });
 
 const applicationController = require('../controllers/registerController');
 
-router.post('/check', applicationController.applicationChecker);
+router.post('/', applicationController.account_application);
+router.post('/upload', applicationController.upload_documents);
 
 module.exports = router;

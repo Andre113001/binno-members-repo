@@ -6,8 +6,8 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 
-const activityLogging = require('../middlewares/activityLogging')
-router.use(activityLogging)
+// const activityLogging = require('../middlewares/activityLogging')
+// router.use(activityLogging)
 
 router.get('/', programController.allPrograms);
 router.get('/:program_id', programController.fetchProgram);
