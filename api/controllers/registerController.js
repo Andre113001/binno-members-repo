@@ -1,12 +1,12 @@
-const db = require('../../database/db');
+const db = require('../../database/db')
 
 //Middlewares
-const sanitizeId = require('../middlewares/querySanitizerMiddleware');
-const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const jwt = require('jsonwebtoken');
+const sanitizeId = require('../middlewares/querySanitizerMiddleware')
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
+const fs = require('fs')
+const path = require('path')
+const axios = require('axios')
+const jwt = require('jsonwebtoken')
 
 const getMemberByEmail = (memberEmail) => {
     return new Promise((resolve, reject) => {
@@ -24,22 +24,27 @@ const getMemberByEmail = (memberEmail) => {
 const applicationChecker = (email, name) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = "SELECT * FROM application_i WHERE app_email = ? OR app_institution = ?"
+        const sql =
+            'SELECT * FROM application_i WHERE app_email = ? OR app_institution = ?'
         db.query(sql, [email, name], (err, data) => {
             if (err) {
-                resolve(false);
+                resolve(false)
             } else {
-                db.query("SELECT setting_institution FROM setting_i WHERE setting_institution = ?", [name], (err, data) => {
-                    if (err) {
-                        resolve(false)
-                    } else {
-                        resolve(true);
+                db.query(
+                    'SELECT setting_institution FROM setting_i WHERE setting_institution = ?',
+                    [name],
+                    (err, data) => {
+                        if (err) {
+                            resolve(false)
+                        } else {
+                            resolve(true)
+                        }
                     }
-                })
+                )
             }
         })
     })
-};
+}
 
 const account_application = async (req, res) => {
     const { email, institution, address, type, classification } = req.body
@@ -69,7 +74,7 @@ const account_application = async (req, res) => {
 
                     if (EmailResult.length > 0) {
                         // Insert Email notif here
-                        return res.json({result: 'processing'})
+                        return res.json({ result: 'processing' })
                         // axios
                         //     .post(
                         //         `http://localhost:3400/membership/ongoing/${email}`
@@ -91,7 +96,7 @@ const account_application = async (req, res) => {
                         //     .status(200)
                         //     .json({ message: 'Currently in processing' })
                     } else {
-                        return res.json({appId: id});
+                        return res.json({ appId: id })
                     }
                 }
             )
@@ -102,8 +107,7 @@ const account_application = async (req, res) => {
     }
 }
 
-
-const upload_documents = async(req, res) => {
+const upload_documents = async (req, res) => {
     const { email, institution, address, type, classification, id } = req.body
 
     const tokenPayload = {
@@ -112,11 +116,9 @@ const upload_documents = async(req, res) => {
         // You can include additional information in the token payload
     }
     const tokenExpiration = 3 * 24 * 60 * 60 // 3 days in seconds
-    const token = jwt.sign(
-        tokenPayload,
-        process.env.SECRET_KEY,
-        { expiresIn: tokenExpiration }
-    )
+    const token = jwt.sign(tokenPayload, process.env.SECRET_KEY, {
+        expiresIn: tokenExpiration,
+    })
 
     // Calculate the date 3 days from now
     const currentDate = new Date()
@@ -137,22 +139,16 @@ const upload_documents = async(req, res) => {
             expirationDate,
         ],
         (insertError, insertResult) => {
-            if (insertResult.affectedRows > 0) {
-                return res
-                    .status(201)
-                    .json({ message: 'Application added' })
+            if (!insertResult.insertId) {
+                return res.status(201).json({ message: 'Application added' })
             } else {
-                return res
-                    .status(500)
-                    .json({ error: 'Failed to apply' })
+                return res.status(500).json({ error: 'Failed to apply' })
             }
         }
     )
 }
 
-
-
 module.exports = {
-    account_application, 
+    account_application,
     upload_documents,
 }
