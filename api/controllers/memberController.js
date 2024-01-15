@@ -267,113 +267,113 @@ const changeStatus = async (req, res) => {
     }
 }
 
-const signUp = async (req, res) => {
-    const { email, institution, address, type, classification } = req.body
+// const signUp = async (req, res) => {
+//     const { email, institution, address, type, classification } = req.body
 
-    const id = uniqueId.appId_generator()
+//     const id = uniqueId.appId_generator()
 
-    try {
-        // Check if email already exist in the database
-        const result = await getMemberByEmail(email)
-        if (result.length > 0) {
-            return res.json({
-                result: 'Sorry you are already registered to the platform',
-            })
-        } else {
-            // Check if email is under processing in application
-            db.query(
-                'SELECT app_email, app_institution FROM application_i WHERE app_email = ? OR app_institution = ?',
-                [email, institution],
-                (EmailError, EmailResult) => {
-                    // this must be modular
-                    if (EmailError) {
-                        // console.log(updateError);
-                        return res.status(500).json({
-                            error: 'Failed to retrieve Email from application',
-                        })
-                    }
+//     try {
+//         // Check if email already exist in the database
+//         const result = await getMemberByEmail(email)
+//         if (result.length > 0) {
+//             return res.json({
+//                 result: 'Sorry you are already registered to the platform',
+//             })
+//         } else {
+//             // Check if email is under processing in application
+//             db.query(
+//                 'SELECT app_email, app_institution FROM application_i WHERE app_email = ? OR app_institution = ?',
+//                 [email, institution],
+//                 (EmailError, EmailResult) => {
+//                     // this must be modular
+//                     if (EmailError) {
+//                         // console.log(updateError);
+//                         return res.status(500).json({
+//                             error: 'Failed to retrieve Email from application',
+//                         })
+//                     }
 
-                    if (EmailResult.length > 0) {
-                        // Insert Email notif here
-                        axios
-                            .post(
-                                `http://localhost:3002/membership/ongoing/${email}`
-                            )
-                            .then((response) => {
-                                console.log(
-                                    'Response from localhost:3002',
-                                    response.data
-                                )
-                            })
-                            .catch((error) => {
-                                console.error(
-                                    'Error making request',
-                                    error.message
-                                )
-                            })
+//                     if (EmailResult.length > 0) {
+//                         // Insert Email notif here
+//                         axios
+//                             .post(
+//                                 `http://localhost:3002/membership/ongoing/${email}`
+//                             )
+//                             .then((response) => {
+//                                 console.log(
+//                                     'Response from localhost:3002',
+//                                     response.data
+//                                 )
+//                             })
+//                             .catch((error) => {
+//                                 console.error(
+//                                     'Error making request',
+//                                     error.message
+//                                 )
+//                             })
 
-                        return res
-                            .status(200)
-                            .json({ message: 'Currently in processing' })
-                    } else {
-                        const tokenPayload = {
-                            userId: id,
-                            userEmail: email,
-                            // You can include additional information in the token payload
-                        }
-                        const tokenExpiration = 3 * 24 * 60 * 60 // 3 days in seconds
-                        const token = jwt.sign(
-                            tokenPayload,
-                            process.env.SECRET_KEY,
-                            { expiresIn: tokenExpiration }
-                        )
+//                         return res
+//                             .status(200)
+//                             .json({ message: 'Currently in processing' })
+//                     } else {
+//                         const tokenPayload = {
+//                             userId: id,
+//                             userEmail: email,
+//                             // You can include additional information in the token payload
+//                         }
+//                         const tokenExpiration = 3 * 24 * 60 * 60 // 3 days in seconds
+//                         const token = jwt.sign(
+//                             tokenPayload,
+//                             process.env.SECRET_KEY,
+//                             { expiresIn: tokenExpiration }
+//                         )
 
-                        // Calculate the date 3 days from now
-                        const currentDate = new Date()
-                        const expirationDate = new Date(
-                            currentDate.getTime() + 3 * 24 * 60 * 60 * 1000
-                        ) // 3 days in milliseconds
+//                         // Calculate the date 3 days from now
+//                         const currentDate = new Date()
+//                         const expirationDate = new Date(
+//                             currentDate.getTime() + 3 * 24 * 60 * 60 * 1000
+//                         ) // 3 days in milliseconds
 
-                        db.query(
-                            'INSERT INTO application_i (app_id, app_institution, app_email, app_address, app_type, app_class, app_dateadded, app_token, app_token_valid) VALUES (?,?,?,?,?,?, NOW(), ?, ?)',
-                            [
-                                id,
-                                institution,
-                                email,
-                                address,
-                                type,
-                                classification,
-                                token,
-                                expirationDate,
-                            ],
-                            (insertError, insertResult) => {
-                                if (insertError) {
-                                    console.log(insertError)
-                                    return res
-                                        .status(500)
-                                        .json({ error: insertError })
-                                }
+//                         db.query(
+//                             'INSERT INTO application_i (app_id, app_institution, app_email, app_address, app_type, app_class, app_dateadded, app_token, app_token_valid) VALUES (?,?,?,?,?,?, NOW(), ?, ?)',
+//                             [
+//                                 id,
+//                                 institution,
+//                                 email,
+//                                 address,
+//                                 type,
+//                                 classification,
+//                                 token,
+//                                 expirationDate,
+//                             ],
+//                             (insertError, insertResult) => {
+//                                 if (insertError) {
+//                                     console.log(insertError)
+//                                     return res
+//                                         .status(500)
+//                                         .json({ error: insertError })
+//                                 }
 
-                                if (insertResult.affectedRows > 0) {
-                                    return res
-                                        .status(201)
-                                        .json({ message: 'Application added' })
-                                } else {
-                                    return res
-                                        .status(500)
-                                        .json({ error: 'Failed to apply' })
-                                }
-                            }
-                        )
-                    }
-                }
-            )
-        }
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({ error: error })
-    }
-}
+//                                 if (insertResult.affectedRows > 0) {
+//                                     return res
+//                                         .status(201)
+//                                         .json({ message: 'Application added' })
+//                                 } else {
+//                                     return res
+//                                         .status(500)
+//                                         .json({ error: 'Failed to apply' })
+//                                 }
+//                             }
+//                         )
+//                     }
+//                 }
+//             )
+//         }
+//     } catch (error) {
+//         console.log(error)
+//         return res.status(500).json({ error: error })
+//     }
+// }
 
 const verifyChangePassword = async (req, res) => {
     const { accesskey } = req.body
@@ -497,7 +497,7 @@ module.exports = {
     fetchProfileByToken,
     updateProfile,
     changeStatus,
-    signUp,
+    // signUp,
     verifyChangePassword,
     changePassword,
     fetchEnablers,

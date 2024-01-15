@@ -14,3 +14,4 @@ router.post('/upload', socMedController.updateCreatePost)
 router.get('/delete/:post_id', socMedController.deletePost)
 
 module.exports = router
+    

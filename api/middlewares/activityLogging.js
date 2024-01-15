@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const moment = require('moment-timezone')
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const db = require('../../database/db')
+const sha256 = require('sha256')
 
 const uploadHistory = (author, text) => {
     const newId = uniqueId.uniqueIdGenerator()
@@ -45,8 +46,10 @@ const activityLogging = async (req, res, next) => {
         // throw new Error('Request denied!')
         return next()
     }
+    const hashedToken = sha256(process.env.JWT_SECRET_KEY);
+    console.log(hashedToken);
 
-    const authData = jwt.verify(token, process.env.JWT_SECRET_KEY)
+    const authData = jwt.verify(token, hashedToken);
 
     switch (req.url) {
         case '/post-blog':
