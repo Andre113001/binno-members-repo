@@ -2,7 +2,9 @@ const db = require('../../database/db')
 
 // Middlewares
 const sanitizeId = require('../middlewares/querySanitizerMiddleware')
-const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
+const {
+    uniqueIdGenerator,
+} = require('../middlewares/uniqueIdGeneratorMiddleware')
 
 const post = async (req, res) => {
     try {
@@ -135,7 +137,7 @@ const updateCreatePost = async (req, res) => {
                 }
             )
         } else {
-            const newId = uniqueId()
+            const newId = uniqueIdGenerator()
             // Create a new blog
             db.query(
                 'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext, post_img) VALUES (?, NOW(), ?, ?, ?, ?, ?)',
