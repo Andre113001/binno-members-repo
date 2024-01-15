@@ -23,6 +23,27 @@ const fetchProgramById = (programId) => {
     })
 }
 
+const allPrograms = async (req, res) => {
+    const programs = await new Promise((resolve, reject) => {
+        // Using parameterized query to prevent SQL injection
+        const sql = `
+        SELECT * FROM program_i WHERE program_flag = 1`
+        db.query(sql, (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+
+    if (programs.length > 0) {
+        res.status(200).send(programs)
+    } else {
+        res.status(404).send([])
+    }
+}
+
 // Function to fetch a program page by ID
 const fetchProgramPageById = (programPageId) => {
     return new Promise((resolve, reject) => {
@@ -396,4 +417,5 @@ module.exports = {
     createUpdatePage,
     deleteProgam,
     deletePage,
+    allPrograms,
 }
