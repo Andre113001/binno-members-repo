@@ -1,7 +1,7 @@
 const dotenv = require('dotenv')
 const express = require('express')
 const path = require('path')
-import { rateLimit } from 'express-rate-limit'
+const rateLimit = require('express-rate-limit')
 
 dotenv.config()
 
