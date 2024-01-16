@@ -62,7 +62,7 @@ const events_user = async (req, res) => {
 
     try {
         db.query(
-            'SELECT event_id, event_author, event_datecreated, event_date, event_title, event_description, event_datemodified FROM event_i WHERE event_author = ?',
+            'SELECT * FROM event_i WHERE event_author = ?',
             [userId],
             (eventError, eventRes) => {
                 if (eventError) {

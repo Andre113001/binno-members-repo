@@ -170,7 +170,12 @@ const fetchProfileByToken = async (req, res) => {
 
 // Controller to update user's profile
 const updateProfile = async (req, res) => {
-    const { member_id, new_setting_bio, new_setting_color } = req.body
+    const {
+        member_id,
+        member_setting_bio,
+        member_profilepic,
+        member_coverpic,
+    } = req.body
 
     try {
         const result = await getMemberById(member_id)
@@ -181,12 +186,8 @@ const updateProfile = async (req, res) => {
             )
             if (getSettingsResult.length > 0) {
                 db.query(
-                    'UPDATE member_settings SET setting_bio = ?, setting_color = ?, setting_datemodified = NOW() WHERE setting_id = ?',
-                    [
-                        new_setting_bio,
-                        new_setting_color,
-                        result[0].member_setting,
-                    ],
+                    'UPDATE member_settings SET setting_bio = ?, setting_profilepic = ?, setting_coverpic = ?, setting_datemodified = NOW() WHERE setting_id = ?',
+                    [member_setting_bio, member_profilepic, member_coverpic, result[0].member_setting],
                     (updateError, updateRes) => {
                         if (updateError) {
                             return res
