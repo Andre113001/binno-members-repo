@@ -141,7 +141,7 @@ const getEventImage = async (req, res) => {
 
 // Create and Update
 const create_update = async (req, res) => {
-    const { eventId, eventAuthor, eventDate, eventTitle, eventDescription } =
+    const { eventId, eventAuthor, eventDate, eventTime, eventTitle, eventDescription } =
         req.body
 
     try {
@@ -162,6 +162,7 @@ const create_update = async (req, res) => {
                 `UPDATE event_i SET 
                         event_author = ?, 
                         event_date = ?,
+                        event_time = ?,
                         event_title = ?, 
                         event_description = ?,
                         event_img = ?, 
@@ -170,6 +171,7 @@ const create_update = async (req, res) => {
                 [
                     eventAuthor,
                     eventDate,
+                    eventTime,
                     eventTitle,
                     eventDescription,
                     eventImg,
@@ -211,6 +213,7 @@ const create_update = async (req, res) => {
                     event_author, 
                     event_datecreated, 
                     event_date, 
+                    event_time,
                     event_title, 
                     event_description, 
                     event_img) 
@@ -219,6 +222,7 @@ const create_update = async (req, res) => {
                     newId,
                     eventAuthor,
                     eventDate,
+                    eventTime,
                     eventTitle,
                     eventDescription,
                     eventImg,

@@ -1,6 +1,7 @@
 const dotenv = require('dotenv')
 const express = require('express')
 const path = require('path')
+// const bodyParser = require('body-parser');
 
 dotenv.config()
 
@@ -19,6 +20,13 @@ app.use(urlencodedMiddleware)
 
 app.use('/templates', express.static(path.join(__dirname, './api/templates')))
 app.use('/static', express.static('public'))
+// Increase the limit for JSON data
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json({ limit: '50mb' }));
+
+// Increase the limit for URL-encoded data
+// app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // const activityLogging = require('./api/middlewares/activityLogging')
 // app.use(activityLogging)
