@@ -1,11 +1,23 @@
 const dotenv = require('dotenv')
 const express = require('express')
 const path = require('path')
+import { rateLimit } from 'express-rate-limit'
 
 dotenv.config()
 
 const app = express()
 const port = process.env.PORT
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+    // store: ... , // Use an external store for consistency across multiple server instances.
+})
+
+// Apply the rate limiting middleware to all requests.
+app.use(limiter)
 
 // Require middleware functions
 const corsMiddleware = require('./api/middlewares/corsMiddleware')
@@ -31,8 +43,8 @@ const postRoute = require('./api/routes/socMedPostRoute')
 const programRoute = require('./api/routes/programRoute')
 const loginRoute = require('./api/routes/loginRoute')
 const passwordRoute = require('./api/routes/passwordRoute')
-const registerRoute = require('./api/routes/registerRoute');
-const imageRoute = require('./api/routes/imageRoute');
+const registerRoute = require('./api/routes/registerRoute')
+const imageRoute = require('./api/routes/imageRoute')
 
 // Use Routes
 app.use('/api/members', memberRoute)
