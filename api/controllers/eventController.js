@@ -141,12 +141,17 @@ const getEventImage = async (req, res) => {
 
 // Create and Update
 const create_update = async (req, res) => {
-    const { eventId, eventAuthor, eventDate, eventTime, eventTitle, eventDescription } =
+    const { eventId, eventAuthor, eventDate, eventTime, eventTitle, eventDescription, eventImg } =
         req.body
 
     try {
         const retrieveEvent = await getEventById(eventId)
-        const image = req.file
+        const dateObject = new Date(eventDate);
+        const eventObject = new Date(eventTime)
+        const event_time = eventObject.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const formattedDate = dateObject.toISOString().split('T')[0];
+        // const date = new Date(eventDate);
+        const image = req.file;
 
         if (
             retrieveEvent.length > 0 &&
@@ -201,12 +206,13 @@ const create_update = async (req, res) => {
             )
         } else {
             const newId = uniqueId.uniqueIdGenerator()
-            // Move the file to the specified directory
-            const eventImg = moveFileToDirectory(
-                image,
-                newId,
-                '../../public/img/event-pics'
-            )
+            const simplifiedPath = eventImg.replace(/\\\\/g, '\\');
+            // // Move the file to the specified directory
+            // const eventImg = moveFileToDirectory(
+            //     image,
+            //     newId,
+            //     '../../public/img/event-pics'
+            // )
             db.query(
                 `INSERT INTO event_i (
                     event_id, 
@@ -217,15 +223,15 @@ const create_update = async (req, res) => {
                     event_title, 
                     event_description, 
                     event_img) 
-                    VALUES (?, ?, NOW(), ?, ?, ?, ?)`,
+                    VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
                 [
                     newId,
                     eventAuthor,
-                    eventDate,
-                    eventTime,
+                    formattedDate,
+                    event_time,
                     eventTitle,
                     eventDescription,
-                    eventImg,
+                    simplifiedPath,
                 ],
                 (eventUploadError, eventUploadResult) => {
                     if (eventUploadError) {
@@ -239,14 +245,10 @@ const create_update = async (req, res) => {
                     }
 
                     if (eventUploadResult.affectedRows > 0) {
-                        return res
-                            .status(200)
-                            .json({ message: 'Event uploaded successfully' })
+                        return res.json({ result: true })
                     } else {
                         console.log(eventUploadError)
-                        return res
-                            .status(500)
-                            .json({ message: 'Failed to update event' })
+                        return res.json({ result: false })
                     }
                 }
             )

@@ -112,59 +112,60 @@ const fetchAllBlogs = async (req, res) => {
 
 
 const postBlog = async (req, res) => {
-    const { blogId, authorId, blogTitle, blogContent } = req.body;
+    const { blogId, authorId, blogTitle, blogContent, blogImg } = req.body;
 
     try {
-        // Check if the blog with the given ID exists
         const result = await getBlogById(blogId);
 
         if (result.length > 0 && result[0].hasOwnProperty('blog_id')) {
             // Update the existing blog
-            db.query('UPDATE blog_i SET blog_title = ?, blog_content = ?, blog_lastmodified=NOW() WHERE blog_id = ?', [blogTitle, blogContent, result[0].blog_id], (updateError, updateRes) => {
-                if (updateError) {
-                    return res.status(500).json({ error: 'Failed to update blog' });
-                }
+            db.query(
+                'UPDATE blog_i SET blog_title = ?, blog_content = ?, blog_lastmodified = NOW() WHERE blog_id = ?',
+                [blogTitle, blogContent, result[0].blog_id],
+                (updateError, updateRes) => {
+                    if (updateError) {
+                        return res.status(500).json({ error: 'Failed to update blog' });
+                    }
 
-                if (updateRes.affectedRows > 0) {
-                    return res.status(200).json({ message: 'Blog updated successfully' });
-                } else {
-                    return res.status(500).json({ message: 'Failed to update blog' });
+                    if (updateRes.affectedRows > 0) {
+                        return res.status(200).json({ message: 'Blog updated successfully' });
+                    } else {
+                        return res.status(500).json({ message: 'Failed to update blog' });
+                    }
                 }
-            });
+            );
         } else {
             const newId = uniqueId.uniqueIdGenerator();
             let newImageName = '';
 
             // Handle image upload and renaming
             if (req.file) {
-                const imageExtension = path.extname(req.file.originalname);
-                newImageName = newId + imageExtension;
-                const imagePath = path.join(__dirname, '../../public/img/blog-pics', newImageName);
-                fs.writeFileSync(imagePath, req.file.buffer); // Save the image to the specified path
-
-                // Check if the file exists
-                if (fs.existsSync(imagePath)) {
-                    console.log('File uploaded successfully!');
-                } else {
-                    console.error('Error: File not uploaded.');
-                }
-            } else {
-                console.error('Error: No file provided.');
+                newImageName = moveFileToDirectory(
+                    req.file,
+                    newId,
+                    '../../public/img/blog-pics'
+                );
             }
 
-            // Create a new blog
-            db.query('INSERT INTO blog_i (blog_id, blog_author, blog_dateadded, blog_title, blog_content, blog_img) VALUES (?, ?, NOW(), ?, ?, ?)', [newId, authorId, blogTitle, blogContent, newImageName], (createError, createRes) => {
-                if (createError) {
-                    console.log(createError);
-                    return res.status(500).json({ error: 'Failed to create blog' });
-                }
+            newImageName = blogImg.replace(/\\\\/g, '\\');
 
-                if (createRes.affectedRows > 0) {
-                    return res.status(201).json({ message: 'Blog created successfully'});
-                } else {
-                    return res.status(500).json({ error: 'Failed to create blog', createError });
+            // Create a new blog
+            db.query(
+                'INSERT INTO blog_i (blog_id, blog_author, blog_dateadded, blog_title, blog_content, blog_img) VALUES (?, ?, NOW(), ?, ?, ?)',
+                [newId, authorId, blogTitle, blogContent, newImageName],
+                (createError, createRes) => {
+                    if (createError) {
+                        console.log(createError);
+                        return res.status(500).json({ error: 'Failed to create blog' });
+                    }
+
+                    if (createRes.affectedRows > 0) {
+                        return res.status(201).json({ message: 'Blog created successfully' });
+                    } else {
+                        return res.status(500).json({ error: 'Failed to create blog' });
+                    }
                 }
-            });
+            );
         }
     } catch (error) {
         console.error(error);
