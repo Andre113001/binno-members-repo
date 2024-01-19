@@ -65,7 +65,12 @@ app.use('/api/password', passwordRoute)
 app.use('/api/register', registerRoute)
 
 app.get('/', (req, res) => {
-    console.log('Connected')
+    res.status(200).json({
+        success: true,
+        data: {
+            message: "Connected!"
+        }
+    })
 })
 
 app.listen(port, () => {
