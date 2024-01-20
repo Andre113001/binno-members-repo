@@ -29,8 +29,7 @@ app.use(corsMiddleware)
 app.use(jsonMiddleware)
 app.use(urlencodedMiddleware)
 
-app.use('/templates', express.static(path.join(__dirname, './api/templates')))
-app.use('/static', express.static('public'))
+app.use('/public', express.static(path.join(__dirname, '../../public')));
 // Increase the limit for JSON data
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: true }));
