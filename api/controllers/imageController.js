@@ -33,7 +33,7 @@ const getImage = async (req, res) => {
 
     const decodedFilePath = decodeURIComponent(file_path);
 
-    const imgPath = path.join(__dirname, '../../public/img', decodedFilePath);
+    const imgPath = path.join(__dirname, '../../public/img/', decodedFilePath);
     try {
         const imageBlob = getImageBlob(imgPath)
 
