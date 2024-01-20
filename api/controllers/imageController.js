@@ -33,18 +33,18 @@ const getImage = async (req, res) => {
 
     const decodedFilePath = decodeURIComponent(file_path);
 
-    const imgPath = path.join(__dirname, `../../public/img/${decodedFilePath}`);
+    const imgPath = path.join(__dirname, `../../public/img`, decodedFilePath);
     try {
-        const imageBlob = getImageBlob(imgPath)
+        const imageBlob = getImageBlob(imgPath);
 
         // Set the appropriate content type for the image
-        res.setHeader('Content-Type', 'image/jpeg, image/png, image/jpg')
+        res.setHeader('Content-Type', 'image/jpeg, image/png, image/jpg');
 
         // Send the image binary data as the response
-        res.send(imageBlob)
+        res.send(imageBlob);
     } catch (error) {
-        console.error('Error fetching image:', error)
-        res.status(500).send('Internal Server Error')
+        console.error('Error fetching image:', error);
+        res.status(500).send('Internal Server Error');
     }
 }
 
