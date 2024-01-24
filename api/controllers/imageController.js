@@ -21,7 +21,7 @@ const moveFileToDirectory = (file, destinationDirectory) => {
         // Write the file, overwriting if it already exists
         fs.writeFileSync(filePath, file.buffer)
 
-        return filePath
+        return newFileName
     } catch (error) {
         console.error('Error moving file:', error)
         throw error // You might want to handle or log the error appropriately
@@ -32,8 +32,6 @@ const getImage = async (req, res) => {
     const { filePath } = req.query
 
     const imgPath = path.join(__dirname, `../../public/img/${filePath}`);
-
-    console.log(imgPath);
     try {
         const imageBlob = getImageBlob(imgPath);
 

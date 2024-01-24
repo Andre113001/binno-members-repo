@@ -83,14 +83,14 @@ const events_user = async (req, res) => {
 // Function to move file to a specified directory
 const moveFileToDirectory = (file, newId, destinationDirectory) => {
     try {
-        const fixedExtension = '.png' // Use the desired extension
+        const fixedExtension = path.extname(file.originalname).toLowerCase();
         const newFileName = newId + fixedExtension
         const filePath = path.join(__dirname, destinationDirectory, newFileName)
 
         // Write the file, overwriting if it already exists
         fs.writeFileSync(filePath, file.buffer)
 
-        return filePath
+        return newFileName
     } catch (error) {
         console.error('Error moving file:', error)
         throw error // You might want to handle or log the error appropriately
@@ -151,18 +151,20 @@ const create_update = async (req, res) => {
         const event_time = eventObject.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
         const formattedDate = dateObject.toISOString().split('T')[0];
         // const date = new Date(eventDate);
-        const image = req.file;
+
+       
 
         if (
             retrieveEvent.length > 0 &&
             retrieveEvent[0].hasOwnProperty('event_id')
         ) {
             // Update the existing event
-            const eventImg = moveFileToDirectory(
-                image,
-                eventId,
-                '../../public/img/event-pics'
-            )
+            // const newFileName = moveFileToDirectory(
+            //     image,
+            //     eventId,
+            //     '../../public/img/event-pics',
+            // )
+
             db.query(
                 `UPDATE event_i SET 
                         event_author = ?, 
@@ -179,7 +181,7 @@ const create_update = async (req, res) => {
                     eventTime,
                     eventTitle,
                     eventDescription,
-                    eventImg,
+                    newFileName,
                     eventId,
                 ],
                 (updateError, updateRes) => {
@@ -206,13 +208,23 @@ const create_update = async (req, res) => {
             )
         } else {
             const newId = uniqueId.uniqueIdGenerator()
-            const simplifiedPath = eventImg.replace(/\\\\/g, '\\');
+
+            // const newFileName = moveFileToDirectory(
+            //     image,
+            //     newId,
+            //     '../../public/img/event-pics',
+            // )
+
+            // const newFileName = 'event-img/92mu8.png';
+
+            // const simplifiedPath = newFileName.replace(/\\\\/g, '\\');
             // // Move the file to the specified directory
             // const eventImg = moveFileToDirectory(
             //     image,
             //     newId,
             //     '../../public/img/event-pics'
             // )
+
             db.query(
                 `INSERT INTO event_i (
                     event_id, 
@@ -231,7 +243,7 @@ const create_update = async (req, res) => {
                     event_time,
                     eventTitle,
                     eventDescription,
-                    simplifiedPath,
+                    eventImg,
                 ],
                 (eventUploadError, eventUploadResult) => {
                     if (eventUploadError) {

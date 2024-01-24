@@ -54,7 +54,6 @@ const fetchProgramPageById = (programPageId) => {
             if (err) {
                 reject(err)
             } else {
-                console.log(programPageId)
                 if (data.length === 0) {
                     resolve([])
                 } else {
@@ -107,8 +106,6 @@ const fetchProgramPages = (programPageId) => {
                 if (data.length === 0) {
                     resolve([])
                 } else {
-                    console.log(data)
-
                     const updatedData = await Promise.all(
                         (data || []).map(async (program) => {
                             const elements = await fetchProgramPageElements(

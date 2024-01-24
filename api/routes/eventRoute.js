@@ -14,7 +14,7 @@ router.get('/', eventController.event);
 router.get('/:eventId', eventController.fetchEventById)
 router.get('/user/:userId', eventController.events_user)
 router.get('/img/:eventId', eventController.getEventImage)
-router.post('/post', eventController.create_update);
+router.post('/post', upload.single('image'), eventController.create_update);
 router.get('/delete/:eventId', eventController.deleteEvent)
 
 module.exports = router
