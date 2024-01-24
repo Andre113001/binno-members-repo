@@ -348,51 +348,48 @@ const verifyChangePassword = async (req, res) => {
     }
 }
 
-const changePassword = async (req, res) => {
-    const { accesskey, newPassword } = req.body
-    try {
-        const result = await getMemberByAccessKey(accesskey)
-        if (result.length > 0) {
-            const convertedPassword = await bcryptConverter(newPassword)
-            db.query(
-                'UPDATE member_i SET member_password = ? WHERE member_id = ?',
-                [convertedPassword, result[0].member_id],
-                (updateError, updateRes) => {
-                    if (updateError) {
-                        // console.log(updateError);
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to change password' })
-                    }
+// const changePassword = async (req, res) => {
+//     const { accesskey, newPassword } = req.body
+//     try {
+//         const result = await getMemberByAccessKey(accesskey)
+//         if (result.length > 0) {
+//             const convertedPassword = await bcryptConverter(newPassword)
+//             db.query(
+//                 'UPDATE member_i SET member_password = ? WHERE member_id = ?',
+//                 [convertedPassword, result[0].member_id],
+//                 (updateError, updateRes) => {
+//                     if (updateError) {
+//                         // console.log(updateError);
+//                         return res
+//                             .status(500)
+//                             .json({ error: 'Failed to change password' })
+//                     }
 
-                    if (updateRes.affectedRows > 0) {
-                        return res
-                            .status(200)
-                            .json({ message: 'Password Changed Successfully' })
-                    } else {
-                        return res
-                            .status(500)
-                            .json({ message: 'Failed to change password' })
-                    }
-                }
-            )
-        } else {
-            return res.status(500).json({ invalid: 'No user exist' })
-        }
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({ error: error })
-    }
-}
+//                     if (updateRes.affectedRows > 0) {
+//                         return res
+//                             .status(200)
+//                             .json({ message: 'Password Changed Successfully' })
+//                     } else {
+//                         return res
+//                             .status(500)
+//                             .json({ message: 'Failed to change password' })
+//                     }
+//                 }
+//             )
+//         } else {
+//             return res.status(500).json({ invalid: 'No user exist' })
+//         }
+//     } catch (error) {
+//         console.log(error)
+//         return res.status(500).json({ error: error })
+//     }
+// }
 
 module.exports = {
     getMember,
     fetchProfileByToken,
     updateProfile,
     changeStatus,
-    // signUp,
-    verifyChangePassword,
-    changePassword,
     fetchEnablers,
     fetchCompanies,
 }

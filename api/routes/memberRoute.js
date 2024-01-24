@@ -16,8 +16,5 @@ router.get('/enablers', memberController.fetchEnablers)
 router.get('/companies', memberController.fetchCompanies)
 router.post('/update-profile', memberController.updateProfile)
 router.get('/change-status/:member_id', memberController.changeStatus)
-// router.get('/signup', memberController.signUp)
-router.post('/verifyChangePassword', memberController.verifyChangePassword)
-router.post('/changepassword', memberController.changePassword)
 
 module.exports = router
