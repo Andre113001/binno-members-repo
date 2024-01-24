@@ -29,11 +29,11 @@ const moveFileToDirectory = (file, destinationDirectory) => {
 }
 
 const getImage = async (req, res) => {
-    const { file_path } = req.params
+    const { filePath } = req.query
 
-    const decodedFilePath = decodeURIComponent(file_path);
+    const imgPath = path.join(__dirname, `../../public/img/${filePath}`);
 
-    const imgPath = path.join(__dirname, `../../public/img`, decodedFilePath);
+    console.log(imgPath);
     try {
         const imageBlob = getImageBlob(imgPath);
 
