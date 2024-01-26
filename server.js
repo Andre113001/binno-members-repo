@@ -1,7 +1,7 @@
 const dotenv = require('dotenv')
 const express = require('express')
 const path = require('path')
-const rateLimit = require('express-rate-limit')
+// const rateLimit = require('express-rate-limit')
 
 dotenv.config()
 
@@ -17,7 +17,7 @@ const port = process.env.PORT
 // })
 
 // Apply the rate limiting middleware to all requests.
-app.use(limiter)
+// app.use(limiter)
 
 // Require middleware functions
 const corsMiddleware = require('./api/middlewares/corsMiddleware')
