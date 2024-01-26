@@ -8,13 +8,13 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-    standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
-    // store: ... , // Use an external store for consistency across multiple server instances.
-})
+// const limiter = rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+//     standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+//     legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+//     // store: ... , // Use an external store for consistency across multiple server instances.
+// })
 
 // Apply the rate limiting middleware to all requests.
 app.use(limiter)
@@ -30,6 +30,19 @@ app.use(jsonMiddleware)
 app.use(urlencodedMiddleware)
 
 app.use('/public', express.static(path.join(__dirname, '../../public')));
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, PATCH'
+    )
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, X-Requested-With'
+    )
+    next()
+})
 // Increase the limit for JSON data
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: true }));
