@@ -1,3 +1,4 @@
+const { default: axios } = require('axios');
 const db = require('../../database/db');
 
 //Middlewares
@@ -110,9 +111,15 @@ const fetchAllBlogs = async (req, res) => {
     }
 };
 
+function limitWords(text, limit) {
+    const words = text.split(' ');
+    const limitedWords = words.slice(0, limit);
+    return limitedWords.join(' ');
+}
+
 
 const postBlog = async (req, res) => {
-    const { blogId, authorId, blogTitle, blogContent, blogImg } = req.body;
+    const { blogId, authorId, blogTitle, blogContent, blogImg, username, type } = req.body;
 
     try {
         const result = await getBlogById(blogId);
@@ -148,6 +155,7 @@ const postBlog = async (req, res) => {
             }
 
             newImageName = blogImg.replace(/\\\\/g, '\\');
+            shortenedBlogContent = limitWords(blogContent, 60);
 
             // Create a new blog
             db.query(
@@ -160,6 +168,15 @@ const postBlog = async (req, res) => {
                     }
 
                     if (createRes.affectedRows > 0) {
+                        axios.post("https://binno-email-production.up.railway.app/newsletter/", {
+                            username: username,
+                            type: type,
+                            title: blogTitle,
+                            img: `blog-pics/${newImageName}`,
+                            details: shortenedBlogContent,
+                            contentId: newId
+                        })
+
                         return res.status(201).json({ message: 'Blog created successfully' });
                     } else {
                         return res.status(500).json({ error: 'Failed to create blog' });
