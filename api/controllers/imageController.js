@@ -30,8 +30,10 @@ const moveFileToDirectory = (file, destinationDirectory) => {
 
 const getImage = async (req, res) => {
     const { filePath } = req.query
-
-    const imgPath = path.join(__dirname, `../../public/img/${filePath}`);
+    
+    const [folder, filename] = filePath.split('/');
+    const imgPath = path.join(__dirname, `../../public/img/${folder}`, filename);
+    
     try {
         const imageBlob = getImageBlob(imgPath);
 
