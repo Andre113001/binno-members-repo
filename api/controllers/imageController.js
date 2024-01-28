@@ -30,7 +30,11 @@ const moveFileToDirectory = (file, destinationDirectory) => {
 
 const getImage = async (req, res) => {
     const { filePath } = req.query
-    
+
+    if (!filePath) {
+        return res.status(400).json({ error: 'Missing filePath parameter' });
+    }
+
     const [folder, filename] = filePath.split('/');
     const imgPath = path.join(__dirname, `../../public/img/${folder}`, filename);
     
