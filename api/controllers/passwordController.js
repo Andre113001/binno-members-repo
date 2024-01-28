@@ -24,7 +24,7 @@ const verifyChangePassword = async (req, res) => {
                 const name = result[0].setting_institution;
                 const token = generateToken(32);
                 const convertedToken = sha256(token);
-
+                
                 // Assuming you have a MySQL connection named `db`
                 // Make sure to replace 'your_table_name' with the actual table name
                 const query = "UPDATE member_i SET member_resetpassword_token = ?, member_resetpassword_token_valid = DATE_ADD(NOW(), INTERVAL 3 HOUR) WHERE member_accesskey = ?";
