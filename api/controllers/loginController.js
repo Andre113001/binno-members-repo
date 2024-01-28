@@ -133,7 +133,7 @@ const verify_twoAuth = async (req, res) => {
     const hashedAccesskey = hash(accesskey);
 
     try {
-        db.query("SELECT member_id, member_twoauth, member_twoauth_valid FROM member_i WHERE member_twoauth = ? AND member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
+        db.query("SELECT member_id, member_twoauth, member_first_time, member_twoauth_valid FROM member_i WHERE member_twoauth = ? AND member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
             if (result.length > 0) {
                 if (new Date(result[0].member_twoauth_valid) > new Date()) {
                     const token = jwt.sign(
@@ -147,7 +147,7 @@ const verify_twoAuth = async (req, res) => {
                         [hash(token), result[0].member_id], 
                     );
     
-                    return res.json({auth: true, token: token});
+                    return res.json({auth: result[0].member_first_time, token: token});
                 } else {
                     return res.json({auth: false}); // Return false if the validation fails
                 }

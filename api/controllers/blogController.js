@@ -98,7 +98,7 @@ const fetchAllBlogs = async (req, res) => {
     const { userId } = req.params;
 
     try {
-        db.query("SELECT * FROM blog_i WHERE blog_author = ?", [userId], (blogError, blogRes) => {
+        db.query("SELECT * FROM blog_i WHERE blog_author = ? AND blog_flag = 1", [userId], (blogError, blogRes) => {
             if (blogError) {
                 console.log(blogError);
                 return res.status(500).json({ error: 'Failed to fetch blogs', blogError });

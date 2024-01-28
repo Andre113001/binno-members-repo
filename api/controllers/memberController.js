@@ -91,6 +91,7 @@ const fetchMemberByAccessToken = (accessToken) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT 
                     member_i.member_id,
+                    member_i.member_first_time,
                     member_settings.setting_address,
                     member_settings.setting_bio, 
                     member_settings.setting_color,
@@ -101,7 +102,7 @@ const fetchMemberByAccessToken = (accessToken) => {
                     member_contact.contact_facebook, 
                     member_type.user_type,
                     email_i.email_address
-                    FROM member_i 
+                    FROM member_i
                     INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
                     INNER JOIN member_type ON member_i.member_type = member_type.user_type_id
                     INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id
