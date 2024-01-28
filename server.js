@@ -1,6 +1,7 @@
 const dotenv = require('dotenv')
 const express = require('express')
 const path = require('path')
+const cors = require('cors');
 // const rateLimit = require('express-rate-limit')
 
 dotenv.config()
@@ -25,24 +26,27 @@ const jsonMiddleware = require('./api/middlewares/jsonMiddleware')
 const urlencodedMiddleware = require('./api/middlewares/urlencodedMiddleware')
 
 // Use Middleware
-app.use(corsMiddleware)
 app.use(jsonMiddleware)
 app.use(urlencodedMiddleware)
 
+
+app.use(cors({
+    origin: '*',
+}));
 app.use('/public', express.static(path.join(__dirname, '../../public')));
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader(
-        'Access-Control-Allow-Methods',
-        'GET, POST, PUT, DELETE, PATCH'
-    )
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'Content-Type, Authorization, X-Requested-With'
-    )
-    next()
-})
+// app.use((req, res, next) => {
+//     res.setHeader('Access-Control-Allow-Origin', '*')
+//     res.setHeader(
+//         'Access-Control-Allow-Methods',
+//         'GET, POST, PUT, DELETE, PATCH'
+//     )
+//     res.setHeader(
+//         'Access-Control-Allow-Headers',
+//         'Content-Type, Authorization, X-Requested-With'
+//     )
+//     next()
+// })
 // Increase the limit for JSON data
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: true }));
