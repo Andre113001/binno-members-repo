@@ -5,6 +5,13 @@ const hash = require('sha256')
 const generateToken = require('../middlewares/generateTokenMiddleware');
 const axios = require('axios');
 const { promisify } = require('util');
+const fs = require('fs');
+const path = require('path');
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
+
+const { converBase64ToImage } = require('convert-base64-to-image')
+
+const bcryptConverter = require('../middlewares/bcryptConverter');
 
 
 // Reusable function to authenticate user and generate token
@@ -158,12 +165,114 @@ const verify_twoAuth = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.json({error: error}); // Return false in case of an error
-    }
-
-        
+    }      
 };
+
+function getFileExtensionFromDataURL(dataURL) {
+    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+}
+
+const firstTime = async (req, res) => {
+    try {
+        const { token, password, contact, description, profileImg, coverImg } = req.body;
+        const newId = uniqueId.uniqueIdGenerator();
+        let success = true;
+
+        // Process profile image
+        const base64ImageProfile = profileImg.split(';base64,').pop();
+        const newNameProfile = newId + '.' + getFileExtensionFromDataURL(profileImg);
+        const profileImagePath = path.join(__dirname, '../../public/img/profile-img/', newNameProfile);
+
+        fs.writeFile(profileImagePath, base64ImageProfile, { encoding: 'base64' }, function (err) {
+            if (err) {
+                console.log('Error saving profile image:', err);
+                success = false;
+            } else {
+                console.log('Profile Photo Added');
+            }
+        });
+
+        // Process cover image
+        const base64ImageCover = coverImg.split(';base64,').pop();
+        const newNameCover = newId + '.' + getFileExtensionFromDataURL(coverImg);
+        const coverImagePath = path.join(__dirname, '../../public/img/profile-cover-img/', newNameCover);
+
+        fs.writeFile(coverImagePath, base64ImageCover, { encoding: 'base64' }, function (err) {
+            if (err) {
+                console.log('Error saving cover image:', err);
+                success = false;
+            } else {
+                console.log('Cover Photo Added');
+            }
+        });
+
+        // Rest Query
+
+        const convertedPassword = await bcryptConverter(password);
+
+        db.query("UPDATE member_i SET member_password = ? WHERE member_access = ?", [convertedPassword, hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating password:', err);
+                success = false;
+            } else if (result.affectedRows > 0) {
+                console.log("Password Updated");
+            } else {
+                console.log("No rows were affected");
+            }
+        });
+
+        db.query("UPDATE member_contact mc INNER JOIN member_i mi ON mi.member_contact_id = mc.contact_id SET mc.contact_number = ? WHERE mi.member_access = ?", [contact, hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating contact number:', err);
+                success = false;
+            } else if (result.affectedRows > 0) {
+                console.log("Contact Number Updated");
+            } else {
+                console.log("No rows were affected");
+            }
+        });
+
+        db.query("UPDATE member_settings ms INNER JOIN member_i mi ON mi.member_setting = ms.setting_id SET ms.setting_bio = ?, ms.setting_profilepic = ?, ms.setting_coverpic = ? WHERE mi.member_access = ?", [description, newNameProfile, newNameCover, hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating member settings:', err);
+                success = false;
+            } else if (result.affectedRows > 0) {
+                console.log("Profile Updated");
+            } else {
+                console.log("No rows were affected");
+            }
+        });
+
+        db.query("UPDATE member_i SET member_first_time = 0 WHERE member_access = ?", [hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating member_first_time:', err);
+                success = false;
+            } else if (result.affectedRows > 0) {
+                console.log("Updated First Time Login");
+            } else {
+                console.log("No rows were affected");
+            }
+        });
+
+        if (success) {
+            res.json(true);
+        } else {
+            res.status(500).json({ error: 'One or more updates failed' });
+        }
+
+    } catch (error) {
+        console.error('Error in firstTime controller:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
 
 module.exports = {
     login,
     verify_twoAuth,
+    firstTime
 }
