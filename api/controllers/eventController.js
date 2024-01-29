@@ -62,7 +62,7 @@ const events_user = async (req, res) => {
 
     try {
         db.query(
-            'SELECT * FROM event_i WHERE event_author = ?',
+            'SELECT * FROM event_i WHERE event_author = ? AND event_flag = 1 ORDER BY event_date DESC',
             [userId],
             (eventError, eventRes) => {
                 if (eventError) {
@@ -137,51 +137,72 @@ const getEventImage = async (req, res) => {
     )
 }
 
+function getFileExtensionFromDataURL(dataURL) {
+    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+}
 
 
 // Create and Update
 const create_update = async (req, res) => {
-    const { eventId, eventAuthor, eventDate, eventTime, eventTitle, eventDescription, eventImg } =
-        req.body
-
     try {
+        const { eventId, eventAuthor, eventDate, eventTime, eventLocation, eventTitle, eventDescription, eventImg } = req.body
+
         const retrieveEvent = await getEventById(eventId)
         const dateObject = new Date(eventDate);
-        const eventObject = new Date(eventTime)
+        const eventObject = new Date(eventTime);
         const event_time = eventObject.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
         const formattedDate = dateObject.toISOString().split('T')[0];
         // const date = new Date(eventDate);
 
-       
+        if (retrieveEvent.length > 0 && retrieveEvent[0].hasOwnProperty('event_id')) {
+            const OldimageId = path.basename(retrieveEvent[0].event_img, path.extname(retrieveEvent[0].event_img));
+            let currentImg = retrieveEvent[0].event_img;
+            // Delete the old image file
+            const oldImagePath = path.join(__dirname, '../../public/img/event-pics/', retrieveEvent[0].event_img);
+            
+            const base64Image = eventImg.split(';base64,').pop();
+            const imageName = OldimageId + '.' + getFileExtensionFromDataURL(eventImg);
+            const eventPicPath = path.join(__dirname, '../../public/img/event-pics/', imageName);
 
-        if (
-            retrieveEvent.length > 0 &&
-            retrieveEvent[0].hasOwnProperty('event_id')
-        ) {
-            // Update the existing event
-            // const newFileName = moveFileToDirectory(
-            //     image,
-            //     eventId,
-            //     '../../public/img/event-pics',
-            // )
+            if (base64Image.length > 0) {
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) {
+                        console.error('Error deleting old image:', err);
+                    } else {
+                        // console.log('Old image deleted successfully');
+                        // Continue with saving the new image
+                        fs.writeFile(eventPicPath, base64Image, { encoding: 'base64' }, function (err) {
+                            if (err) {
+                                console.log('Error saving new profile image:', err);
+                                success = false;
+                            }
+                        });
+                    }
+                });
+                currentImg = imageName;
+            }
 
             db.query(
                 `UPDATE event_i SET 
-                        event_author = ?, 
-                        event_date = ?,
-                        event_time = ?,
+                        event_address = ?,
+                        event_date  = ?,
+                        event_time  = ?,
                         event_title = ?, 
                         event_description = ?,
                         event_img = ?, 
                         event_datemodified = NOW()
                         WHERE event_id = ?`,
                 [
-                    eventAuthor,
+                    eventLocation,
                     eventDate,
                     eventTime,
                     eventTitle,
                     eventDescription,
-                    newFileName,
+                    currentImg,
                     eventId,
                 ],
                 (updateError, updateRes) => {
@@ -196,49 +217,33 @@ const create_update = async (req, res) => {
                         // Move the file to the specified directory
 
                         return res
-                            .status(200)
-                            .json({ message: 'Event updated successfully' })
+                            .json(true)
                     } else {
                         console.log(updateError)
                         return res
-                            .status(500)
-                            .json({ message: 'Failed to update event' })
+                            .json(false)
                     }
                 }
             )
         } else {
             const newId = uniqueId.uniqueIdGenerator()
 
-            // const newFileName = moveFileToDirectory(
-            //     image,
-            //     newId,
-            //     '../../public/img/event-pics',
-            // )
-
-            // const newFileName = 'event-img/92mu8.png';
-
-            // const simplifiedPath = newFileName.replace(/\\\\/g, '\\');
-            // // Move the file to the specified directory
-            // const eventImg = moveFileToDirectory(
-            //     image,
-            //     newId,
-            //     '../../public/img/event-pics'
-            // )
-
             db.query(
                 `INSERT INTO event_i (
                     event_id, 
                     event_author, 
                     event_datecreated, 
+                    event_address,
                     event_date, 
                     event_time,
                     event_title, 
                     event_description, 
                     event_img) 
-                    VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)`,
+                    VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
                 [
                     newId,
                     eventAuthor,
+                    eventLocation,
                     formattedDate,
                     event_time,
                     eventTitle,
