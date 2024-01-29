@@ -139,10 +139,11 @@ const verify_twoAuth = async (req, res) => {
     const hashedOtp = hash(otp);
     const hashedAccesskey = hash(accesskey);
 
+    console.log(otp, accesskey);
+
     try {
-        db.query("SELECT member_id, member_twoauth, member_first_time, member_twoauth_valid FROM member_i WHERE member_twoauth = ? AND member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
+        db.query("SELECT member_id, member_twoauth, member_first_time FROM member_i WHERE member_twoauth = ? AND member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
             if (result.length > 0) {
-                if (new Date(result[0].member_twoauth_valid) > new Date()) {
                     const token = jwt.sign(
                         { userId: result[0].member_id, username: result[0].name },
                         process.env.JWT_SECRET_KEY
@@ -155,9 +156,6 @@ const verify_twoAuth = async (req, res) => {
                     );
     
                     return res.json({auth: result[0].member_first_time, token: token});
-                } else {
-                    return res.json({auth: false}); // Return false if the validation fails
-                }
             } else {
                 return res.json({auth: false}); // Return false if no record is found
             }
@@ -205,8 +203,6 @@ const firstTime = async (req, res) => {
             if (err) {
                 console.log('Error saving cover image:', err);
                 success = false;
-            } else {
-                console.log('Cover Photo Added');
             }
         });
 
@@ -218,8 +214,6 @@ const firstTime = async (req, res) => {
             if (err) {
                 console.log('Error updating password:', err);
                 success = false;
-            } else if (result.affectedRows > 0) {
-                console.log("Password Updated");
             } else {
                 console.log("No rows were affected");
             }
@@ -229,8 +223,6 @@ const firstTime = async (req, res) => {
             if (err) {
                 console.log('Error updating contact number:', err);
                 success = false;
-            } else if (result.affectedRows > 0) {
-                console.log("Contact Number Updated");
             } else {
                 console.log("No rows were affected");
             }
@@ -240,8 +232,6 @@ const firstTime = async (req, res) => {
             if (err) {
                 console.log('Error updating member settings:', err);
                 success = false;
-            } else if (result.affectedRows > 0) {
-                console.log("Profile Updated");
             } else {
                 console.log("No rows were affected");
             }
@@ -251,8 +241,6 @@ const firstTime = async (req, res) => {
             if (err) {
                 console.log('Error updating member_first_time:', err);
                 success = false;
-            } else if (result.affectedRows > 0) {
-                console.log("Updated First Time Login");
             } else {
                 console.log("No rows were affected");
             }
