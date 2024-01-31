@@ -1,11 +1,12 @@
 const { default: axios } = require('axios')
 const db = require('../../database/db')
+const fs = require('fs')
+const path = require('path')
 
 //Middlewares
 const sanitizeId = require('../middlewares/querySanitizerMiddleware')
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
-const fs = require('fs')
-const path = require('path')
+const { uploadToLog } = require('../middlewares/activityLogger');
 
 const blog = async (req, res) => {
     try {
@@ -162,9 +163,6 @@ const postBlog = async (req, res) => {
         const result = await getBlogById(blogId);
 
         if (result.length > 0) {
-            console.log('exists');
-            // Update the existing blog
-            
             const OldimageId = path.basename(result[0].blog_img, path.extname(result[0].blog_img));
             let currentImg = result[0].blog_img;
             // Delete the old image file
@@ -202,27 +200,19 @@ const postBlog = async (req, res) => {
                             .json({ error: 'Failed to update blog' })
                     }
 
-                    if (updateRes.affectedRows === 0) {
-                        return res
-                            .status(500)
-                            .json({ message: 'Failed to update blog' })
+                    if (updateRes.affectedRows > 0) {
+                        uploadToLog(
+                            authorId, username, blogId, 'updated', 'blog', blogTitle
+                        )
+                        return res.status(200).json({ message: 'Blog updated successfully' });
+                    } else {
+                        return res.status(500).json({ message: 'Failed to update blog' });
                     }
                 }
-            )
-
-            const newHistoryId = uniqueId.uniqueIdGenerator()
-
-            db.query(
-                `INSERT INTO history_i (history_id, history_datecreated, history_author, history_text) VALUES (?, NOW(), ?, '${username} updated a blog with an ID of ${blogId}.')`,
-                [newHistoryId, authorId]
-            )
-
-            return res
-                .status(200)
-                .json({ message: 'Blog updated successfully' })
+            );
         } else {
-            const newId = uniqueId.uniqueIdGenerator()
-            let newImageName = ''
+            const newId = uniqueId.uniqueIdGenerator();
+            let newImageName = '';
 
             // Handle image upload and renaming
             if (req.file) {
@@ -249,32 +239,27 @@ const postBlog = async (req, res) => {
                     }
 
                     if (createRes.affectedRows > 0) {
-                        axios.post(
-                            'https://binno-email-production.up.railway.app/newsletter/',
-                            {
-                                username: username,
-                                type: type,
-                                title: blogTitle,
-                                img: `blog-pics/${newImageName}`,
-                                details: shortenedBlogContent,
-                                contentId: newId,
-                            }
+
+                        uploadToLog(
+                            authorId, username, newId, 'posted', 'blog', blogTitle
                         )
+
+                        // axios.post("https://binno-email-production.up.railway.app/newsletter/", {
+                        //     username: username,
+                        //     type: type,
+                        //     title: blogTitle,
+                        //     img: `blog-pics/${newImageName}`,
+                        //     details: shortenedBlogContent,
+                        //     contentId: newId
+                        // })
+
+                        return res.status(201).json({ message: 'Blog created successfully' });
                     } else {
                         return res
                             .status(500)
                             .json({ error: 'Failed to create blog' })
                     }
                 }
-            )
-
-            const newHistoryId = uniqueId.uniqueIdGenerator()
-
-            db.query(
-                `INSERT INTO history_i (history_id, history_datecreated, history_author, history_text) VALUES (?, NOW(), ?, '${username} posted a new blog: ${
-                    "'" + blogTitle + "'"
-                }.')`,
-                [newHistoryId, authorId]
             )
 
             return res
@@ -294,29 +279,22 @@ const deleteBlog = async (req, res) => {
     try {
         const result = await getBlogById(blogId)
 
-        if (result.length > 0 && result[0].hasOwnProperty('blog_id')) {
-            db.query(
-                'UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?',
-                [blogId],
-                (deleteError, deleteRes) => {
-                    if (deleteError) {
-                        console.log(deleteError)
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to delete blog' })
-                    }
-
-                    if (deleteRes.affectedRows > 0) {
-                        return res
-                            .status(201)
-                            .json({ message: 'Blog deleted successfully' })
-                    } else {
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to delete blog' })
-                    }
+        if (result.length > 0  && result[0].hasOwnProperty('blog_id')) {
+            db.query("UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?", [blogId], (deleteError, deleteRes) => {
+                if (deleteError) {
+                    console.log(deleteError);
+                    return res.status(500).json({ error: 'Failed to delete blog' });
                 }
-            )
+
+                if (deleteRes.affectedRows > 0) {
+                    uploadToLog(
+                        result[0].blog_author, result[0].blog_id, 'BiNNO', 'deleted', 'blog', result[0].blog_title
+                    )
+                    return res.status(201).json({ message: 'Blog deleted successfully' });
+                } else {
+                    return res.status(500).json({ error: 'Failed to delete blog' });
+                }            
+            });
         } else {
             return res.status(500).json({ error: 'Blog does not exist!' })
         }

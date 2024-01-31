@@ -5,6 +5,9 @@ const sanitizeId = require('../middlewares/querySanitizerMiddleware')
 const {
     uniqueIdGenerator,
 } = require('../middlewares/uniqueIdGeneratorMiddleware')
+const { uploadToLog } = require('../middlewares/activityLogger');
+const fs = require('fs')
+const path = require('path')
 
 const post = async (req, res) => {
     try {
@@ -45,7 +48,7 @@ const getUserPosts = (userId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT * FROM post_i WHERE post_author = ?`
+        SELECT * FROM post_i WHERE post_author = ? AND post_flag = 1`
         db.query(sql, [sanitizeId(userId)], (err, data) => {
             if (err) {
                 reject(err)
@@ -89,6 +92,14 @@ const fetchMemberPosts = async (req, res) => {
     }
 }
 
+function getFileExtensionFromDataURL(dataURL) {
+    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+}
+
 // Controller to update or create post
 const updateCreatePost = async (req, res) => {
     const {
@@ -104,6 +115,42 @@ const updateCreatePost = async (req, res) => {
         const result = await fetchPostById(post_id)
 
         if (result.length > 0 && result[0].hasOwnProperty('post_id')) {
+            const OldimageId = path.basename(result[0].post_img, path.extname(result[0].post_img));
+            let currentImg = result[0].post_img;
+            // Delete the old image file
+            const oldImagePath = path.join(__dirname, '../../public/img/post-pics/', result[0].post_img);
+            
+            const base64Image = postImg.split(';base64,').pop();
+            const imageName = OldimageId + '.' + getFileExtensionFromDataURL(postImg);
+            const imgPath = path.join(__dirname, '../../public/img/post-pics/', imageName);
+
+            if (base64Image.length > 0) {
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) {
+                        console.error('Error deleting old post image:', err);
+                    } else {
+                        // console.log('Old image deleted successfully');
+                        // Continue with saving the new image
+                        fs.writeFile(imgPath, base64Image, { encoding: 'base64' }, function (err) {
+                            if (err) {
+                                console.log('Error saving post image:', err);
+                                success = false;
+                            }
+                        });
+                    }
+                });
+                currentImg = imageName;
+            }
+
+            // console.log({
+            //     postId: post_id,
+            //     author: postAuthor,
+            //     category: postCategory,
+            //     title: postHeading,
+            //     content: postText,
+            //     img: postImg
+            // });
+
             // Update the existing blog
             db.query(
                 'UPDATE post_i SET post_author = ?, post_category = ?, post_heading = ?, post_bodytext = ?, post_img = ?, post_datemodified=NOW() WHERE post_id = ?',
@@ -112,7 +159,7 @@ const updateCreatePost = async (req, res) => {
                     postCategory,
                     postHeading,
                     postText,
-                    postImg,
+                    currentImg,
                     result[0].post_id,
                 ],
                 (updateError, updateRes) => {
@@ -137,37 +184,38 @@ const updateCreatePost = async (req, res) => {
                 }
             )
         } else {
-            const newId = uniqueIdGenerator()
-            // Create a new blog
-            db.query(
-                'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext, post_img) VALUES (?, NOW(), ?, ?, ?, ?, ?)',
-                [
-                    newId,
-                    postAuthor,
-                    postCategory,
-                    postHeading,
-                    postText,
-                    postImg,
-                ],
-                (createError, createRes) => {
-                    if (createError) {
-                        return res.status(500).json({
-                            error: 'Failed to create Post',
-                            createError,
-                        })
-                    }
+            console.log('not exists');
+            // const newId = uniqueIdGenerator()
+            // // Create a new blog
+            // db.query(
+            //     'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext, post_img) VALUES (?, NOW(), ?, ?, ?, ?, ?)',
+            //     [
+            //         newId,
+            //         postAuthor,
+            //         postCategory,
+            //         postHeading,
+            //         postText,
+            //         postImg,
+            //     ],
+            //     (createError, createRes) => {
+            //         if (createError) {
+            //             return res.status(500).json({
+            //                 error: 'Failed to create Post',
+            //                 createError,
+            //             })
+            //         }
 
-                    if (createRes.affectedRows > 0) {
-                        return res
-                            .status(201)
-                            .json({ message: 'Post created successfully' })
-                    } else {
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to create post' })
-                    }
-                }
-            )
+            //         if (createRes.affectedRows > 0) {
+            //             return res
+            //                 .status(201)
+            //                 .json({ message: 'Post created successfully' })
+            //         } else {
+            //             return res
+            //                 .status(500)
+            //                 .json({ error: 'Failed to create post' })
+            //         }
+            //     }
+            // )
         }
     } catch (error) {
         console.error(error)
