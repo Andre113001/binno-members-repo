@@ -17,7 +17,7 @@ router.get('/img/:blogId', blogController.getBlogImage);
 router.get('/:blogId', blogController.getBlog)
 router.get('/user/:userId', blogController.fetchAllBlogs)
 
-router.post('/post', blogController.postBlog)
+router.post('/post', upload.single('image'), blogController.postBlog)
 
 router.get('/delete/:blogId', blogController.deleteBlog)
 

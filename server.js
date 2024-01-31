@@ -28,6 +28,7 @@ const urlencodedMiddleware = require('./api/middlewares/urlencodedMiddleware')
 // Use Middleware
 app.use(jsonMiddleware)
 app.use(urlencodedMiddleware)
+app.use(express.json({ limit: '50mb' }))
 
 
 app.use(cors({

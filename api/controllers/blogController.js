@@ -4,12 +4,12 @@ const db = require('../../database/db');
 //Middlewares
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
 
 const blog = async (req, res) => {
     try {
-        db.query("SELECT * FROM blog_i", [], (err, result) => {
+        db.query("SELECT * FROM blog_i WHERE blog_flag = 1", [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -117,31 +117,67 @@ function limitWords(text, limit) {
     return limitedWords.join(' ');
 }
 
+function getFileExtensionFromDataURL(dataURL) {
+    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+}
 
 const postBlog = async (req, res) => {
-    const { blogId, authorId, blogTitle, blogContent, blogImg, username, type } = req.body;
-
     try {
+        const { blogId, authorId, blogTitle, blogContent, blogImg, username, type } = req.body;
         const result = await getBlogById(blogId);
 
-        if (result.length > 0 && result[0].hasOwnProperty('blog_id')) {
+        if (result.length > 0) {
+            console.log('exists');
             // Update the existing blog
+            
+            const OldimageId = path.basename(result[0].blog_img, path.extname(result[0].blog_img));
+            let currentImg = result[0].blog_img;
+            // Delete the old image file
+            const oldImagePath = path.join(__dirname, '../../public/img/blog-pics/', result[0].blog_img);
+            
+            const base64Image = blogImg.split(';base64,').pop();
+            const imageName = OldimageId + '.' + getFileExtensionFromDataURL(blogImg);
+            const blogImgPath = path.join(__dirname, '../../public/img/blog-pics/', imageName);
+
+            if (base64Image.length > 0) {
+                fs.unlink(oldImagePath, (err) => {
+                    if (err) {
+                        console.error('Error deleting old blog image:', err);
+                    } else {
+                        // console.log('Old image deleted successfully');
+                        // Continue with saving the new image
+                        fs.writeFile(blogImgPath, base64Image, { encoding: 'base64' }, function (err) {
+                            if (err) {
+                                console.log('Error saving blog image:', err);
+                                success = false;
+                            }
+                        });
+                    }
+                });
+                currentImg = imageName;
+            }
+            
             db.query(
-                'UPDATE blog_i SET blog_title = ?, blog_content = ?, blog_lastmodified = NOW() WHERE blog_id = ?',
-                [blogTitle, blogContent, result[0].blog_id],
+                'UPDATE blog_i SET blog_title = ?, blog_content = ?, blog_img = ?, blog_lastmodified = NOW() WHERE blog_id = ?',
+                [blogTitle, blogContent, currentImg, result[0].blog_id],
                 (updateError, updateRes) => {
                     if (updateError) {
                         return res.status(500).json({ error: 'Failed to update blog' });
                     }
 
                     if (updateRes.affectedRows > 0) {
-                        return res.status(200).json({ message: 'Blog updated successfully' });
+                        return res.json(true);
                     } else {
                         return res.status(500).json({ message: 'Failed to update blog' });
                     }
                 }
             );
         } else {
+            console.log('not exists');
             const newId = uniqueId.uniqueIdGenerator();
             let newImageName = '';
 
@@ -175,7 +211,7 @@ const postBlog = async (req, res) => {
                             img: `blog-pics/${newImageName}`,
                             details: shortenedBlogContent,
                             contentId: newId
-                        })
+                        });
 
                         return res.status(201).json({ message: 'Blog created successfully' });
                     } else {
@@ -199,11 +235,6 @@ const deleteBlog = async (req, res) => {
 
         if (result.length > 0  && result[0].hasOwnProperty('blog_id')) {
             db.query("UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?", [blogId], (deleteError, deleteRes) => {
-                if (deleteError) {
-                    console.log(deleteError);
-                    return res.status(500).json({ error: 'Failed to delete blog' });
-                }
-
                 if (deleteRes.affectedRows > 0) {
                     return res.status(201).json({ message: 'Blog deleted successfully' });
                 } else {
