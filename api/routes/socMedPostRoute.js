@@ -15,6 +15,6 @@ router.get('/', socMedController.post);
 router.get('/:post_id', socMedController.fetchPost)
 router.get('/user/:user_id', socMedController.fetchMemberPosts)
 router.post('/upload', upload.single('image'), socMedController.updateCreatePost)
-router.get('/delete/:post_id', socMedController.deletePost)
+router.post('/delete', socMedController.deletePost)
 
 module.exports = router

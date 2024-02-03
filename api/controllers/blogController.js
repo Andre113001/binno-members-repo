@@ -116,7 +116,11 @@ const fetchAllBlogs = async (req, res) => {
 
     try {
         db.query(
-            'SELECT * FROM blog_i WHERE blog_author = ? AND blog_flag = 1',
+            `SELECT blog_i.*, member_settings.setting_institution
+            FROM blog_i
+            INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
+            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1`,
             [userId],
             (blogError, blogRes) => {
                 if (blogError) {
@@ -155,8 +159,7 @@ const postBlog = async (req, res) => {
         blogTitle,
         blogContent,
         blogImg,
-        username,
-        type,
+        username
     } = req.body
 
     try {
@@ -201,10 +204,13 @@ const postBlog = async (req, res) => {
                     }
 
                     if (updateRes.affectedRows > 0) {
-                        uploadToLog(
-                            authorId, username, blogId, 'updated', 'blog', blogTitle
+                        const logRes = uploadToLog(
+                            authorId, blogId, username, 'updated a', 'blog', blogTitle
                         )
-                        return res.status(200).json({ message: 'Blog updated successfully' });
+                        
+                        if (logRes) {
+                            return res.status(200).json({ message: 'Blog updated successfully' });
+                        }
                     } else {
                         return res.status(500).json({ message: 'Failed to update blog' });
                     }
@@ -239,21 +245,22 @@ const postBlog = async (req, res) => {
                     }
 
                     if (createRes.affectedRows > 0) {
-
-                        uploadToLog(
-                            authorId, username, newId, 'posted', 'blog', blogTitle
+                        const logRes = uploadToLog(
+                            authorId, newId, username, 'posted a', 'blog', blogTitle
                         )
 
-                        // axios.post("https://binno-email-production.up.railway.app/newsletter/", {
-                        //     username: username,
-                        //     type: type,
-                        //     title: blogTitle,
-                        //     img: `blog-pics/${newImageName}`,
-                        //     details: shortenedBlogContent,
-                        //     contentId: newId
-                        // })
+                        axios.post("https://binno-email-production.up.railway.app/newsletter", {
+                            username: username,
+                            type: 'Blog',
+                            title: blogTitle,
+                            img: `blog-pics/${newImageName}`,
+                            details: shortenedBlogContent,
+                            contentId: newId
+                        })
 
-                        return res.status(201).json({ message: 'Blog created successfully' });
+                        if (logRes) {
+                            return res.status(201).json({ message: 'Blog created successfully' });
+                        }
                     } else {
                         return res
                             .status(500)
@@ -261,10 +268,6 @@ const postBlog = async (req, res) => {
                     }
                 }
             )
-
-            return res
-                .status(201)
-                .json({ message: 'Blog created successfully' })
         }
     } catch (error) {
         console.error(error)
@@ -274,7 +277,7 @@ const postBlog = async (req, res) => {
 
 // Controller to delete a blog
 const deleteBlog = async (req, res) => {
-    const { blogId } = req.params
+    const { blogId, username } = req.body
 
     try {
         const result = await getBlogById(blogId)
@@ -287,10 +290,13 @@ const deleteBlog = async (req, res) => {
                 }
 
                 if (deleteRes.affectedRows > 0) {
-                    uploadToLog(
-                        result[0].blog_author, result[0].blog_id, 'BiNNO', 'deleted', 'blog', result[0].blog_title
+                    const logRes = uploadToLog(
+                        result[0].blog_author, result[0].blog_id, username, 'deleted a', 'blog', result[0].blog_title
                     )
-                    return res.status(201).json({ message: 'Blog deleted successfully' });
+                    
+                    if (logRes) {
+                        return res.status(201).json({ message: 'Blog deleted successfully' });
+                    }
                 } else {
                     return res.status(500).json({ error: 'Failed to delete blog' });
                 }            

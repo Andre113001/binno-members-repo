@@ -5,6 +5,8 @@ const eventSanitizeInput = require('../middlewares/querySanitizerMiddleware')
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const fs = require('fs')
 const path = require('path')
+const { uploadToLog } = require('../middlewares/activityLogger');
+const axios = require('axios');
 
 const event = async (req, res) => {
     try {
@@ -62,7 +64,11 @@ const events_user = async (req, res) => {
 
     try {
         db.query(
-            'SELECT * FROM event_i WHERE event_author = ? AND event_flag = 1 ORDER BY event_date DESC',
+            `SELECT event_i.*, member_settings.setting_institution 
+            FROM event_i
+            INNER JOIN member_i ON event_i.event_author = member_i.member_id
+            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            WHERE event_author = ? AND event_flag = 1 ORDER BY event_date DESC`,
             [userId],
             (eventError, eventRes) => {
                 if (eventError) {
@@ -145,12 +151,16 @@ function getFileExtensionFromDataURL(dataURL) {
     return null;
 }
 
+function limitWords(text, limit) {
+    const words = text.split(' ')
+    const limitedWords = words.slice(0, limit)
+    return limitedWords.join(' ')
+}
 
 // Create and Update
 const create_update = async (req, res) => {
+    const { eventId, eventAuthor, eventDate, eventTime, eventLocation, eventTitle, eventDescription, username, eventImg } = req.body
     try {
-        const { eventId, eventAuthor, eventDate, eventTime, eventLocation, eventTitle, eventDescription, eventImg } = req.body
-
         const retrieveEvent = await getEventById(eventId)
         const dateObject = new Date(eventDate);
         const eventObject = new Date(eventTime);
@@ -214,10 +224,13 @@ const create_update = async (req, res) => {
                     }
 
                     if (updateRes.affectedRows > 0) {
-                        // Move the file to the specified directory
+                        const logRes = uploadToLog(
+                            eventAuthor, eventId, username, 'updated an', 'event', eventTitle
+                        )
 
-                        return res
-                            .json(true)
+                        if (logRes) {
+                            return res.json(true)
+                        }
                     } else {
                         console.log(updateError)
                         return res
@@ -262,7 +275,22 @@ const create_update = async (req, res) => {
                     }
 
                     if (eventUploadResult.affectedRows > 0) {
-                        return res.json({ result: true })
+                        const logRes = uploadToLog(
+                            eventAuthor, newId, username, 'posted an', 'event', eventTitle
+                        );
+
+                        axios.post("https://binno-email-production.up.railway.app/newsletter", {
+                            username: username,
+                            type: 'Event',
+                            title: eventTitle,
+                            img: `event-pics/${eventImg}`,
+                            details: limitWords(eventDescription, 60),
+                            contentId: newId
+                        })
+
+                        if (logRes) {
+                            return res.json({ result: true })
+                        }
                     } else {
                         console.log(eventUploadError)
                         return res.json({ result: false })
@@ -278,13 +306,13 @@ const create_update = async (req, res) => {
 
 // DELETE Event
 const deleteEvent = async (req, res) => {
-    const { eventId } = req.params
+    const { eventId, username } = req.body
 
     try {
-        const retrieveEvent = await getEventById(eventId)
+        const result = await getEventById(eventId)
         if (
-            retrieveEvent.length > 0 &&
-            retrieveEvent[0].hasOwnProperty('event_id')
+            result.length > 0 &&
+            result[0].hasOwnProperty('event_id')
         ) {
             db.query(
                 'UPDATE event_i SET event_flag = 0 WHERE event_id = ?',
@@ -297,9 +325,14 @@ const deleteEvent = async (req, res) => {
                     }
 
                     if (eventDeleteResult.affectedRows > 0) {
-                        return res
-                            .status(200)
-                            .json({ message: 'Event deleted successfully' })
+                        const logRes = uploadToLog(
+                            result[0].event_author, result[0].event_id, username, 'deleted an', 'event', result[0].event_title
+                        )
+                        
+                        if (logRes) {
+                            return res.status(200).json({ message: 'Event deleted successfully' })
+                        }
+                        
                     } else {
                         console.log(eventDeleteError)
                         return res

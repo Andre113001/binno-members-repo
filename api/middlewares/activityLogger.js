@@ -7,7 +7,7 @@ const uploadToLog = async (authorId, contentId, username, action, type, title) =
 
     db.query(
       'INSERT INTO history_i (history_id, history_datecreated, history_author, history_reference, history_text) VALUES (?, NOW(), ?, ?, ?)',
-      [newHistoryId, authorId, contentId, `${username} ${action} a ${type}: '${title}'`], (err, result) => {
+      [newHistoryId, authorId, contentId, `${username} ${action} ${type}: '${title}'`], (err, result) => {
         if (err) {
           console.error(err);
           reject(false);

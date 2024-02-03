@@ -19,6 +19,6 @@ router.get('/user/:userId', blogController.fetchAllBlogs)
 
 router.post('/post', upload.single('image'), blogController.postBlog)
 
-router.get('/delete/:blogId', blogController.deleteBlog)
+router.post('/delete', blogController.deleteBlog)
 
 module.exports = router

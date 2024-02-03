@@ -8,6 +8,7 @@ const {
 const { uploadToLog } = require('../middlewares/activityLogger');
 const fs = require('fs')
 const path = require('path')
+const axios = require('axios')
 
 const post = async (req, res) => {
     try {
@@ -48,7 +49,11 @@ const getUserPosts = (userId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT * FROM post_i WHERE post_author = ? AND post_flag = 1`
+        SELECT post_i.*, member_settings.setting_institution 
+        FROM post_i
+        INNER JOIN member_i ON post_i.post_author = member_i.member_id
+        INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+        WHERE post_author = ? AND post_flag = 1`
         db.query(sql, [sanitizeId(userId)], (err, data) => {
             if (err) {
                 reject(err)
@@ -100,6 +105,12 @@ function getFileExtensionFromDataURL(dataURL) {
     return null;
 }
 
+function limitWords(text, limit) {
+    const words = text.split(' ')
+    const limitedWords = words.slice(0, limit)
+    return limitedWords.join(' ')
+}
+
 // Controller to update or create post
 const updateCreatePost = async (req, res) => {
     const {
@@ -108,6 +119,7 @@ const updateCreatePost = async (req, res) => {
         postCategory,
         postHeading,
         postText,
+        username,
         postImg,
     } = req.body
 
@@ -142,15 +154,6 @@ const updateCreatePost = async (req, res) => {
                 currentImg = imageName;
             }
 
-            // console.log({
-            //     postId: post_id,
-            //     author: postAuthor,
-            //     category: postCategory,
-            //     title: postHeading,
-            //     content: postText,
-            //     img: postImg
-            // });
-
             // Update the existing blog
             db.query(
                 'UPDATE post_i SET post_author = ?, post_category = ?, post_heading = ?, post_bodytext = ?, post_img = ?, post_datemodified=NOW() WHERE post_id = ?',
@@ -172,9 +175,13 @@ const updateCreatePost = async (req, res) => {
                         }
 
                         if (updateRes.affectedRows > 0) {
-                            return res
-                                .status(200)
-                                .json({ message: 'Post updated successfully' })
+                            const logRes = uploadToLog(
+                                postAuthor, post_id, username, 'updated a', 'post', postHeading
+                            )
+    
+                            if (logRes) {
+                                return res.status(200).json({ message: 'Post updated successfully' })
+                            }
                         } else {
                             return res
                                 .status(500)
@@ -184,38 +191,50 @@ const updateCreatePost = async (req, res) => {
                 }
             )
         } else {
-            console.log('not exists');
-            // const newId = uniqueIdGenerator()
-            // // Create a new blog
-            // db.query(
-            //     'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext, post_img) VALUES (?, NOW(), ?, ?, ?, ?, ?)',
-            //     [
-            //         newId,
-            //         postAuthor,
-            //         postCategory,
-            //         postHeading,
-            //         postText,
-            //         postImg,
-            //     ],
-            //     (createError, createRes) => {
-            //         if (createError) {
-            //             return res.status(500).json({
-            //                 error: 'Failed to create Post',
-            //                 createError,
-            //             })
-            //         }
+            const newId = uniqueIdGenerator()
+            // Create a new blog
+            db.query(
+                'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext, post_img) VALUES (?, NOW(), ?, ?, ?, ?, ?)',
+                [
+                    newId,
+                    postAuthor,
+                    postCategory,
+                    postHeading,
+                    postText,
+                    postImg,
+                ],
+                (createError, createRes) => {
+                    if (createError) {
+                        return res.status(500).json({
+                            error: 'Failed to create Post',
+                            createError,
+                        })
+                    }
 
-            //         if (createRes.affectedRows > 0) {
-            //             return res
-            //                 .status(201)
-            //                 .json({ message: 'Post created successfully' })
-            //         } else {
-            //             return res
-            //                 .status(500)
-            //                 .json({ error: 'Failed to create post' })
-            //         }
-            //     }
-            // )
+                    if (createRes.affectedRows > 0) {
+                        const logRes = uploadToLog(
+                            postAuthor, newId, username, 'created a', 'post', postHeading
+                        );
+
+                        axios.post("https://binno-email-production.up.railway.app/newsletter", {
+                            username: username,
+                            type: 'Post',
+                            title: postHeading,
+                            img: `post-pics/${postImg}`,
+                            details: limitWords(postText, 60),
+                            contentId: newId
+                        })
+
+                        if (logRes) {
+                            return res.status(201).json({ message: 'Post created successfully' })
+                        }
+                    } else {
+                        return res
+                            .status(500)
+                            .json({ error: 'Failed to create post' })
+                    }
+                }
+            )
         }
     } catch (error) {
         console.error(error)
@@ -224,7 +243,7 @@ const updateCreatePost = async (req, res) => {
 }
 
 const deletePost = async (req, res) => {
-    const { post_id } = req.params
+    const { post_id, username } = req.body
 
     try {
         const result = await fetchPostById(post_id)
@@ -242,9 +261,14 @@ const deletePost = async (req, res) => {
                     }
 
                     if (deleteRes.affectedRows > 0) {
-                        return res
-                            .status(201)
-                            .json({ message: 'Post deleted successfully' })
+                        const logRes = uploadToLog(
+                            result[0].post_author, result[0].post_id, username, 'deleted a', 'post', result[0].post_heading
+                        )
+                        
+                        if (logRes) {
+                            return res.status(201).json({ message: 'Post deleted successfully' })
+                        }
+                        
                     } else {
                         return res
                             .status(500)
