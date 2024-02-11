@@ -120,7 +120,8 @@ const fetchAllBlogs = async (req, res) => {
             FROM blog_i
             INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1`,
+            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1 
+            ORDER BY blog_dateadded DESC`,
             [userId],
             (blogError, blogRes) => {
                 if (blogError) {

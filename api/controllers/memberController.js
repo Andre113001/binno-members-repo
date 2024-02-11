@@ -93,6 +93,7 @@ const fetchMemberByAccessToken = (accessToken) => {
                     member_i.member_id,
                     member_i.member_first_time,
                     member_settings.setting_address,
+                    member_settings.setting_id,
                     member_settings.setting_bio, 
                     member_settings.setting_color,
                     member_settings.setting_coverpic,
@@ -238,6 +239,44 @@ const updateProfile = async (req, res) => {
     } catch (error) {
         console.error(error)
         return res.status(500).json({ error: 'Internal server error' })
+    }
+}
+
+const updateProfilePic = async (req, res) => {
+    try {
+        const { newProfilePic, id } = req.body;
+        db.query('UPDATE member_settings SET setting_profilepic = ? WHERE setting_id = ?', [newProfilePic, id], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+
+            if (result.affectedRows > 0) {
+                return res.json('Profile Pic Updated');
+            } else {
+                return res.json('Profile Pic Not Updated');
+            }
+        })
+    } catch (error) {
+        console.log('error: ', error);
+    }
+}
+
+const updateCoverPic = async (req, res) => {
+    try {
+        const { newCoverPic, id } = req.body;
+        db.query('UPDATE member_settings SET setting_coverpic = ? WHERE setting_id = ?', [newCoverPic, id], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+
+            if (result.affectedRows > 0) {
+                return res.json('Cover Pic Updated');
+            } else {
+                return res.json('Cover Pic Not Updated');
+            }
+        })
+    } catch (error) {
+        console.log('error: ', error);
     }
 }
 
@@ -415,6 +454,8 @@ module.exports = {
     changeStatus,
     fetchEnablers,
     fetchCompanies,
+    updateProfilePic,
+    updateCoverPic
 }
 
 // Task: 11/15/2023

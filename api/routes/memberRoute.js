@@ -16,5 +16,7 @@ router.get('/enablers', memberController.fetchEnablers)
 router.get('/companies', memberController.fetchCompanies)
 router.post('/update-profile', memberController.updateProfile)
 router.get('/change-status/:member_id', memberController.changeStatus)
+router.post('/update-profile-cover', memberController.updateCoverPic)
+router.post('/update-profile-img', memberController.updateProfilePic)
 
 module.exports = router
