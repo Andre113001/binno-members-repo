@@ -78,7 +78,48 @@ const uploadImage = async (req, res) => {
     }
 }
 
+function getFileExtensionFromDataURL(dataURL) {
+    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    return null;
+}
+
+const updateImage = async (req, res) => {
+    const { filePath } = req.params;
+
+    const OldimageId = path.basename(result[0].blog_img, path.extname(result[0].blog_img));
+    let currentImg = result[0].blog_img;
+    const oldImagePath = path.join(__dirname, `../../public/img/${filePath}`, result[0].blog_img);
+    const base64Image = blogImg.split(';base64,').pop();
+    const imageName = OldimageId + '.' + getFileExtensionFromDataURL(blogImg);
+    const blogImgPath = path.join(__dirname, `../../public/img/${filePath}`, imageName);
+
+    if (base64Image.length > 0) {
+        fs.unlink(oldImagePath, (err) => {
+            if (err) {
+                console.error('Error deleting old blog image:', err);
+            } else {
+                fs.writeFile(blogImgPath, base64Image, { encoding: 'base64' }, function (err) {
+                    if (err) {
+                        console.log('Error saving blog image:', err);
+                        return res.status(500).json({ error: 'Error saving blog image' });
+                    } else {
+                        currentImg = imageName;
+                        updateBlog(db, result, blogTitle, blogContent, currentImg, authorId, blogId, username, res);
+                    }
+                });
+            }
+        });
+    } else {
+        updateBlog(db, result, blogTitle, blogContent, currentImg, authorId, blogId, username, res);
+    }
+
+}
+
 module.exports = {
     getImage,
     uploadImage,
+    updateImage
 }

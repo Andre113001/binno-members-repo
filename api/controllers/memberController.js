@@ -173,9 +173,10 @@ const fetchProfileByToken = async (req, res) => {
 const updateProfile = async (req, res) => {
     const {
         member_id,
-        member_setting_bio,
-        member_profilepic,
-        member_coverpic,
+        description,
+        contactNumber,
+        profilepic,
+        coverpic,
     } = req.body
 
     try {
@@ -186,27 +187,48 @@ const updateProfile = async (req, res) => {
                 result[0].member_setting
             )
             if (getSettingsResult.length > 0) {
-                db.query(
-                    'UPDATE member_settings SET setting_bio = ?, setting_profilepic = ?, setting_coverpic = ?, setting_datemodified = NOW() WHERE setting_id = ?',
-                    [member_setting_bio, member_profilepic, member_coverpic, result[0].member_setting],
-                    (updateError, updateRes) => {
-                        if (updateError) {
-                            return res
-                                .status(500)
-                                .json({ error: 'Failed to update profile' })
-                        }
-
-                        if (updateRes.affectedRows > 0) {
-                            return res.status(200).json({
-                                message: 'Profile updated successfully',
-                            })
-                        } else {
-                            return res
-                                .status(500)
-                                .json({ message: 'Failed to update profile' })
-                        }
+                db.beginTransaction((transactionError) => {
+                    if (transactionError) {
+                        return res.status(500).json({ error: 'Failed to begin transaction' });
                     }
-                )
+                
+                    db.query(
+                        'UPDATE member_settings SET setting_bio = ?, setting_datemodified = NOW() WHERE setting_id = ?',
+                        [description, result[0].member_setting],
+                        (updateError1, updateRes1) => {
+                            if (updateError1) {
+                                return db.rollback(() => {
+                                    res.status(500).json({ error: 'Failed to update profile', error_text: updateError1 });
+                                });
+                            }
+                
+                            db.query(
+                                'UPDATE member_contact SET contact_number = ? WHERE contact_id = ?',
+                                [contactNumber, result[0].member_contact_id],
+                                (updateError2, updateRes2) => {
+                                    if (updateError2) {
+                                        return db.rollback(() => {
+                                            res.status(500).json({ error: 'Failed to update contact number', error_text: updateError2 });
+                                        });
+                                    }
+                
+                                    db.commit((commitError) => {
+                                        if (commitError) {
+                                            return db.rollback(() => {
+                                                res.status(500).json({ error: 'Failed to commit transaction', error_text: commitError });
+                                            });
+                                        }
+                
+                                        res.status(200).json({
+                                            message: 'Profile settings and contact updated successfully',
+                                        });
+                                    });
+                                }
+                            );
+                        }
+                    );
+                });                
+                
             } else {
                 return res.send('No Setting ID Set')
             }

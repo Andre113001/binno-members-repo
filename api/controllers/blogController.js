@@ -30,7 +30,7 @@ const blog = async (req, res) => {
 const getBlogById = async (blogId) => {
     return new Promise((resolve, reject) => {
         db.query(
-            'SELECT * FROM blog_i WHERE blog_id = ?',
+            'SELECT * FROM blog_i WHERE blog_id = ? AND blog_flag = 1',
             [blogId],
             (err, result) => {
                 if (err) {

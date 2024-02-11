@@ -10,7 +10,7 @@ const axios = require('axios');
 
 const event = async (req, res) => {
     try {
-        db.query("SELECT * FROM event_i", [], (err, result) => {
+        db.query("SELECT * FROM event_i WHERE event_flag = 1", [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -30,7 +30,7 @@ const event = async (req, res) => {
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
         db.query(
-            'SELECT * FROM event_i WHERE event_id = ? ',
+            'SELECT * FROM event_i WHERE event_id = ? AND event_flag = 1',
             [eventSanitizeInput(eventId)],
             (err, result) => {
                 if (err) {
