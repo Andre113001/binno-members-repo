@@ -10,11 +10,14 @@ const axios = require('axios');
 
 const event = async (req, res) => {
     try {
-        db.query("SELECT * FROM event_i", [], (err, result) => {
+        const query = "SELECT * FROM event_i";
+        // NOTE: new quer for the new database
+        // const query = "SELECT * FROM event";
+        db.query(query, [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
-    
+
             if (result.length > 0) {
                 return res.status(200).json(result);
             } else {
@@ -29,8 +32,11 @@ const event = async (req, res) => {
 // Event Finder by ID
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
+        const query = "SELECT * FROM event_i WHERE event_id = ?";
+        // NOTE: new quer for the new database
+        // const query = "SELECT * FROM event WHERE event_id = ?";
         db.query(
-            'SELECT * FROM event_i WHERE event_id = ? ',
+            query,
             [eventSanitizeInput(eventId)],
             (err, result) => {
                 if (err) {
@@ -63,12 +69,21 @@ const events_user = async (req, res) => {
     const { userId } = req.params
 
     try {
-        db.query(
-            `SELECT event_i.*, member_settings.setting_institution 
+        const query = `
+            SELECT event_i.*, member_settings.setting_institution
             FROM event_i
             INNER JOIN member_i ON event_i.event_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE event_author = ? AND event_flag = 1 ORDER BY event_date DESC`,
+            WHERE event_author = ? AND event_flag = 1 ORDER BY event_date DESC
+        `;
+        // NOTE: new quer for the new database
+        // const query = `
+        //     SELECT * FROM event
+        //     WHERE event_author = ? AND archive = 0
+        //     ORDER BY date DESC
+        // `;
+        db.query(
+            query,
             [userId],
             (eventError, eventRes) => {
                 if (eventError) {
@@ -110,8 +125,11 @@ const getImageBlob = (imagePath) => {
 const getEventImage = async (req, res) => {
     const { eventId } = req.params
 
+    const query = `SELECT event_img FROM event_i WHERE event_id = ?`;
+    // NOTE: new query for the new database
+    // const query = `SELECT image FROM event WHERE event_id = ?`;
     db.query(
-        'SELECT event_img FROM event_i WHERE event_id = ?',
+        query,
         [eventId],
         (err, result) => {
             if (err) {
@@ -146,7 +164,7 @@ const getEventImage = async (req, res) => {
 function getFileExtensionFromDataURL(dataURL) {
     const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
     if (match && match[1]) {
-      return match[1];
+        return match[1];
     }
     return null;
 }
@@ -173,7 +191,7 @@ const create_update = async (req, res) => {
             let currentImg = retrieveEvent[0].event_img;
             // Delete the old image file
             const oldImagePath = path.join(__dirname, '../../public/img/event-pics/', retrieveEvent[0].event_img);
-            
+
             const base64Image = eventImg.split(';base64,').pop();
             const imageName = OldimageId + '.' + getFileExtensionFromDataURL(eventImg);
             const eventPicPath = path.join(__dirname, '../../public/img/event-pics/', imageName);
@@ -185,7 +203,7 @@ const create_update = async (req, res) => {
                     } else {
                         // console.log('Old image deleted successfully');
                         // Continue with saving the new image
-                        fs.writeFile(eventPicPath, base64Image, { encoding: 'base64' }, function (err) {
+                        fs.writeFile(eventPicPath, base64Image, { encoding: 'base64' }, function(err) {
                             if (err) {
                                 console.log('Error saving new profile image:', err);
                                 success = false;
@@ -196,16 +214,31 @@ const create_update = async (req, res) => {
                 currentImg = imageName;
             }
 
+            const update_event_query = `
+                UPDATE event_i SET
+                event_address = ?,
+                event_date  = ?,
+                event_time  = ?,
+                event_title = ?,
+                event_description = ?,
+                event_img = ?,
+                event_datemodified = NOW()
+                WHERE event_id = ?
+            `
+            // NOTE: new query for the new database - AL
+            // const update_event_query = `
+            //     UPDATE event SET
+            //     address = ?,
+            //     date = ?,
+            //     time = ?,
+            //     title = ?,
+            //     description = ?,
+            //     image = ?,
+            //     date_modified = NOW()
+            //     WHERE event_id = ?
+            // `
             db.query(
-                `UPDATE event_i SET 
-                        event_address = ?,
-                        event_date  = ?,
-                        event_time  = ?,
-                        event_title = ?, 
-                        event_description = ?,
-                        event_img = ?, 
-                        event_datemodified = NOW()
-                        WHERE event_id = ?`,
+                update_event_query,
                 [
                     eventLocation,
                     eventDate,
@@ -240,19 +273,36 @@ const create_update = async (req, res) => {
             )
         } else {
             const newId = uniqueId.uniqueIdGenerator()
-
+            const insert_event_query = `
+                INSERT INTO event_i (
+                event_id,
+                event_author,
+                event_datecreated,
+                event_address,
+                event_date,
+                event_time,
+                event_title,
+                event_description,
+                event_img)
+                VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)
+            `
+            // NOTE: new query for the new database - AL
+            /* const insert_event_query = `
+                INSERT INTO event (
+                    event_id,
+                    author_id,
+                    date_created,
+                    address,
+                    date,
+                    time,
+                    title,
+                    description,
+                    image
+                )
+                VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)
+            ` */
             db.query(
-                `INSERT INTO event_i (
-                    event_id, 
-                    event_author, 
-                    event_datecreated, 
-                    event_address,
-                    event_date, 
-                    event_time,
-                    event_title, 
-                    event_description, 
-                    event_img) 
-                    VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)`,
+                insert_event_query,
                 [
                     newId,
                     eventAuthor,
@@ -310,14 +360,20 @@ const deleteEvent = async (req, res) => {
 
     try {
         const result = await getEventById(eventId)
-        if (
-            result.length > 0 &&
-            result[0].hasOwnProperty('event_id')
-        ) {
+        if (result.length > 0 && result[0].hasOwnProperty('event_id')) {
+            const query = `
+                UPDATE event_i
+                SET event_flag = 0
+                WHERE event_id = ?
+            `
+            // NOTE: new query for the new database - AL
+            // const query = `
+            //     UPDATE event
+            //     SET archive = 1
+            //     WHERE event_id = ?
+            // `
             db.query(
-                'UPDATE event_i SET event_flag = 0 WHERE event_id = ?',
-                [eventId],
-                (eventDeleteError, eventDeleteResult) => {
+                query, [eventId], (eventDeleteError, eventDeleteResult) => {
                     if (eventDeleteError) {
                         return res
                             .status(500)
@@ -328,11 +384,11 @@ const deleteEvent = async (req, res) => {
                         const logRes = uploadToLog(
                             result[0].event_author, result[0].event_id, username, 'deleted an', 'event', result[0].event_title
                         )
-                        
+
                         if (logRes) {
                             return res.status(200).json({ message: 'Event deleted successfully' })
                         }
-                        
+
                     } else {
                         console.log(eventDeleteError)
                         return res
