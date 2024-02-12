@@ -5,6 +5,8 @@ const { readElements, saveElements } = require('../utils/elementsUtility')
 const sanitizeId = require('../middlewares/querySanitizerMiddleware')
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const sha256 = require('sha256')
+const fs = require('fs');
+const path = require('path');
 
 // Reusable function to get a program by ID
 const fetchProgramById = (programId) => {
@@ -12,7 +14,7 @@ const fetchProgramById = (programId) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
         SELECT * FROM program_i
-        WHERE program_id = ?`
+        WHERE program_id = ? ORDER BY program_dateadded DESC`
         db.query(sql, [sanitizeId(programId)], (err, data) => {
             if (err) {
                 reject(err)
@@ -27,7 +29,7 @@ const allPrograms = async (req, res) => {
     const programs = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT * FROM program_i WHERE program_flag = 1`
+        SELECT * FROM program_i WHERE program_flag = 1 ORDER BY program_dateadded DESC`
         db.query(sql, (err, data) => {
             if (err) {
                 reject(err)
@@ -57,6 +59,7 @@ const fetchProgramPageById = (programPageId) => {
                 if (data.length === 0) {
                     resolve([])
                 } else {
+                    // console.log(data);
                     const elementsData = await readElements(
                         data[0].program_pages_path
                     )
@@ -73,12 +76,12 @@ const fetchProgramPageElements = (programPageId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT * FROM program_pages WHERE program_pages_id = ?`
+            SELECT * FROM program_pages WHERE program_pages_id = ? ORDER BY program_pages_dateadded DESC`
         db.query(sql, [sanitizeId(programPageId)], async (err, data) => {
             if (err) {
                 reject(err)
             } else {
-                console.log(programPageId)
+                // console.log(programPageId)
                 if (data.length === 0) {
                     resolve([])
                 } else {
@@ -98,7 +101,7 @@ const fetchProgramPages = (programPageId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT * FROM program_pages WHERE program_id = ?`
+            SELECT program_pages.*, program_i.program_img FROM program_pages INNER JOIN program_i ON program_i.program_id = program_pages.program_id WHERE program_pages.program_id = ? AND program_pages.program_pages_flag = 1 ORDER BY program_pages.program_pages_dateadded ASC`
         db.query(sql, [sanitizeId(programPageId)], async (err, data) => {
             if (err) {
                 reject(err)
@@ -129,7 +132,7 @@ const fetchProgramPages = (programPageId) => {
 const fetchAllPrograms = async (req, res) => {
     const { id } = req.params
 
-    const sql = `SELECT * FROM program_i WHERE program_author = ?`
+    const sql = `SELECT * FROM program_i WHERE program_author = ? AND program_flag = 1`
 
     db.query(sql, [sanitizeId(id)], (err, data) => {
         if (err) {
@@ -229,6 +232,7 @@ const createUpdateProgram = async (req, res) => {
             )
         } else {
             const newId = uniqueId.uniqueIdGenerator()
+
             // Create a new blog
             db.query(
                 'INSERT INTO program_i (program_id, program_dateadded, program_author, program_heading, program_description) VALUES (?, NOW(), ?, ?, ?)',
@@ -257,6 +261,46 @@ const createUpdateProgram = async (req, res) => {
     } catch (error) {
         console.error(error)
         return res.status(500).json({ error: 'Internal server error' })
+    }
+}
+
+const changeCoverPic = async (req, res) => {
+    const {id, newCoverPic} = req.body;
+    try {
+        db.query('UPDATE program_i SET program_img = ?, program_datemodified = NOW() WHERE program_id = ?', [newCoverPic, id], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+
+            if (result.affectedRows > 0) {
+                res.json(true)
+            } else {
+                res.json(false)
+            }
+        })
+
+    } catch (error) {
+        console.log('error: ', error);
+    }
+}
+
+const changeTitlePage = async (req, res) => {
+    const {pageProgramId, newPageTitle} = req.body;
+    try {
+        db.query('UPDATE program_pages SET program_pages_title = ?, program_pages_datemodified = NOW() WHERE program_pages_id = ?', [newPageTitle, pageProgramId], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+
+            if (result.affectedRows > 0) {
+                res.json(true)
+            } else {
+                res.json(false)
+            }
+        })
+
+    } catch (error) {
+        console.log('error: ', error);
     }
 }
 
@@ -291,33 +335,51 @@ const createUpdatePage = async (req, res) => {
                 }
             )
         } else {
-            const newId = uniqueId.uniqueIdGenerator()
-            // Create a new blog
+        // Generate a new unique ID
+        const newId = uniqueId.uniqueIdGenerator();
+        const fileName = `${newId}.json`;
+
+        // Define the file path for the new JSON file
+        const filePath = path.join(__dirname, `../../public/guide-pages/`, fileName);
+
+        // Create an empty array as JSON data
+        const jsonData = '[]';
+
+        // Write the JSON data to the file
+        fs.writeFile(filePath, jsonData, (err) => {
+            if (err) {
+                console.error('Error creating JSON file:', err);
+                return res.status(500).json({
+                    error: 'Failed to create JSON file',
+                    err,
+                });
+            }
+
+            // Continue with the database query
+            // Insert the program_pages_path as the <insert newId>.json
             db.query(
-                'INSERT INTO program_pages (program_pages_id, program_id, program_pages_dateadded, program_pages_title, program_pages_path) VALUES (?, ?, NOW(), ?, ?)',
-                [newId, pageProgramId, pageTitle, pagePath],
+                `INSERT INTO program_pages (program_pages_id, program_id, program_pages_dateadded, program_pages_title, program_pages_path) VALUES (?, ?, NOW(), ?, ?)`,
+                [newId, pageProgramId, 'Untitled', fileName], // Use the filePath as the program_pages_path
                 (createError, createRes) => {
                     if (createError) {
                         return res.status(500).json({
                             error: 'Failed to create Page',
                             createError,
-                        })
+                        });
                     }
 
                     if (createRes.affectedRows > 0) {
-                        return res
-                            .status(201)
-                            .json({ message: 'Page created successfully' })
+                        return res.json('Page created successfully');
                     } else {
                         return res.status(500).json({
                             error: 'Failed to create page',
                             createError,
-                        })
+                        });
                     }
                 }
-            )
-        }
-    } catch (error) {
+            );
+        });  
+    }} catch (error) {
         console.error(error)
         return res.status(500).json({ error: 'Internal server error' })
     }
@@ -330,7 +392,7 @@ const deleteProgam = async (req, res) => {
     try {
         const result = await fetchProgramById(program_id)
 
-        if (result.length > 0) {
+        if (result) {
             db.query(
                 'DELETE FROM program_i WHERE program_id = ?',
                 [program_id],
@@ -344,9 +406,7 @@ const deleteProgam = async (req, res) => {
                     }
 
                     if (deleteRes.affectedRows > 0) {
-                        return res
-                            .status(201)
-                            .json({ message: 'Program deleted successfully' })
+                        return res.json({ message: 'Program deleted successfully' })
                     } else {
                         return res.status(500).json({
                             error: 'Failed to delete program',
@@ -366,50 +426,65 @@ const deleteProgam = async (req, res) => {
 
 // Delete Page
 const deletePage = async (req, res) => {
-    const { page_id } = req.params
+    const { page_id } = req.params;
 
     try {
-        const result = await fetchProgramPageById(page_id)
+        // Fetch the program page by ID to get the corresponding file path
+        const result = await fetchProgramPageById(page_id);
 
-        if (result.length > 0) {
-            db.query(
-                'DELETE FROM program_pages WHERE program_pages_id = ?',
-                [page_id],
-                (deleteError, deleteRes) => {
-                    if (deleteError) {
-                        console.log(deleteError)
-                        return res.status(500).json({
-                            error: 'Failed to delete program page',
-                            deleteError,
-                        })
-                    }
+        if (result) {
+            const filePath = path.join(__dirname, `../../public/guide-pages/`, `${page_id}.json`);
 
-                    if (deleteRes.affectedRows > 0) {
-                        return res
-                            .status(201)
-                            .json({ message: 'Page deleted successfully' })
-                    } else {
-                        return res.status(500).json({
-                            error: 'Failed to delete page',
-                            deleteError,
-                        })
-                    }
+            // Delete the JSON file
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    console.error('Error deleting JSON file:', err);
+                    return res.status(500).json({
+                        error: 'Failed to delete JSON file',
+                        err,
+                    });
                 }
-            )
+
+                // Continue with deleting the page from the database
+                db.query(
+                    'DELETE FROM program_pages WHERE program_pages_id = ?',
+                    [page_id],
+                    (deleteError, deleteRes) => {
+                        if (deleteError) {
+                            console.error(deleteError);
+                            return res.status(500).json({
+                                error: 'Failed to delete program page',
+                                deleteError,
+                            });
+                        }
+
+                        if (deleteRes.affectedRows > 0) {
+                            return res.status(201).json({ message: 'Page deleted successfully' });
+                        } else {
+                            return res.status(500).json({
+                                error: 'Failed to delete page',
+                                deleteError,
+                            });
+                        }
+                    }
+                );
+            });
         } else {
-            return res.status(500).json({ error: 'Page does not exist!' })
+            return res.status(500).json({ error: 'Page does not exist!' });
         }
     } catch (error) {
-        console.error(error)
-        return res.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
-}
+};
 
 module.exports = {
     fetchProgram,
     fetchProgramPage,
     saveElementsController,
     fetchAllPrograms,
+    changeCoverPic,
+    changeTitlePage,
     createUpdateProgram,
     createUpdatePage,
     deleteProgam,
