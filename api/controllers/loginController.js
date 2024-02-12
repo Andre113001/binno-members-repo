@@ -48,7 +48,7 @@ const authenticateUser = async (accessKey, password) => {
                 const passwordMatch = await bcrypt.compare(password, DBpassword)
 
                 if (passwordMatch) {
-                    const otpSent =  twoAuth(accessKey);
+                    const otpSent = twoAuth(accessKey);
                     if (otpSent) {
                         resolve({ twoAuth: true })
                     }
@@ -59,6 +59,52 @@ const authenticateUser = async (accessKey, password) => {
         )
     })
 }
+
+// NOTE: new query for the new database - AL
+/* const authenticateUser = async (accessKey, password) => {
+    // Ensure accessKey is provided and not falsy
+    if (!accessKey) {
+        return Promise.resolve({ error: 'Access key is required' })
+    }
+
+    const hashedAccesskey = hash(accessKey).toString('base64')
+
+    return new Promise((resolve, reject) => {
+        db.query(
+            `SELECT * FROM member_profile WHERE access_key = ?`,
+            [hashedAccesskey],
+            async (err, result) => {
+                if (err) {
+                    reject({ error: 'Internal server error' })
+                }
+
+                if (
+                    result.length === 0 ||
+                    !result[0].hasOwnProperty('member_password')
+                ) {
+                    resolve({ error: 'User not found' })
+                }
+
+                const DBpassword = result[0].member_password
+
+                if (!DBpassword) {
+                    resolve({ error: 'User password not found' })
+                }
+
+                const passwordMatch = await bcrypt.compare(password, DBpassword)
+
+                if (passwordMatch) {
+                    const otpSent =  twoAuth(accessKey);
+                    if (otpSent) {
+                        resolve({ twoAuth: true })
+                    }
+                } else {
+                    resolve({ twoAuth: false })
+                }
+            }
+        )
+    })
+} */
 
 // Controller to handle login request
 const login = async (req, res) => {
@@ -81,7 +127,7 @@ function generateOTP() {
     // Generate a random 6-digit number
     const otp = Math.floor(100000 + Math.random() * 900000);
     return otp.toString();
-  }
+}
 
 const twoAuth = async (accesskey) => {
     try {
@@ -111,16 +157,16 @@ const twoAuth = async (accesskey) => {
                             receiver: email,
                             otp: otp
                         })
-                        .then(response => {
-                            console.log('Response from server', response.data);
-                            return true;
-                            // Add any additional logic here based on the response if needed
-                        })
-                        .catch(error => {
-                            console.error('Error making request', error.message);
-                            return false;
-                            // Handle error 
-                        });
+                            .then(response => {
+                                console.log('Response from server', response.data);
+                                return true;
+                                // Add any additional logic here based on the response if needed
+                            })
+                            .catch(error => {
+                                console.error('Error making request', error.message);
+                                return false;
+                                // Handle error
+                            });
                     } else {
                         console.error("Fields unsuccessfully updated");
                     }
@@ -134,6 +180,57 @@ const twoAuth = async (accesskey) => {
     }
 }
 
+/* const twoAuth = async (accesskey) => {
+    try {
+        const convertedAccessKey = hash(accesskey);
+        db.query("SELECT email_i.email_address FROM member_i INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email INNER JOIN email_i ON member_contact.contact_email = email_i.email_id WHERE member_i.member_accesskey = ?", [convertedAccessKey], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+
+            if (result.length > 0) {
+                const email = result[0].email_address;
+                const otp = generateOTP();
+                const convertedOtp = hash(otp);
+
+                const query = "UPDATE member_i SET member_twoauth = ?, member_twoauth_valid = DATE_ADD(NOW(), INTERVAL 30 MINUTE) WHERE member_accesskey = ?";
+                const values = [convertedOtp, convertedAccessKey];
+
+                db.query(query, values, (updateError, updateRes) => {
+                    if (updateError) {
+                        console.log(updateError);
+                    }
+
+                    if (updateRes.affectedRows > 0) {
+                        // Email notif here
+                        console.log(email, otp);
+                        axios.post(`https://binno-email-production.up.railway.app/others/twoAuth`, {
+                            receiver: email,
+                            otp: otp
+                        })
+                            .then(response => {
+                                console.log('Response from server', response.data);
+                                return true;
+                                // Add any additional logic here based on the response if needed
+                            })
+                            .catch(error => {
+                                console.error('Error making request', error.message);
+                                return false;
+                                // Handle error
+                            });
+                    } else {
+                        console.error("Fields unsuccessfully updated");
+                    }
+                });
+            } else {
+                console.error("Email cannot be found");
+            }
+        });
+    } catch (error) {
+        console.log(error);
+    }
+} */
+
 const verify_twoAuth = async (req, res) => {
     const { otp, accesskey } = req.body;
     const hashedOtp = hash(otp);
@@ -144,17 +241,51 @@ const verify_twoAuth = async (req, res) => {
     try {
         db.query("SELECT member_id, member_twoauth, member_first_time FROM member_i WHERE member_twoauth = ? AND member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
             if (result.length > 0) {
+                const token = jwt.sign(
+                    { userId: result[0].member_id, username: result[0].name },
+                    process.env.JWT_SECRET_KEY
+                );
+
+                // Update token to database
+                db.query(
+                    'UPDATE member_i SET member_access = ? WHERE member_id = ?',
+                    [hash(token), result[0].member_id],
+                );
+
+                return res.json({ auth: result[0].member_first_time, token: token });
+            } else {
+                return res.json({ auth: false }); // Return false if no record is found
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        return res.json({ error: error }); // Return false in case of an error
+    }
+};
+
+// NOTE: new query for the new database - AL
+/* const verify_twoAuth = async (req, res) => {
+    const { otp, accesskey } = req.body;
+    const hashedOtp = hash(otp);
+    const hashedAccesskey = hash(accesskey);
+
+    console.log(otp, accesskey);
+
+    try {
+        const query = "SELECT member_id, two_auth_token, first_time_login FROM member_profile WHERE two_auth_token = ? AND access_key = ?"
+        db.query(query, [hashedOtp, hashedAccesskey], (err, result) => {
+            if (result.length > 0) {
                     const token = jwt.sign(
                         { userId: result[0].member_id, username: result[0].name },
                         process.env.JWT_SECRET_KEY
                     );
-    
+
                     // Update token to database
                     db.query(
-                        'UPDATE member_i SET member_access = ? WHERE member_id = ?',
-                        [hash(token), result[0].member_id], 
+                        'UPDATE member_profile SET access_key = ? WHERE member_id = ?',
+                        [hash(token), result[0].member_id],
                     );
-    
+
                     return res.json({auth: result[0].member_first_time, token: token});
             } else {
                 return res.json({auth: false}); // Return false if no record is found
@@ -163,13 +294,13 @@ const verify_twoAuth = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.json({error: error}); // Return false in case of an error
-    }      
-};
+    }
+}; */
 
 function getFileExtensionFromDataURL(dataURL) {
     const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
     if (match && match[1]) {
-      return match[1];
+        return match[1];
     }
     return null;
 }
@@ -185,7 +316,7 @@ const firstTime = async (req, res) => {
         const newNameProfile = newId + '.' + getFileExtensionFromDataURL(profileImg);
         const profileImagePath = path.join(__dirname, '../../public/img/profile-img/', newNameProfile);
 
-        fs.writeFile(profileImagePath, base64ImageProfile, { encoding: 'base64' }, function (err) {
+        fs.writeFile(profileImagePath, base64ImageProfile, { encoding: 'base64' }, function(err) {
             if (err) {
                 console.log('Error saving profile image:', err);
                 success = false;
@@ -199,7 +330,7 @@ const firstTime = async (req, res) => {
         const newNameCover = newId + '.' + getFileExtensionFromDataURL(coverImg);
         const coverImagePath = path.join(__dirname, '../../public/img/profile-cover-img/', newNameCover);
 
-        fs.writeFile(coverImagePath, base64ImageCover, { encoding: 'base64' }, function (err) {
+        fs.writeFile(coverImagePath, base64ImageCover, { encoding: 'base64' }, function(err) {
             if (err) {
                 console.log('Error saving cover image:', err);
                 success = false;
@@ -218,6 +349,15 @@ const firstTime = async (req, res) => {
                 console.log("No rows were affected");
             }
         });
+        // NOTE: new query for the new database - AL
+        /* db.query("UPDATE member_profile SET password = ? WHERE access_key = ?", [convertedPassword, hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating password:', err);
+                success = false;
+            } else {
+                console.log("No rows were affected");
+            }
+        }); */
 
         db.query("UPDATE member_contact mc INNER JOIN member_i mi ON mi.member_contact_id = mc.contact_id SET mc.contact_number = ? WHERE mi.member_access = ?", [contact, hash(token)], (err, result) => {
             if (err) {
@@ -227,6 +367,15 @@ const firstTime = async (req, res) => {
                 console.log("No rows were affected");
             }
         });
+        // NOTE: new query for the new database - AL
+        /* db.query("UPDATE member_profile SET contact_number = ? WHERE access_key = ?", [contact, hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating contact number:', err);
+                success = false;
+            } else {
+                console.log("No rows were affected");
+            }
+        }); */
 
         db.query("UPDATE member_settings ms INNER JOIN member_i mi ON mi.member_setting = ms.setting_id SET ms.setting_bio = ?, ms.setting_profilepic = ?, ms.setting_coverpic = ? WHERE mi.member_access = ?", [description, newNameProfile, newNameCover, hash(token)], (err, result) => {
             if (err) {
@@ -236,6 +385,15 @@ const firstTime = async (req, res) => {
                 console.log("No rows were affected");
             }
         });
+        // NOTE: new query for the new database - AL
+        /* db.query("UPDATE member_profile SET s_bio = ?, s_profile_pic = ?, s_cover_pic = ? WHERE access_key = ?", [description, newNameProfile, newNameCover, hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating member settings:', err);
+                success = false;
+            } else {
+                console.log("No rows were affected");
+            }
+        }); */
 
         db.query("UPDATE member_i SET member_first_time = 0 WHERE member_access = ?", [hash(token)], (err, result) => {
             if (err) {
@@ -245,6 +403,15 @@ const firstTime = async (req, res) => {
                 console.log("No rows were affected");
             }
         });
+        // NOTE: new query for the new database - AL
+        /* db.query("UPDATE member_profile SET first_time_login = 0 WHERE access_key = ?", [hash(token)], (err, result) => {
+            if (err) {
+                console.log('Error updating member_first_time:', err);
+                success = false;
+            } else {
+                console.log("No rows were affected");
+            }
+        }); */
 
         if (success) {
             res.json(true);
