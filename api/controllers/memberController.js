@@ -28,6 +28,23 @@ const getMemberById = (memberId) => {
     })
 }
 
+// NOTE: new query for the new database - AL
+// Reusable function to get a member by ID
+/* const getMemberById = (memberId) => {
+    return new Promise((resolve, reject) => {
+        // Using parameterized query to prevent SQL injection
+        const sql = `
+            SELECT * FROM member_profile WHERE member_id = ?`
+        db.query(sql, [sanitizedMemberId(memberId)], (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+} */
+
 const fetchEnablers = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
@@ -44,6 +61,24 @@ const fetchEnablers = async (req, res) => {
 
     res.status(200).json(query)
 }
+
+// NOTE: new query for the new database - AL
+/* const fetchEnablers = async (req, res) => {
+    const query = await new Promise((resolve, reject) => {
+        // Using parameterized query to prevent SQL injection
+        const sql = `SELECT * FROM member_profile WHERE member_class = '2'`
+        db.query(sql, (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+
+    res.status(200).json(query)
+} */
+
 const fetchCompanies = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
@@ -61,6 +96,23 @@ const fetchCompanies = async (req, res) => {
     res.status(200).json(query)
 }
 
+// NOTE: new query for the new database - AL
+/* const fetchCompanies = async (req, res) => {
+    const query = await new Promise((resolve, reject) => {
+        // Using parameterized query to prevent SQL injection
+        const sql = `SELECT * FROM member_profile WHERE member_class = '1'`
+        db.query(sql, (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+
+    res.status(200).json(query)
+} */
+
 const getMemberByEmail = (memberEmail) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT * FROM email_i WHERE email_address = ?`
@@ -73,6 +125,20 @@ const getMemberByEmail = (memberEmail) => {
         })
     })
 }
+
+// NOTE: new query for the new database - AL
+/* const getMemberByEmail = (memberEmail) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM email WHERE email_address = ?`
+        db.query(sql, [sanitizedMemberId(memberEmail)], (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+} */
 
 const getMemberByAccessKey = (accesskey) => {
     return new Promise((resolve, reject) => {
@@ -87,19 +153,33 @@ const getMemberByAccessKey = (accesskey) => {
     })
 }
 
+// NOTE: new query for the new database - AL
+/* const getMemberByAccessKey = (accesskey) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT * FROM member_profile WHERE access_key = ?`
+        db.query(sql, [sanitizedMemberId(sha256(accesskey))], (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+} */
+
 const fetchMemberByAccessToken = (accessToken) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT 
+        const sql = `SELECT
                     member_i.member_id,
                     member_i.member_first_time,
                     member_settings.setting_address,
-                    member_settings.setting_bio, 
+                    member_settings.setting_bio,
                     member_settings.setting_color,
                     member_settings.setting_coverpic,
                     member_settings.setting_institution,
                     member_settings.setting_profilepic,
-                    member_contact.contact_number, 
-                    member_contact.contact_facebook, 
+                    member_contact.contact_number,
+                    member_contact.contact_facebook,
                     member_type.user_type,
                     email_i.email_address
                     FROM member_i
@@ -118,6 +198,21 @@ const fetchMemberByAccessToken = (accessToken) => {
     })
 }
 
+// NOTE: new query for the new database - AL
+/* const fetchMemberByAccessToken = (accessToken) => {
+    return new Promise((resolve, reject) => {
+        const sql = `select * from member_profile where jwt_access_token = ?`
+        db.query(sql, [sha256(sanitizedMemberId(accessToken))], (err, data) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    })
+} */
+
+// WARN: to be removed for the new database - AL
 // Reusable to fetch profile details
 const getProfileSettings = (settingId) => {
     return new Promise((resolve, reject) => {
@@ -169,6 +264,7 @@ const fetchProfileByToken = async (req, res) => {
     }
 }
 
+// WARN: to be refactored for the new database - AL
 // Controller to update user's profile
 const updateProfile = async (req, res) => {
     const {
@@ -219,6 +315,7 @@ const updateProfile = async (req, res) => {
     }
 }
 
+// WARN: to be removed for the new database - AL
 // Change status of member [Active, Vacation]
 const changeStatus = async (req, res) => {
     const { member_id } = req.params
@@ -269,6 +366,7 @@ const changeStatus = async (req, res) => {
     }
 }
 
+// WARN: to be refactor for the new database - AL
 const verifyChangePassword = async (req, res) => {
     const { accesskey } = req.body
 
