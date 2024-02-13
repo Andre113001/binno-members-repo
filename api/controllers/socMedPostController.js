@@ -312,10 +312,15 @@ const deletePost = async (req, res) => {
         const result = await fetchPostById(post_id)
 
         if (result.length > 0 && result[0].hasOwnProperty('post_id')) {
+            const deletePostQuery = `
+                UPDATE post_i SET post_flag = 0 WHERE post_id = ?
+            `;
+            // NOTE: new query for the new database - AL
+            // const deletePostQuery = `
+            //     UPDATE post SET archive = 1 WHERE post_id = ?
+            // `;
             db.query(
-                'UPDATE post_i SET post_flag = 0 WHERE post_id = ?',
-                [post_id],
-                (deleteError, deleteRes) => {
+                deletePostQuery, [post_id], (deleteError, deleteRes) => {
                     if (deleteError) {
                         console.log(deleteError)
                         return res
