@@ -132,7 +132,7 @@ const fetchProgramPages = (programPageId) => {
 const fetchAllPrograms = async (req, res) => {
     const { id } = req.params
 
-    const sql = `SELECT * FROM program_i WHERE program_author = ? AND program_flag = 1`
+    const sql = `SELECT * FROM program_i WHERE program_author = ? AND program_flag = 1 ORDER BY program_dateadded DESC`
 
     db.query(sql, [sanitizeId(id)], (err, data) => {
         if (err) {
@@ -200,64 +200,37 @@ const fetchProgramPage = async (req, res) => {
 }
 
 // Create & Update program
-const createUpdateProgram = async (req, res) => {
-    const { programId, programAuthor, programHeading, programDescription } =
+const createProgram = async (req, res) => {
+    const { programAuthor, fileName, programTitle } =
         req.body
 
     try {
-        const fetchProgramResult = await fetchProgramById(programId)
+        const newId = uniqueId.uniqueIdGenerator()
 
-        if (fetchProgramResult.length > 0) {
-            // Update Program
-            db.query(
-                'UPDATE program_i SET program_heading = ?, program_description = ?, program_datemodified = NOW() WHERE program_id = ?',
-                [programHeading, programDescription, programId],
-                (err, result) => {
-                    if (err) {
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to update program', err })
-                    }
-
-                    if (result.affectedRows > 0) {
-                        return res
-                            .status(200)
-                            .json({ message: 'Program updated successfully' })
-                    } else {
-                        return res
-                            .status(500)
-                            .json({ message: 'Failed to update progaram', err })
-                    }
+        // Create a new blog
+        db.query(
+            'INSERT INTO program_i (program_id, program_dateadded, program_author, program_heading, program_img) VALUES (?, NOW(), ?, ?, ?)',
+            [newId, programAuthor, programTitle, fileName],
+            (createError, createRes) => {
+                if (createError) {
+                    return res.status(500).json({
+                        error: 'Failed to create Program',
+                        createError,
+                    })
                 }
-            )
-        } else {
-            const newId = uniqueId.uniqueIdGenerator()
 
-            // Create a new blog
-            db.query(
-                'INSERT INTO program_i (program_id, program_dateadded, program_author, program_heading, program_description) VALUES (?, NOW(), ?, ?, ?)',
-                [newId, programAuthor, programHeading, programDescription],
-                (createError, createRes) => {
-                    if (createError) {
-                        return res.status(500).json({
-                            error: 'Failed to create Program',
-                            createError,
-                        })
-                    }
-
-                    if (createRes.affectedRows > 0) {
-                        return res
-                            .status(201)
-                            .json({ message: 'Program created successfully' })
-                    } else {
-                        return res.status(500).json({
-                            error: 'Failed to create program',
-                            createError,
-                        })
-                    }
+                if (createRes.affectedRows > 0) {
+                    return res
+                        .status(201)
+                        .json({ message: 'Program created successfully', id: newId })
+                } else {
+                    return res.status(500).json({
+                        error: 'Failed to create program',
+                        createError,
+                    })
                 }
-            )
-        }
+            }
+        )
     } catch (error) {
         console.error(error)
         return res.status(500).json({ error: 'Internal server error' })
@@ -387,14 +360,15 @@ const createUpdatePage = async (req, res) => {
 
 // Delete Program
 const deleteProgam = async (req, res) => {
-    const { program_id } = req.params
+    const { program_id } = req.params;
+    const { username } = req.body;
 
     try {
         const result = await fetchProgramById(program_id)
 
         if (result) {
             db.query(
-                'DELETE FROM program_i WHERE program_id = ?',
+                'UPDATE program_i SET program_flag = 0 WHERE program_id = ?',
                 [program_id],
                 (deleteError, deleteRes) => {
                     if (deleteError) {
@@ -485,7 +459,7 @@ module.exports = {
     fetchAllPrograms,
     changeCoverPic,
     changeTitlePage,
-    createUpdateProgram,
+    createProgram,
     createUpdatePage,
     deleteProgam,
     deletePage,

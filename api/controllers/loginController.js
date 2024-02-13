@@ -12,6 +12,7 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const { converBase64ToImage } = require('convert-base64-to-image')
 
 const bcryptConverter = require('../middlewares/bcryptConverter');
+const { uploadToLog } = require('../middlewares/activityLogger');
 
 
 // Reusable function to authenticate user and generate token
@@ -134,6 +135,25 @@ const twoAuth = async (accesskey) => {
     }
 }
 
+function formatDate() {
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    
+    const currentDate = new Date();
+    const month = months[currentDate.getMonth()];
+    const day = currentDate.getDate();
+    const year = currentDate.getFullYear();
+    let hour = currentDate.getHours();
+    const minute = currentDate.getMinutes();
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12; // Convert hour to 12-hour format
+    const formattedDate = `${month} ${day}, ${year} | ${hour}:${minute < 10 ? '0' : ''}${minute} ${ampm}`;
+    
+    return formattedDate;
+}
+
 const verify_twoAuth = async (req, res) => {
     const { otp, accesskey } = req.body;
     const hashedOtp = hash(otp);
@@ -142,7 +162,7 @@ const verify_twoAuth = async (req, res) => {
     console.log(otp, accesskey);
 
     try {
-        db.query("SELECT member_id, member_twoauth, member_first_time FROM member_i WHERE member_twoauth = ? AND member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
+        db.query("SELECT member_settings.setting_institution, member_i.member_id, member_i.member_twoauth, member_i.member_first_time FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_twoauth = ? AND member_i.member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
             if (result.length > 0) {
                     const token = jwt.sign(
                         { userId: result[0].member_id, username: result[0].name },
@@ -154,6 +174,12 @@ const verify_twoAuth = async (req, res) => {
                         'UPDATE member_i SET member_access = ? WHERE member_id = ?',
                         [hash(token), result[0].member_id], 
                     );
+
+                    const todayDateString = formatDate();
+
+                    const logRes = uploadToLog(
+                        result[0].member_id, '', result[0].setting_institution, 'Logged in', '', todayDateString
+                    )
     
                     return res.json({auth: result[0].member_first_time, token: token});
             } else {
