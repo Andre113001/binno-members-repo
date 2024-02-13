@@ -16,9 +16,10 @@ const generateToken = require('../middlewares/generateTokenMiddleware')
 const getMemberById = (memberId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-            SELECT * FROM member_i WHERE member_id = ?`
-        db.query(sql, [sanitizedMemberId(memberId)], (err, data) => {
+        const getMemberByIdQuery = "SELECT * FROM member_i WHERE member_id = ?";
+        // NOTE: new query for the new database - AL
+        // const getMemberByIdQuery = "SELECT * FROM member_profile WHERE member_id = ?";
+        db.query(getMemberByIdQuery, [sanitizedMemberId(memberId)], (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -27,30 +28,18 @@ const getMemberById = (memberId) => {
         })
     })
 }
-
-// NOTE: new query for the new database - AL
-// Reusable function to get a member by ID
-/* const getMemberById = (memberId) => {
-    return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
-        const sql = `
-            SELECT * FROM member_profile WHERE member_id = ?`
-        db.query(sql, [sanitizedMemberId(memberId)], (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
-        })
-    })
-} */
 
 const fetchEnablers = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-            SELECT * FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id  WHERE member_type = '2'`
-        db.query(sql, (err, data) => {
+        const getEnablersQuery = `
+            SELECT * FROM member_i
+            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            WHERE member_type = '2'
+        `;
+        // NOTE: new query for the new database - AL
+        // const getEnablersQuery = "SELECT * FROM member_profile WHERE member_class = 2";
+        db.query(getEnablersQuery, (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -61,30 +50,18 @@ const fetchEnablers = async (req, res) => {
 
     res.status(200).json(query)
 }
-
-// NOTE: new query for the new database - AL
-/* const fetchEnablers = async (req, res) => {
-    const query = await new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
-        const sql = `SELECT * FROM member_profile WHERE member_class = '2'`
-        db.query(sql, (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
-        })
-    })
-
-    res.status(200).json(query)
-} */
 
 const fetchCompanies = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-        SELECT * FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id  WHERE member_type = '1'`
-        db.query(sql, (err, data) => {
+        const getCompaniesQuery = `
+            SELECT * FROM member_i
+            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            WHERE member_type = '1'
+        `;
+        // NOTE: new query for the new database - AL
+        // const getCompaniesQuery = "SELECT * FROM member_profile WHERE member_type = 1";
+        db.query(getCompaniesQuery, (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -95,28 +72,13 @@ const fetchCompanies = async (req, res) => {
 
     res.status(200).json(query)
 }
-
-// NOTE: new query for the new database - AL
-/* const fetchCompanies = async (req, res) => {
-    const query = await new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
-        const sql = `SELECT * FROM member_profile WHERE member_class = '1'`
-        db.query(sql, (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
-        })
-    })
-
-    res.status(200).json(query)
-} */
 
 const getMemberByEmail = (memberEmail) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM email_i WHERE email_address = ?`
-        db.query(sql, [sanitizedMemberId(memberEmail)], (err, data) => {
+        const getMemberByEmailQuery = "SELECT * FROM email_i WHERE email_address = ?";
+        // NOTE: new query for the new database - AL
+        // const getMemberByEmailQuery = `SELECT * FROM email WHERE email_address = ?`;
+        db.query(getMemberByEmailQuery, [sanitizedMemberId(memberEmail)], (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -125,25 +87,13 @@ const getMemberByEmail = (memberEmail) => {
         })
     })
 }
-
-// NOTE: new query for the new database - AL
-/* const getMemberByEmail = (memberEmail) => {
-    return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM email WHERE email_address = ?`
-        db.query(sql, [sanitizedMemberId(memberEmail)], (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
-        })
-    })
-} */
 
 const getMemberByAccessKey = (accesskey) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT member_i.member_id FROM member_i WHERE member_accesskey = ?`
-        db.query(sql, [sanitizedMemberId(sha256(accesskey))], (err, data) => {
+        const getMemberByAccessKeyQuery = "SELECT member_i.member_id FROM member_i WHERE member_accesskey = ?";
+        // NOTE: new query for the new database - AL
+        // const getMemberByAccessKeyQuery = "SELECT member_id FROM member_profile WHERE access_key = ?";
+        db.query(getMemberByAccessKeyQuery, [sanitizedMemberId(sha256(accesskey))], (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -152,43 +102,32 @@ const getMemberByAccessKey = (accesskey) => {
         })
     })
 }
-
-// NOTE: new query for the new database - AL
-/* const getMemberByAccessKey = (accesskey) => {
-    return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM member_profile WHERE access_key = ?`
-        db.query(sql, [sanitizedMemberId(sha256(accesskey))], (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
-        })
-    })
-} */
 
 const fetchMemberByAccessToken = (accessToken) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT
-                    member_i.member_id,
-                    member_i.member_first_time,
-                    member_settings.setting_address,
-                    member_settings.setting_bio,
-                    member_settings.setting_color,
-                    member_settings.setting_coverpic,
-                    member_settings.setting_institution,
-                    member_settings.setting_profilepic,
-                    member_contact.contact_number,
-                    member_contact.contact_facebook,
-                    member_type.user_type,
-                    email_i.email_address
-                    FROM member_i
-                    INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-                    INNER JOIN member_type ON member_i.member_type = member_type.user_type_id
-                    INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id
-                    INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
-                    WHERE member_i.member_access = ?`
-        db.query(sql, [sha256(sanitizedMemberId(accessToken))], (err, data) => {
+        const getMemberByAccessTokenQuery = `
+            SELECT
+            member_i.member_id,
+            member_i.member_first_time,
+            member_settings.setting_address,
+            member_settings.setting_bio,
+            member_settings.setting_color,
+            member_settings.setting_coverpic,
+            member_settings.setting_institution,
+            member_settings.setting_profilepic,
+            member_contact.contact_number,
+            member_contact.contact_facebook,
+            member_type.user_type,
+            email_i.email_address
+            FROM member_i
+            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            INNER JOIN member_type ON member_i.member_type = member_type.user_type_id
+            INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id
+            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
+            WHERE member_i.member_access = ?`;
+        // NOTE: new query for the new database - AL
+        // const getMemberByAccessTokenQuery = "SELECT * FROM member_profile WHERE jwt_access_token = ?";
+        db.query(getMemberByAccessTokenQuery, [sha256(sanitizedMemberId(accessToken))], (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -197,20 +136,6 @@ const fetchMemberByAccessToken = (accessToken) => {
         })
     })
 }
-
-// NOTE: new query for the new database - AL
-/* const fetchMemberByAccessToken = (accessToken) => {
-    return new Promise((resolve, reject) => {
-        const sql = `select * from member_profile where jwt_access_token = ?`
-        db.query(sql, [sha256(sanitizedMemberId(accessToken))], (err, data) => {
-            if (err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
-        })
-    })
-} */
 
 // WARN: to be removed for the new database - AL
 // Reusable to fetch profile details
@@ -366,80 +291,93 @@ const changeStatus = async (req, res) => {
     }
 }
 
-// WARN: to be refactor for the new database - AL
 const verifyChangePassword = async (req, res) => {
     const { accesskey } = req.body
 
     try {
         const convertedAccessKey = sha256(accesskey)
-        db.query(
-            'SELECT email_i.email_address, member_settings.setting_institution FROM member_i INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email INNER JOIN email_i ON member_contact.contact_email = email_i.email_id LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_accesskey = ?',
-            [convertedAccessKey],
-            (err, result) => {
-                if (err) {
-                    return res.status(500).json({ err })
-                }
-
-                if (result.length > 0) {
-                    const email = result[0].email_address
-                    const name = result[0].setting_institution
-                    const token = generateToken(32)
-                    const convertedToken = sha256(token)
-
-                    // Assuming you have a MySQL connection named `db`
-                    // Make sure to replace 'your_table_name' with the actual table name
-                    const query =
-                        'UPDATE member_i SET member_resetpassword_token = ?, member_resetpassword_token_valid = DATE_ADD(NOW(), INTERVAL 3 HOUR) WHERE member_accesskey = ?'
-                    const values = [convertedToken, convertedAccessKey]
-
-                    db.query(query, values, (updateError, updateRes) => {
-                        if (updateError) {
-                            return res.status(500).json({ error: updateError })
-                        }
-
-                        if (updateRes.affectedRows > 0) {
-                            // Email notif here
-                            axios
-                                .post(
-                                    `http://localhost:3002/others/forgotPassword`,
-                                    {
-                                        receiver: email,
-                                        name: name,
-                                        token: token,
-                                    }
-                                )
-                                .then((response) => {
-                                    console.log(
-                                        'Response from localhost:3002',
-                                        response.data
-                                    )
-                                    // Add any additional logic here based on the response if needed
-                                    return res
-                                        .status(200)
-                                        .json({ message: 'Email Sent' })
-                                })
-                                .catch((error) => {
-                                    console.error(
-                                        'Error making request',
-                                        error.message
-                                    )
-                                    // Handle error
-                                    return res.status(500).json({
-                                        message: 'Failed to send email',
-                                    })
-                                })
-                        } else {
-                            res.status(500).json({
-                                result: 'Fields unsuccessfully updated',
-                            })
-                        }
-                    })
-                } else {
-                    return res
-                        .status(200)
-                        .json({ message: 'Email cannot be found' })
-                }
+        const verifyUserQuery = `
+            SELECT email_i.email_address, member_settings.setting_institution FROM member_i
+            INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email
+            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
+            LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            WHERE member_i.member_accesskey = ?
+        `;
+        // NOTE: new query for the new database - AL
+        // const verifyUserQuery = "SELECT contact_email, name FROM member_profile WHERE access_key = ?";
+        db.query(verifyUserQuery, [convertedAccessKey], (err, result) => {
+            if (err) {
+                return res.status(500).json({ err })
             }
+
+            if (result.length > 0) {
+                const email = result[0].email_address
+                const name = result[0].setting_institution
+                const token = generateToken(32)
+                const convertedToken = sha256(token)
+
+                const updatePasswordQuery = `
+                    UPDATE member_i SET
+                    member_resetpassword_token = ?,
+                    member_resetpassword_token_valid = DATE_ADD(NOW(), INTERVAL 3 HOUR)
+                    WHERE member_accesskey = ?
+                `;
+                const parameters = [convertedToken, convertedAccessKey]
+                // NOTE: new query for the new database - AL
+                // const updatePasswordQuery = `
+                //     UPDATE member_profile SET
+                //     password_reset_token = ?,
+                //     password_reset_token_valid_date = DATE_ADD(NOW(), INTERVAL 3 HOUR)
+                //     WHERE access_key = ?
+                // `;
+                db.query(updatePasswordQuery, parameters, (updateError, updateRes) => {
+                    if (updateError) {
+                        return res.status(500).json({ error: updateError })
+                    }
+
+                    if (updateRes.affectedRows > 0) {
+                        // Email notif here
+                        axios
+                            .post(
+                                `http://localhost:3002/others/forgotPassword`,
+                                {
+                                    receiver: email,
+                                    name: name,
+                                    token: token,
+                                }
+                            )
+                            .then((response) => {
+                                console.log(
+                                    'Response from localhost:3002',
+                                    response.data
+                                )
+                                // Add any additional logic here based on the response if needed
+                                return res
+                                    .status(200)
+                                    .json({ message: 'Email Sent' })
+                            })
+                            .catch((error) => {
+                                console.error(
+                                    'Error making request',
+                                    error.message
+                                )
+                                // Handle error
+                                return res.status(500).json({
+                                    message: 'Failed to send email',
+                                })
+                            })
+                    } else {
+                        res.status(500).json({
+                            result: 'Fields unsuccessfully updated',
+                        })
+                    }
+                })
+            } else {
+                return res
+                    .status(200)
+                    .json({ message: 'Email cannot be found' })
+            }
+        }
         )
     } catch (error) {
         console.log(error)
