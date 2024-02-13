@@ -1,3 +1,6 @@
+// WARN: file might be renamed to guideController.js - AL
+// because program is not called guide
+
 const db = require('../../database/db')
 
 // Middlewares
@@ -9,13 +12,22 @@ const fs = require('fs');
 const path = require('path');
 
 // Reusable function to get a program by ID
+// NOTE: should be renamed as fetchGuideById() - AL
 const fetchProgramById = (programId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-        SELECT * FROM program_i
-        WHERE program_id = ? ORDER BY program_dateadded DESC`
-        db.query(sql, [sanitizeId(programId)], (err, data) => {
+        const getGuideById = `
+            SELECT * FROM program_i
+            WHERE program_id = ?
+            ORDER BY program_dateadded DESC
+        `;
+        // NOTE: new query for the new database - AL
+        // const getGuideById = `
+        //     SELECT * FROM guide
+        //     WHERE guide_id = ?
+        //     ORDER BY date_created DESC
+        // `;
+        db.query(getGuideById, [sanitizeId(programId)], (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -25,12 +37,22 @@ const fetchProgramById = (programId) => {
     })
 }
 
+// NOTE: should be renamed as fetchAllGuides()
 const allPrograms = async (req, res) => {
     const programs = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-        SELECT * FROM program_i WHERE program_flag = 1 ORDER BY program_dateadded DESC`
-        db.query(sql, (err, data) => {
+        const getAllGuidesQuery = `
+            SELECT * FROM program_i
+            WHERE program_flag = 1
+            ORDER BY program_dateadded DESC
+        `;
+        // NOTE: new query for the new database - AL
+        // const getAllGuidesQuery = `
+        //     SELECT * FROM guide
+        //     WHERE archive = 0
+        //     ORDER BY date_created DESC
+        // `;
+        db.query(getAllGuidesQuery, (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -47,12 +69,18 @@ const allPrograms = async (req, res) => {
 }
 
 // Function to fetch a program page by ID
+// NOTE: should be renamed to fetchGuidePagesById() - AL
 const fetchProgramPageById = (programPageId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-            SELECT * FROM program_pages WHERE program_pages_id = ?`
-        db.query(sql, [sanitizeId(programPageId)], async (err, data) => {
+        const getGuidePagesByIdQuery = `
+            SELECT * FROM program_pages WHERE program_pages_id = ?
+        `;
+        // NOTE: new query for the new database - AL
+        // const getGuidePagesByIdQuery = `
+        //     SELECT * FROM guide_page WHERE guide_page_id = ?
+        // `;
+        db.query(getGuidePagesByIdQuery, [sanitizeId(programPageId)], async (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -72,12 +100,22 @@ const fetchProgramPageById = (programPageId) => {
 }
 
 // Function to fetch a program page by ID
+// NOTE: should be renamed to fetchGuidePagesByIdDesc() - AL
 const fetchProgramPageElements = (programPageId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-            SELECT * FROM program_pages WHERE program_pages_id = ? ORDER BY program_pages_dateadded DESC`
-        db.query(sql, [sanitizeId(programPageId)], async (err, data) => {
+        const getGuidePagesByIdQuery = `
+            SELECT * FROM program_pages
+            WHERE program_pages_id = ?
+            ORDER BY program_pages_dateadded DESC
+        `;
+        // NOTE: new query for the new database - AL
+        // const getGuidePagesByIdQuery = `
+        //     SELECT * FROM guide_page
+        //     WHERE guide_page_id = ?
+        //     ORDER BY date_created DESC
+        // `;
+        db.query(getGuidePagesByIdQuery, [sanitizeId(programPageId)], async (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -97,12 +135,23 @@ const fetchProgramPageElements = (programPageId) => {
 }
 
 // Function to fetch a program page by ID
+// NOTE: should be renamed to fetchGuidePagesByGuideId()
 const fetchProgramPages = (programPageId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-            SELECT program_pages.*, program_i.program_img FROM program_pages INNER JOIN program_i ON program_i.program_id = program_pages.program_id WHERE program_pages.program_id = ? AND program_pages.program_pages_flag = 1 ORDER BY program_pages.program_pages_dateadded ASC`
-        db.query(sql, [sanitizeId(programPageId)], async (err, data) => {
+        const getGuidePagesByGuideIdQuery = `
+            SELECT program_pages.*, program_i.program_img FROM program_pages
+            INNER JOIN program_i ON program_i.program_id = program_pages.program_id
+            WHERE program_pages.program_id = ? AND program_pages.program_pages_flag = 1
+            ORDER BY program_pages.program_pages_dateadded ASC
+        `;
+        // NOTE: new query for the new database - AL
+        // const getGuidePagesByGuideIdQuery = `
+        //     SELECT * FROM guide_page
+        //     WHERE guide_id = ? AND archive = 0
+        //     ORDER BY date_created ASC
+        // `;
+        db.query(getGuidePagesByGuideIdQuery, [sanitizeId(programPageId)], async (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -129,12 +178,22 @@ const fetchProgramPages = (programPageId) => {
 }
 
 // Fetch All programs
+// NOTE: should be renamed as fetchAllGuidesByAuthor()
 const fetchAllPrograms = async (req, res) => {
     const { id } = req.params
 
-    const sql = `SELECT * FROM program_i WHERE program_author = ? AND program_flag = 1 ORDER BY program_dateadded DESC`
-
-    db.query(sql, [sanitizeId(id)], (err, data) => {
+    const getGuidesByAuthorID = `
+        SELECT * FROM program_i WHERE
+        program_author = ? AND program_flag = 1
+        ORDER BY program_dateadded DESC
+    `;
+    // NOTE: new query for the new database - AL
+    // const getGuidesByAuthorID = `
+    //     SELECT * FROM guide WHERE
+    //     author_id = ? AND archive = 0
+    //     ORDER BY date_created DESC
+    // `;
+    db.query(getGuidesByAuthorID, [sanitizeId(id)], (err, data) => {
         if (err) {
             console.error(err)
             res.status(500).json({
@@ -148,6 +207,7 @@ const fetchAllPrograms = async (req, res) => {
 }
 
 // Find Program
+// NOTE: should be renamed as fetchGuide() - AL
 const fetchProgram = async (req, res) => {
     const { program_id } = req.params
 
@@ -200,6 +260,7 @@ const fetchProgramPage = async (req, res) => {
 }
 
 // Create & Update program
+// NOTE: should be renamed to createGuide() - AL
 const createProgram = async (req, res) => {
     const { programAuthor, fileName, programTitle } =
         req.body
@@ -208,9 +269,29 @@ const createProgram = async (req, res) => {
         const newId = uniqueId.uniqueIdGenerator()
 
         // Create a new blog
+        const createGuideQuery = `
+            INSERT INTO program_i (
+                program_id,
+                program_dateadded,
+                program_author,
+                program_heading,
+                program_img
+            )
+            VALUES (?, NOW(), ?, ?, ?)
+        `;
+        // NOTE: new query for the new database - AL
+        // const createGuideQuery = `
+        //     INSERT INTO guide (
+        //         guide_id,
+        //         date_created,
+        //         author_id,
+        //         title,
+        //         image
+        //     )
+        //     VALUES (?, NOW(), ?, ?, ?)
+        // `;
         db.query(
-            'INSERT INTO program_i (program_id, program_dateadded, program_author, program_heading, program_img) VALUES (?, NOW(), ?, ?, ?)',
-            [newId, programAuthor, programTitle, fileName],
+            createGuideQuery, [newId, programAuthor, programTitle, fileName],
             (createError, createRes) => {
                 if (createError) {
                     return res.status(500).json({
@@ -237,10 +318,24 @@ const createProgram = async (req, res) => {
     }
 }
 
+// NOTE: should be renamed to changeGuideImage() or changeGuidePic()
 const changeCoverPic = async (req, res) => {
-    const {id, newCoverPic} = req.body;
+    const { id, newCoverPic } = req.body;
+    const changeGuideImageQuery = `
+        UPDATE program_i SET
+        program_img = ?,
+        program_datemodified = NOW()
+        WHERE program_id = ?
+    `;
+    // NOTE: new query for the new database - AL
+    // const changeGuideImageQuery = `
+    //     UPDATE guide SET
+    //     image = ?,
+    //     date_modified = NOW()
+    //     WHERE program_id = ?
+    // `;
     try {
-        db.query('UPDATE program_i SET program_img = ?, program_datemodified = NOW() WHERE program_id = ?', [newCoverPic, id], (err, result) => {
+        db.query(changeGuideImageQuery, [newCoverPic, id], (err, result) => {
             if (err) {
                 console.log(err);
             }
@@ -257,10 +352,24 @@ const changeCoverPic = async (req, res) => {
     }
 }
 
+// NOTE: should be renamed to changeGuidePageTitle()
 const changeTitlePage = async (req, res) => {
-    const {pageProgramId, newPageTitle} = req.body;
+    const { pageProgramId, newPageTitle } = req.body;
     try {
-        db.query('UPDATE program_pages SET program_pages_title = ?, program_pages_datemodified = NOW() WHERE program_pages_id = ?', [newPageTitle, pageProgramId], (err, result) => {
+        const changeGuidePageTitleQuery = `
+            UPDATE program_pages SET
+            program_pages_title = ?,
+            program_pages_datemodified = NOW()
+            WHERE program_pages_id = ?
+        `;
+        // NOTE: new query for the new database - AL
+        // const changeGuidePageTitleQuery = `
+        //     UPDATE guide_page SET
+        //     title = ?,
+        //     date_modified = NOW()
+        //     WHERE guide_page_id = ?
+        // `;
+        db.query(changeGuidePageTitleQuery, [newPageTitle, pageProgramId], (err, result) => {
             if (err) {
                 console.log(err);
             }
@@ -286,9 +395,24 @@ const createUpdatePage = async (req, res) => {
 
         if (fetchProgramResult.length > 0) {
             // Update Program
-            db.query(
-                'UPDATE program_pages SET program_id = ?, program_pages_title = ?, program_pages_path = ?, program_pages_datemodified = NOW() WHERE program_pages_id = ?',
-                [pageProgramId, pageTitle, pagePath, pageId],
+            const updateGuidePageQuery = `
+                UPDATE program_pages SET
+                program_id = ?,
+                program_pages_title = ?,
+                program_pages_path = ?,
+                program_pages_datemodified = NOW()
+                WHERE program_pages_id = ?
+            `
+            // NOTE: new query for the new database - AL
+            // const updateGuidePageQuery = `
+            //     UPDATE guide_page SET
+            //     guide_id = ?,
+            //     title = ?,
+            //     filename = ?,
+            //     date_modified = NOW()
+            //     WHERE guide_page_id = ?
+            // `;
+            db.query(updateGuidePageQuery, [pageProgramId, pageTitle, pagePath, pageId],
                 (err, result) => {
                     if (err) {
                         return res
@@ -308,57 +432,79 @@ const createUpdatePage = async (req, res) => {
                 }
             )
         } else {
-        // Generate a new unique ID
-        const newId = uniqueId.uniqueIdGenerator();
-        const fileName = `${newId}.json`;
+            // Generate a new unique ID
+            const newId = uniqueId.uniqueIdGenerator();
+            const fileName = `${newId}.json`;
 
-        // Define the file path for the new JSON file
-        const filePath = path.join(__dirname, `../../public/guide-pages/`, fileName);
+            // Define the file path for the new JSON file
+            const filePath = path.join(__dirname, `../../public/guide-pages/`, fileName);
 
-        // Create an empty array as JSON data
-        const jsonData = '[]';
+            // Create an empty array as JSON data
+            const jsonData = '[]';
 
-        // Write the JSON data to the file
-        fs.writeFile(filePath, jsonData, (err) => {
-            if (err) {
-                console.error('Error creating JSON file:', err);
-                return res.status(500).json({
-                    error: 'Failed to create JSON file',
-                    err,
-                });
-            }
-
-            // Continue with the database query
-            // Insert the program_pages_path as the <insert newId>.json
-            db.query(
-                `INSERT INTO program_pages (program_pages_id, program_id, program_pages_dateadded, program_pages_title, program_pages_path) VALUES (?, ?, NOW(), ?, ?)`,
-                [newId, pageProgramId, 'Untitled', fileName], // Use the filePath as the program_pages_path
-                (createError, createRes) => {
-                    if (createError) {
-                        return res.status(500).json({
-                            error: 'Failed to create Page',
-                            createError,
-                        });
-                    }
-
-                    if (createRes.affectedRows > 0) {
-                        return res.json('Page created successfully');
-                    } else {
-                        return res.status(500).json({
-                            error: 'Failed to create page',
-                            createError,
-                        });
-                    }
+            // Write the JSON data to the file
+            fs.writeFile(filePath, jsonData, (err) => {
+                if (err) {
+                    console.error('Error creating JSON file:', err);
+                    return res.status(500).json({
+                        error: 'Failed to create JSON file',
+                        err,
+                    });
                 }
-            );
-        });  
-    }} catch (error) {
+
+                // Continue with the database query
+                // Insert the program_pages_path as the <insert newId>.json
+                const createGuidePageQuery = `
+                    INSERT INTO program_pages (
+                        program_pages_id,
+                        program_id,
+                        program_pages_dateadded,
+                        program_pages_title,
+                        program_pages_path
+                    )
+                    VALUES (?, ?, NOW(), ?, ?)
+                `;
+                // NOTE: new query for the new database - AL
+                // const createGuidePageQuery = `
+                //     INSERT INTO guide_page (
+                //         guide_page_id,
+                //         guide_id,
+                //         date_created,
+                //         title,
+                //         filename
+                //     )
+                //     VALUES (?, ?, NOW(), ?, ?)
+                // `;
+                db.query(
+                    createGuidePageQuery, [newId, pageProgramId, 'Untitled', fileName], // Use the filePath as the program_pages_path
+                    (createError, createRes) => {
+                        if (createError) {
+                            return res.status(500).json({
+                                error: 'Failed to create Page',
+                                createError,
+                            });
+                        }
+
+                        if (createRes.affectedRows > 0) {
+                            return res.json('Page created successfully');
+                        } else {
+                            return res.status(500).json({
+                                error: 'Failed to create page',
+                                createError,
+                            });
+                        }
+                    }
+                );
+            });
+        }
+    } catch (error) {
         console.error(error)
         return res.status(500).json({ error: 'Internal server error' })
     }
 }
 
 // Delete Program
+// NOTE: should be renamed to deleteGuide() - AL
 const deleteProgam = async (req, res) => {
     const { program_id } = req.params;
     const { username } = req.body;
@@ -367,10 +513,15 @@ const deleteProgam = async (req, res) => {
         const result = await fetchProgramById(program_id)
 
         if (result) {
+            const deleteGuideQuery = `
+                UPDATE program_i SET program_flag = 0 WHERE program_id = ?
+            `;
+            // NOTE: new query for the new database - AL
+            // const deleteGuideQuery = `
+            //     UPDATE guide SET archive = 1 WHERE guide_id = ?
+            // `;
             db.query(
-                'UPDATE program_i SET program_flag = 0 WHERE program_id = ?',
-                [program_id],
-                (deleteError, deleteRes) => {
+                deleteGuideQuery, [program_id], (deleteError, deleteRes) => {
                     if (deleteError) {
                         console.log(deleteError)
                         return res.status(500).json({
@@ -399,6 +550,7 @@ const deleteProgam = async (req, res) => {
 }
 
 // Delete Page
+// NOTE: should be renamed to deleteGuidePage()
 const deletePage = async (req, res) => {
     const { page_id } = req.params;
 
@@ -420,9 +572,15 @@ const deletePage = async (req, res) => {
                 }
 
                 // Continue with deleting the page from the database
+                const deleteGuidePageQuery = `
+                    DELETE FROM program_pages WHERE program_pages_id = ?
+                `;
+                // NOTE: new query for the new database - AL
+                // const deleteGuidePageQuery = `
+                //     UPDATE guide_page SET archive = 1 WHERE guide_page_id = ?
+                // `;
                 db.query(
-                    'DELETE FROM program_pages WHERE program_pages_id = ?',
-                    [page_id],
+                    deleteGuidePageQuery, [page_id],
                     (deleteError, deleteRes) => {
                         if (deleteError) {
                             console.error(deleteError);
