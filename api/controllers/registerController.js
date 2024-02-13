@@ -73,28 +73,8 @@ const account_application = async (req, res) => {
                     }
 
                     if (EmailResult.length > 0) {
-                        // Insert Email notif here
                         return res.json({ result: 'processing' })
-                        // axios
-                        //     .post(
-                        //         `http://localhost:3400/membership/ongoing/${email}`
-                        //     )
-                        //     .then((response) => {
-                        //         console.log(
-                        //             'Response from localhost:3002',
-                        //             response.data
-                        //         )
-                        //     })
-                        //     .catch((error) => {
-                        //         console.error(
-                        //             'Error making request',
-                        //             error.message
-                        //         )
-                        //     })
-
-                        // return res
-                        //     .status(200)
-                        //     .json({ message: 'Currently in processing' })
+                        
                     } else {
                         return res.json({ appId: id })
                     }

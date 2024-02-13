@@ -38,24 +38,26 @@ const authenticateUser = async (accessKey, password) => {
                     !result[0].hasOwnProperty('member_password')
                 ) {
                     resolve({ error: 'User not found' })
-                }
-
-                const DBpassword = result[0].member_password
-
-                if (!DBpassword) {
-                    resolve({ error: 'User password not found' })
-                }
-
-                const passwordMatch = await bcrypt.compare(password, DBpassword)
-
-                if (passwordMatch) {
-                    const otpSent =  twoAuth(accessKey);
-                    if (otpSent) {
-                        resolve({ twoAuth: true })
-                    }
                 } else {
-                    resolve({ twoAuth: false })
+                    const DBpassword = result[0].member_password
+
+                    if (!DBpassword) {
+                        resolve({ error: 'User password not found' })
+                    }
+    
+                    const passwordMatch = await bcrypt.compare(password, DBpassword)
+    
+                    if (passwordMatch) {
+                        const otpSent =  twoAuth(accessKey);
+                        if (otpSent) {
+                            resolve({ twoAuth: true })
+                        }
+                    } else {
+                        console.log('invalid pw');
+                        resolve({ twoAuth: false })
+                    }
                 }
+                
             }
         )
     })
@@ -69,7 +71,7 @@ const login = async (req, res) => {
         // Destroy accesskey when logged out or by default
         const result = await authenticateUser(accessKey, password)
         if (result.error) {
-            return res.status(401).json(result)
+            return res.json(result)
         }
         return res.json(result)
     } catch (error) {
@@ -107,7 +109,7 @@ const twoAuth = async (accesskey) => {
 
                     if (updateRes.affectedRows > 0) {
                         // Email notif here
-                        console.log(email, otp);
+                        // console.log(email, otp);
                         axios.post(`https://binno-email-production.up.railway.app/others/twoAuth`, {
                             receiver: email,
                             otp: otp
@@ -159,7 +161,7 @@ const verify_twoAuth = async (req, res) => {
     const hashedOtp = hash(otp);
     const hashedAccesskey = hash(accesskey);
 
-    console.log(otp, accesskey);
+    // console.log(otp, accesskey);
 
     try {
         db.query("SELECT member_settings.setting_institution, member_i.member_id, member_i.member_twoauth, member_i.member_first_time FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_twoauth = ? AND member_i.member_accesskey = ?", [hashedOtp, hashedAccesskey], (err, result) => {
@@ -215,9 +217,7 @@ const firstTime = async (req, res) => {
             if (err) {
                 console.log('Error saving profile image:', err);
                 success = false;
-            } else {
-                console.log('Profile Photo Added');
-            }
+            } 
         });
 
         // Process cover image

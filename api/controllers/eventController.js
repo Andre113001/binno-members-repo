@@ -198,18 +198,12 @@ const create_update = async (req, res) => {
 
             db.query(
                 `UPDATE event_i SET 
-                        event_address = ?,
-                        event_date  = ?,
-                        event_time  = ?,
                         event_title = ?, 
                         event_description = ?,
                         event_img = ?, 
                         event_datemodified = NOW()
                         WHERE event_id = ?`,
                 [
-                    eventLocation,
-                    eventDate,
-                    eventTime,
                     eventTitle,
                     eventDescription,
                     currentImg,
