@@ -12,6 +12,7 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const { converBase64ToImage } = require('convert-base64-to-image')
 
 const bcryptConverter = require('../middlewares/bcryptConverter');
+const { uploadToLog } = require('../middlewares/activityLogger');
 
 
 // Reusable function to authenticate user and generate token
@@ -154,6 +155,25 @@ const twoAuth = async (accesskey) => {
     }
 }
 
+function formatDate() {
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const currentDate = new Date();
+    const month = months[currentDate.getMonth()];
+    const day = currentDate.getDate();
+    const year = currentDate.getFullYear();
+    let hour = currentDate.getHours();
+    const minute = currentDate.getMinutes();
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12; // Convert hour to 12-hour format
+    const formattedDate = `${month} ${day}, ${year} | ${hour}:${minute < 10 ? '0' : ''}${minute} ${ampm}`;
+
+    return formattedDate;
+}
+
 const verify_twoAuth = async (req, res) => {
     const { otp, accesskey } = req.body;
     const hashedOtp = hash(otp);
@@ -185,6 +205,12 @@ const verify_twoAuth = async (req, res) => {
                 db.query(
                     updateQuery, [hash(token), result[0].member_id],
                 );
+
+                const todayDateString = formatDate();
+
+                const logRes = uploadToLog(
+                    result[0].member_id, '', result[0].setting_institution, 'Logged in', '', todayDateString
+                )
 
                 return res.json({ auth: result[0].member_first_time, token: token });
             } else {

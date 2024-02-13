@@ -194,9 +194,10 @@ const fetchProfileByToken = async (req, res) => {
 const updateProfile = async (req, res) => {
     const {
         member_id,
-        member_setting_bio,
-        member_profilepic,
-        member_coverpic,
+        description,
+        contactNumber,
+        profilepic,
+        coverpic,
     } = req.body
 
     try {
@@ -207,27 +208,48 @@ const updateProfile = async (req, res) => {
                 result[0].member_setting
             )
             if (getSettingsResult.length > 0) {
-                db.query(
-                    'UPDATE member_settings SET setting_bio = ?, setting_profilepic = ?, setting_coverpic = ?, setting_datemodified = NOW() WHERE setting_id = ?',
-                    [member_setting_bio, member_profilepic, member_coverpic, result[0].member_setting],
-                    (updateError, updateRes) => {
-                        if (updateError) {
-                            return res
-                                .status(500)
-                                .json({ error: 'Failed to update profile' })
-                        }
-
-                        if (updateRes.affectedRows > 0) {
-                            return res.status(200).json({
-                                message: 'Profile updated successfully',
-                            })
-                        } else {
-                            return res
-                                .status(500)
-                                .json({ message: 'Failed to update profile' })
-                        }
+                db.beginTransaction((transactionError) => {
+                    if (transactionError) {
+                        return res.status(500).json({ error: 'Failed to begin transaction' });
                     }
-                )
+
+                    db.query(
+                        'UPDATE member_settings SET setting_bio = ?, setting_datemodified = NOW() WHERE setting_id = ?',
+                        [description, result[0].member_setting],
+                        (updateError1, updateRes1) => {
+                            if (updateError1) {
+                                return db.rollback(() => {
+                                    res.status(500).json({ error: 'Failed to update profile', error_text: updateError1 });
+                                });
+                            }
+
+                            db.query(
+                                'UPDATE member_contact SET contact_number = ? WHERE contact_id = ?',
+                                [contactNumber, result[0].member_contact_id],
+                                (updateError2, updateRes2) => {
+                                    if (updateError2) {
+                                        return db.rollback(() => {
+                                            res.status(500).json({ error: 'Failed to update contact number', error_text: updateError2 });
+                                        });
+                                    }
+
+                                    db.commit((commitError) => {
+                                        if (commitError) {
+                                            return db.rollback(() => {
+                                                res.status(500).json({ error: 'Failed to commit transaction', error_text: commitError });
+                                            });
+                                        }
+
+                                        res.status(200).json({
+                                            message: 'Profile settings and contact updated successfully',
+                                        });
+                                    });
+                                }
+                            );
+                        }
+                    );
+                });
+
             } else {
                 return res.send('No Setting ID Set')
             }
@@ -240,7 +262,44 @@ const updateProfile = async (req, res) => {
     }
 }
 
-// WARN: to be removed for the new database - AL
+const updateProfilePic = async (req, res) => {
+    try {
+        const { newProfilePic, id } = req.body;
+        db.query('UPDATE member_settings SET setting_profilepic = ? WHERE setting_id = ?', [newProfilePic, id], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+
+            if (result.affectedRows > 0) {
+                return res.json('Profile Pic Updated');
+            } else {
+                return res.json('Profile Pic Not Updated');
+            }
+        })
+    } catch (error) {
+        console.log('error: ', error);
+    }
+}
+
+const updateCoverPic = async (req, res) => {
+    try {
+        const { newCoverPic, id } = req.body;
+        db.query('UPDATE member_settings SET setting_coverpic = ? WHERE setting_id = ?', [newCoverPic, id], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+
+            if (result.affectedRows > 0) {
+                return res.json('Cover Pic Updated');
+            } else {
+                return res.json('Cover Pic Not Updated');
+            }
+        })
+    } catch (error) {
+        console.log('error: ', error);
+    }
+}
+
 // Change status of member [Active, Vacation]
 const changeStatus = async (req, res) => {
     const { member_id } = req.params
@@ -429,6 +488,8 @@ module.exports = {
     changeStatus,
     fetchEnablers,
     fetchCompanies,
+    updateProfilePic,
+    updateCoverPic
 }
 
 // Task: 11/15/2023

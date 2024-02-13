@@ -12,7 +12,7 @@ const axios = require('axios')
 
 const post = async (req, res) => {
     try {
-        db.query('SELECT * FROM post_i', [], (err, result) => {
+        db.query('SELECT * FROM post_i WHERE post_flag = 1', [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -33,7 +33,7 @@ const fetchPostById = (postId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT * FROM post_i WHERE post_id = ?`
+            SELECT * FROM post_i WHERE post_id = ? AND post_flag = 1`
         db.query(sql, [sanitizeId(postId)], (err, data) => {
             if (err) {
                 reject(err)

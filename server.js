@@ -2,6 +2,7 @@ const dotenv = require('dotenv')
 const express = require('express')
 const path = require('path')
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 dotenv.config()
 
@@ -17,7 +18,15 @@ const urlencodedMiddleware = require('./api/middlewares/urlencodedMiddleware')
 app.use(corsMiddleware)
 app.use(jsonMiddleware)
 app.use(urlencodedMiddleware)
-app.use(express.json({ limit: '50mb' }))
+app.use(bodyParser.json({limit: '35mb'}));
+
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+    limit: '35mb',
+    parameterLimit: 50000,
+  }),
+);
 
 
 // app.use(cors({

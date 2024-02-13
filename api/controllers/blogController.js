@@ -132,17 +132,16 @@ const fetchAllBlogs = async (req, res) => {
         // const getAllBlogsByAuthorQuery = `
         //     SELECT * FROM blog WHERE author_id = ? AND archive = 0
         // `;
-        db.query(
-            getAllBlogsByAuthorQuery, [userId], (blogError, blogRes) => {
-                if (blogError) {
-                    console.log(blogError)
-                    return res
-                        .status(500)
-                        .json({ error: 'Failed to fetch blogs', blogError })
-                } else {
-                    return res.status(200).json(blogRes)
-                }
+        db.query(getAllBlogsByAuthorQuery, [userId], (blogError, blogRes) => {
+            if (blogError) {
+                console.log(blogError)
+                return res
+                    .status(500)
+                    .json({ error: 'Failed to fetch blogs', blogError })
+            } else {
+                return res.status(200).json(blogRes)
             }
+        }
         )
     } catch (error) {
         res.status(500).json({ error })

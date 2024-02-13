@@ -10,7 +10,8 @@ const imageController = require('../controllers/imageController')
 // const activityLogging = require('../middlewares/activityLogging')
 // router.use(activityLogging)
 
-router.get('/', imageController.getImage)
-router.post('/upload', upload.single('image'), imageController.uploadImage)
+router.get('/', imageController.getImage);
+router.post('/upload', upload.single('image'), imageController.uploadImage);
+router.post('/update', upload.single('image'), imageController.updateImage);
 
 module.exports = router
