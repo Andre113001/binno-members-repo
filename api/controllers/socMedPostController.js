@@ -1,3 +1,5 @@
+// WARN: filename should be renamed to postController.js - AL
+
 const db = require('../../database/db')
 
 // Middlewares
@@ -10,9 +12,13 @@ const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 
+// NOTE: should be renamed to fetchAllPost()
 const post = async (req, res) => {
     try {
-        db.query('SELECT * FROM post_i WHERE post_flag = 1', [], (err, result) => {
+        const getAllPostQuery = "SELECT * FROM post_i WHERE post_flag = 1";
+        // NOTE: new query for the new database - AL
+        // const getAllPostQuery = "SELECT * FROM post WHERE archive = 0";
+        db.query(getAllPostQuery, [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -32,9 +38,14 @@ const post = async (req, res) => {
 const fetchPostById = (postId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-            SELECT * FROM post_i WHERE post_id = ? AND post_flag = 1`
-        db.query(sql, [sanitizeId(postId)], (err, data) => {
+        const getPostByIdQuery = `
+            SELECT * FROM post_i WHERE post_id = ? AND post_flag = 1
+        `;
+        // NOTE: new query for the new database - AL
+        // const getPostByIdQuery = `
+        //     SELECT * FROM post WHERE post_id = ? AND archive = 0
+        // `;
+        db.query(getPostByIdQuery, [sanitizeId(postId)], (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -45,16 +56,22 @@ const fetchPostById = (postId) => {
 }
 
 // Reusable function to get a post by ID
+// NOTE: getPostByUserId() or getPostByAuthorId()
 const getUserPosts = (userId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const sql = `
-        SELECT post_i.*, member_settings.setting_institution 
-        FROM post_i
-        INNER JOIN member_i ON post_i.post_author = member_i.member_id
-        INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-        WHERE post_author = ? AND post_flag = 1`
-        db.query(sql, [sanitizeId(userId)], (err, data) => {
+        const getPostByUserIdQuery = `
+            SELECT post_i.*, member_settings.setting_institution FROM post_i
+            INNER JOIN member_i ON post_i.post_author = member_i.member_id
+            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            WHERE post_author = ? AND post_flag = 1
+        `;
+        // NOTE: new query for the new database - AL
+        // const getPostByUserIdQuery = `
+        //     SELECT * FROM post
+        //     WHERE author_id = ? AND archive = 0
+        // `;
+        db.query(getPostByUserIdQuery, [sanitizeId(userId)], (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -100,7 +117,7 @@ const fetchMemberPosts = async (req, res) => {
 function getFileExtensionFromDataURL(dataURL) {
     const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
     if (match && match[1]) {
-      return match[1];
+        return match[1];
     }
     return null;
 }
@@ -131,7 +148,7 @@ const updateCreatePost = async (req, res) => {
             let currentImg = result[0].post_img;
             // Delete the old image file
             const oldImagePath = path.join(__dirname, '../../public/img/post-pics/', result[0].post_img);
-            
+
             const base64Image = postImg.split(';base64,').pop();
             const imageName = OldimageId + '.' + getFileExtensionFromDataURL(postImg);
             const imgPath = path.join(__dirname, '../../public/img/post-pics/', imageName);
@@ -143,7 +160,7 @@ const updateCreatePost = async (req, res) => {
                     } else {
                         // console.log('Old image deleted successfully');
                         // Continue with saving the new image
-                        fs.writeFile(imgPath, base64Image, { encoding: 'base64' }, function (err) {
+                        fs.writeFile(imgPath, base64Image, { encoding: 'base64' }, function(err) {
                             if (err) {
                                 console.log('Error saving post image:', err);
                                 success = false;
@@ -154,9 +171,30 @@ const updateCreatePost = async (req, res) => {
                 currentImg = imageName;
             }
 
-            // Update the existing blog
+            // Update the existing post
+            const updateExistingPostQuery = `
+                UPDATE post_i SET
+                post_author = ?,
+                post_category = ?,
+                post_heading = ?,
+                post_bodytext = ?,
+                post_img = ?,
+                post_datemodified = NOW()
+                WHERE post_id = ?
+            `;
+            // NOTE: new query for the new database - AL
+            // const updateExistingPostQuery = `
+            //     UPDATE post SET
+            //     author_id = ?,
+            //     category = ?,
+            //     title = ?,
+            //     body = ?,
+            //     image = ?,
+            //     date_modified = NOW()
+            //     WHERE post_id = ?
+            // `;
             db.query(
-                'UPDATE post_i SET post_author = ?, post_category = ?, post_heading = ?, post_bodytext = ?, post_img = ?, post_datemodified=NOW() WHERE post_id = ?',
+                updateExistingPostQuery,
                 [
                     postAuthor,
                     postCategory,
@@ -178,7 +216,7 @@ const updateCreatePost = async (req, res) => {
                             const logRes = uploadToLog(
                                 postAuthor, post_id, username, 'updated a', 'post', postHeading
                             )
-    
+
                             if (logRes) {
                                 return res.status(200).json({ message: 'Post updated successfully' })
                             }
@@ -192,9 +230,34 @@ const updateCreatePost = async (req, res) => {
             )
         } else {
             const newId = uniqueIdGenerator()
-            // Create a new blog
+            // Create a new post
+            const createPostQuery = `
+                INSERT INTO post_i (
+                    post_id,
+                    post_dateadded,
+                    post_author,
+                    post_category,
+                    post_heading,
+                    post_bodytext,
+                    post_img
+                )
+                VALUES (?, NOW(), ?, ?, ?, ?, ?)
+            `;
+            // NOTE: new query for the new database - AL
+            // const createPostQuery = `
+            //     INSERT INTO post_i (
+            //         post_id,
+            //         date_created,
+            //         author_id,
+            //         category,
+            //         title,
+            //         body,
+            //         image,
+            //     )
+            //     VALUES (?, NOW(), ?, ?, ?, ?, ?)
+            // `;
             db.query(
-                'INSERT INTO post_i (post_id, post_dateadded, post_author, post_category, post_heading, post_bodytext, post_img) VALUES (?, NOW(), ?, ?, ?, ?, ?)',
+                createPostQuery,
                 [
                     newId,
                     postAuthor,
@@ -264,11 +327,11 @@ const deletePost = async (req, res) => {
                         const logRes = uploadToLog(
                             result[0].post_author, result[0].post_id, username, 'deleted a', 'post', result[0].post_heading
                         )
-                        
+
                         if (logRes) {
                             return res.status(201).json({ message: 'Post deleted successfully' })
                         }
-                        
+
                     } else {
                         return res
                             .status(500)
