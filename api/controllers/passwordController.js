@@ -14,7 +14,19 @@ const verifyChangePassword = async (req, res) => {
 
     try {
         const convertedAccessKey = sha256(accesskey);
-        db.query("SELECT email_i.email_address, member_settings.setting_institution FROM member_i INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email INNER JOIN email_i ON member_contact.contact_email = email_i.email_id LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_accesskey = ?", [convertedAccessKey], (err, result) => {
+        const getEmailAndInstitutionQuery = `
+            SELECT email_i.email_address, member_settings.setting_institution FROM member_i
+            INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email
+            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
+            LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+            WHERE member_i.member_accesskey = ?
+        `;
+        // NOTE: new query for the new database - AL
+        // const getEmailAndInstitutionQuery = `
+        //     SELECT contact_email, name FROM member_profile
+        //     WHERE access_key = ?
+        // `;
+        db.query(getEmailAndInstitutionQuery, [convertedAccessKey], (err, result) => {
             if (err) {
                 return res.status(500).json({ err });
             }
@@ -24,13 +36,22 @@ const verifyChangePassword = async (req, res) => {
                 const name = result[0].setting_institution;
                 const token = generateToken(32);
                 const convertedToken = sha256(token);
-                
-                // Assuming you have a MySQL connection named `db`
-                // Make sure to replace 'your_table_name' with the actual table name
-                const query = "UPDATE member_i SET member_resetpassword_token = ?, member_resetpassword_token_valid = DATE_ADD(NOW(), INTERVAL 3 HOUR) WHERE member_accesskey = ?";
+
+
+                const updatePasswordResetTokenQuery = `
+                    UPDATE member_i SET
+                    member_resetpassword_token = ?,
+                    member_resetpassword_token_valid = DATE_ADD(NOW(), INTERVAL 3 HOUR)
+                    WHERE member_accesskey = ?`;
+                // NOTE: new query for the new database - AL
+                // const updatePasswordResetTokenQuery = `
+                //     UPDATE member_profile SET
+                //     password_reset_token = ?,
+                //     password_reset_token_valid_date = DATE_ADD(NOW(), INTERVAL 3 HOUR)
+                //     WHERE access_key = ?`;
                 const values = [convertedToken, convertedAccessKey];
 
-                db.query(query, values, (updateError, updateRes) => {
+                db.query(updatePasswordResetTokenQuery, values, (updateError, updateRes) => {
                     if (updateError) {
                         return res.status(500).json({ error: updateError });
                     }
@@ -42,16 +63,16 @@ const verifyChangePassword = async (req, res) => {
                             name: name,
                             token: token
                         })
-                        .then(response => {
-                            console.log('Response from email server', response.data);
-                            // Add any additional logic here based on the response if needed
-                            return res.status(200).json({ message: "Email Sent" });
-                        })
-                        .catch(error => {
-                            console.error('Error making request', error.message);
-                            // Handle error
-                            return res.status(500).json({ message: "Failed to send email" });
-                        });
+                            .then(response => {
+                                console.log('Response from email server', response.data);
+                                // Add any additional logic here based on the response if needed
+                                return res.status(200).json({ message: "Email Sent" });
+                            })
+                            .catch(error => {
+                                console.error('Error making request', error.message);
+                                // Handle error
+                                return res.status(500).json({ message: "Failed to send email" });
+                            });
                     } else {
                         res.status(500).json({ result: "Fields unsuccessfully updated" });
                     }
@@ -68,9 +89,20 @@ const verifyChangePassword = async (req, res) => {
 
 const resetTokenChecker = async (req, res) => {
     try {
-        const { token }= req.body;
+        const { token } = req.body;
 
-        db.query("SELECT member_id, member_resetpassword_token, member_resetpassword_token_valid FROM member_i WHERE member_resetpassword_token = ?", [sha256(token)], (err, result) => {
+        const getPasswordResetTokenQuery = `
+            SELECT member_id, member_resetpassword_token, member_resetpassword_token_valid
+            FROM member_i
+            WHERE member_resetpassword_token = ?
+        `;
+        // NOTE: new query for the new database - AL
+        // const getPasswordResetTokenQuery = `
+        //     SELECT member_id, password_reset_token, password_reset_token_valid_date
+        //     FROM member_profile
+        //     WHERE password_reset_token = ?
+        // `;
+        db.query(getPasswordResetTokenQuery, [sha256(token)], (err, result) => {
             if (result.length > 0) {
                 const tokenData = result[0];
                 const currentTimestamp = new Date().getTime();
@@ -83,11 +115,10 @@ const resetTokenChecker = async (req, res) => {
                     res.status(400).json({ message: 'Token has expired' });
                 }
             } else {
-                return res.status(500).json({error: err});
+                return res.status(500).json({ error: err });
             }
         });
 
-        
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ error: error });
@@ -98,7 +129,22 @@ const changePassword = async (req, res) => {
     const { token, newPassword } = req.body
     try {
         const convertedPassword = await bcryptConverter(newPassword);
-        db.query("UPDATE member_i SET member_password = ?, member_resetpassword_token = NULL, member_resetpassword_token_valid = NULL WHERE member_resetpassword_token = ?", [convertedPassword, sha256(token)], (updateError, updateRes) => {
+        const changePasswordQuery = `
+            UPDATE member_i SET
+            member_password = ?,
+            member_resetpassword_token = NULL,
+            member_resetpassword_token_valid = NULL
+            WHERE member_resetpassword_token = ?
+        `;
+        // NOTE: new query for the new database - AL
+        // const changePasswordQuery = `
+        //     UPDATE member_profile SET
+        //     password = ?,
+        //     password_reset_token = NULL,
+        //     password_reset_token_valid_date = NULL
+        //     WHERE password_reset_token = ?
+        // `;
+        db.query(changePasswordQuery, [convertedPassword, sha256(token)], (updateError, updateRes) => {
             if (updateError) {
                 // console.log(updateError);
                 return res.status(500).json({ error: 'Failed to change password' });
@@ -112,7 +158,7 @@ const changePassword = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({error: error});
+        return res.status(500).json({ error: error });
     }
 };
 
