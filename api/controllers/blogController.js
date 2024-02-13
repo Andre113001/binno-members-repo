@@ -10,7 +10,10 @@ const { uploadToLog } = require('../middlewares/activityLogger');
 
 const blog = async (req, res) => {
     try {
-        db.query("SELECT * FROM blog_i WHERE blog_flag = 1", [], (err, result) => {
+        const getBlogsQuery = "SELECT * FROM blog_i WHERE blog_flag = 1";
+        // NOTE: new query for the new database - AL
+        // const getBlogsQuery = "SELECT * FROM blog where archive = 0";
+        db.query(getBlogsQuery, [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -29,10 +32,11 @@ const blog = async (req, res) => {
 // Reusable function to get a blog by ID
 const getBlogById = async (blogId) => {
     return new Promise((resolve, reject) => {
+        const getBlogByIdQuery = "SELECT * FROM blog_i WHERE blog_id = ?";
+        // NOTE: new query for the new database - AL
+        // const getBlogByIdQuery = "SELECT * FROM blog WHERE blog_id = ?";
         db.query(
-            'SELECT * FROM blog_i WHERE blog_id = ?',
-            [blogId],
-            (err, result) => {
+            getBlogByIdQuery, [blogId], (err, result) => {
                 if (err) {
                     reject(err)
                 } else {
@@ -78,10 +82,11 @@ const getImageBlob = (imagePath) => {
 const getBlogImage = async (req, res) => {
     const { blogId } = req.params
 
+    const getBlogImageQuery = "SELECT blog_img FROM blog_i WHERE blog_id = ?";
+    // NOTE: new query for the new database - AL
+    // const getBlogImageQuery = "SELECT image FROM blog WHERE blog_id = ?";
     db.query(
-        'SELECT blog_img FROM blog_i WHERE blog_id = ?',
-        [blogId],
-        (err, result) => {
+        getBlogImageQuery, [blogId], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -111,18 +116,24 @@ const getBlogImage = async (req, res) => {
     )
 }
 
+// NOTE: function name should be getAllBlogsByAuthorId(), getAllBlogsById() or getAllBlogsByUser() - AL
 const fetchAllBlogs = async (req, res) => {
     const { userId } = req.params
 
     try {
-        db.query(
-            `SELECT blog_i.*, member_settings.setting_institution
+        const getAllBlogsByAuthorQuery = `
+            SELECT blog_i.*, member_settings.setting_institution
             FROM blog_i
             INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1`,
-            [userId],
-            (blogError, blogRes) => {
+            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1
+        `;
+        // NOTE: new query for the new database - AL
+        // const getAllBlogsByAuthorQuery = `
+        //     SELECT * FROM blog WHERE author_id = ? AND archive = 0
+        // `;
+        db.query(
+            getAllBlogsByAuthorQuery, [userId], (blogError, blogRes) => {
                 if (blogError) {
                     console.log(blogError)
                     return res
@@ -147,7 +158,7 @@ function limitWords(text, limit) {
 function getFileExtensionFromDataURL(dataURL) {
     const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
     if (match && match[1]) {
-      return match[1];
+        return match[1];
     }
     return null;
 }
@@ -170,7 +181,7 @@ const postBlog = async (req, res) => {
             let currentImg = result[0].blog_img;
             // Delete the old image file
             const oldImagePath = path.join(__dirname, '../../public/img/blog-pics/', result[0].blog_img);
-            
+
             const base64Image = blogImg.split(';base64,').pop();
             const imageName = OldimageId + '.' + getFileExtensionFromDataURL(blogImg);
             const blogImgPath = path.join(__dirname, '../../public/img/blog-pics/', imageName);
@@ -182,9 +193,10 @@ const postBlog = async (req, res) => {
                     } else {
                         // console.log('Old image deleted successfully');
                         // Continue with saving the new image
-                        fs.writeFile(blogImgPath, base64Image, { encoding: 'base64' }, function (err) {
+                        fs.writeFile(blogImgPath, base64Image, { encoding: 'base64' }, function(err) {
                             if (err) {
                                 console.log('Error saving blog image:', err);
+                                // WARN: success variable is undeclared - AL
                                 success = false;
                             }
                         });
@@ -192,10 +204,26 @@ const postBlog = async (req, res) => {
                 });
                 currentImg = imageName;
             }
-            
+
+            const updateBlogQuery = `
+                UPDATE blog_i SET
+                blog_title = ?,
+                blog_content = ?,
+                blog_img = ?,
+                blog_lastmodified = NOW()
+                WHERE blog_id = ?
+            `;
+            // NOTE: new query for the new database - AL
+            // const updateBlogQuery = `
+            //     UPDATE blog SET
+            //     title = ?,
+            //     body = ?,
+            //     image = ?,
+            //     date_modified = NOW()
+            //     WHERE blog_id = ?
+            // `;
             db.query(
-                'UPDATE blog_i SET blog_title = ?, blog_content = ?, blog_img = ?, blog_lastmodified = NOW() WHERE blog_id = ?',
-                [blogTitle, blogContent, currentImg, result[0].blog_id],
+                updateBlogQuery, [blogTitle, blogContent, currentImg, result[0].blog_id],
                 (updateError, updateRes) => {
                     if (updateError) {
                         return res
@@ -207,7 +235,7 @@ const postBlog = async (req, res) => {
                         const logRes = uploadToLog(
                             authorId, blogId, username, 'updated a', 'blog', blogTitle
                         )
-                        
+
                         if (logRes) {
                             return res.status(200).json({ message: 'Blog updated successfully' });
                         }
@@ -222,6 +250,7 @@ const postBlog = async (req, res) => {
 
             // Handle image upload and renaming
             if (req.file) {
+                // WARN: moveFileToDirectory() is undeclared - AL
                 newImageName = moveFileToDirectory(
                     req.file,
                     newId,
@@ -230,12 +259,34 @@ const postBlog = async (req, res) => {
             }
 
             newImageName = blogImg.replace(/\\\\/g, '\\')
-            shortenedBlogContent = limitWords(blogContent, 60)
+            const shortenedBlogContent = limitWords(blogContent, 60)
 
             // Create a new blog
+            const createBlogQuery = `
+                INSERT INTO blog_i (
+                    blog_id,
+                    blog_author,
+                    blog_dateadded,
+                    blog_title,
+                    blog_content,
+                    blog_img
+                )
+                VALUES (?, ?, NOW(), ?, ?, ?)
+            `;
+            // NOTE: new query for the new database - AL
+            // const createBlogQuery = `
+            //     INSERT INTO blog (
+            //         blog_id,
+            //         author_id,
+            //         date_created,
+            //         title,
+            //         body,
+            //         image
+            //     )
+            //     VALUES (?, ?, NOW(), ?, ?, ?)
+            // `;
             db.query(
-                'INSERT INTO blog_i (blog_id, blog_author, blog_dateadded, blog_title, blog_content, blog_img) VALUES (?, ?, NOW(), ?, ?, ?)',
-                [newId, authorId, blogTitle, blogContent, newImageName],
+                createBlogQuery, [newId, authorId, blogTitle, blogContent, newImageName],
                 (createError, createRes) => {
                     if (createError) {
                         console.log(createError)
@@ -282,8 +333,11 @@ const deleteBlog = async (req, res) => {
     try {
         const result = await getBlogById(blogId)
 
-        if (result.length > 0  && result[0].hasOwnProperty('blog_id')) {
-            db.query("UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?", [blogId], (deleteError, deleteRes) => {
+        if (result.length > 0 && result[0].hasOwnProperty('blog_id')) {
+            const deleteBlogQuery = "UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?";
+            // NOTE: new query for the new database - AL
+            // const deleteBlogQuery = "UPDATE blog SET archive = 1 WHERE blog_id = ?";
+            db.query(deleteBlogQuery, [blogId], (deleteError, deleteRes) => {
                 if (deleteError) {
                     console.log(deleteError);
                     return res.status(500).json({ error: 'Failed to delete blog' });
@@ -293,13 +347,13 @@ const deleteBlog = async (req, res) => {
                     const logRes = uploadToLog(
                         result[0].blog_author, result[0].blog_id, username, 'deleted a', 'blog', result[0].blog_title
                     )
-                    
+
                     if (logRes) {
                         return res.status(201).json({ message: 'Blog deleted successfully' });
                     }
                 } else {
                     return res.status(500).json({ error: 'Failed to delete blog' });
-                }            
+                }
             });
         } else {
             return res.status(500).json({ error: 'Blog does not exist!' })
