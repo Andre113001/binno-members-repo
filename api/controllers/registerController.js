@@ -10,17 +10,20 @@ const jwt = require('jsonwebtoken')
 
 const getMemberByEmail = (memberEmail) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT * FROM email_i WHERE email_address = ?`
-        db.query(sql, [sanitizeId(memberEmail)], (err, data) => {
+        const getEmailDetailsQuery = `SELECT * FROM email_i WHERE email_address = ?`;
+        // NOTE: new query for the new database - AL
+        // const getEmailDetailsQuery = `SELECT * FROM email WHERE email_address = ?`;
+        db.query(getEmailDetailsQuery, [sanitizeId(memberEmail)], (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
-                resolve(data)
+                resolve(data);
             }
         })
     })
 }
 
+// WARN: obsolete?? - AL
 const applicationChecker = (email, name) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
@@ -60,10 +63,17 @@ const account_application = async (req, res) => {
             })
         } else {
             // Check if email is under processing in application
+            const checkApplicationQuery = `
+                SELECT app_email, app_institution FROM application_i
+                WHERE app_email = ? OR app_institution = ?
+            `;
+            // NOTE: new query for the new database - AL
+            // const checkApplicationQuery = `
+            //     SELECT email, name FROM pending_application
+            //     WHERE email = ? OR name = ?
+            // `;
             db.query(
-                'SELECT app_email, app_institution FROM application_i WHERE app_email = ? OR app_institution = ?',
-                [email, institution],
-                (EmailError, EmailResult) => {
+                checkApplicationQuery, [email, institution], (EmailError, EmailResult) => {
                     // this must be modular
                     if (EmailError) {
                         // console.log(updateError);
@@ -107,8 +117,8 @@ const account_application = async (req, res) => {
     }
 }
 
-
-const upload_documents = async(req, res) => {
+// NOTE: should be renamed to createApplication();
+const upload_documents = async (req, res) => {
     const { email, institution, address, type, classification, id } = req.body
 
     const tokenPayload = {
@@ -129,8 +139,35 @@ const upload_documents = async(req, res) => {
         currentDate.getTime() + 3 * 24 * 60 * 60 * 1000
     ) // 3 days in milliseconds
 
+    const createApplicationQuery = `
+        INSERT INTO application_i (
+            app_id,
+            app_institution,
+            app_email,
+            app_address,
+            app_type,
+            app_class,
+            app_dateadded,
+            app_token,
+            app_token_valid
+        )
+        VALUES (?,?,?,?,?,?, NOW(), ?, ?)
+    `;
+    // NOTE: new query for the new database - AL
+    // not yet sure
+    // const createApplicationQuery = `
+    //     INSERT INTO pending_application (
+    //         application_id,
+    //         name,
+    //         email,
+    //         address,
+    //         classification,
+    //         date_created,
+    //     )
+    //     VALUES (?,?,?,?,?, NOW(), ?, ?)
+    // `;
     db.query(
-        'INSERT INTO application_i (app_id, app_institution, app_email, app_address, app_type, app_class, app_dateadded, app_token, app_token_valid) VALUES (?,?,?,?,?,?, NOW(), ?, ?)',
+        createApplicationQuery,
         [
             id,
             institution,
