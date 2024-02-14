@@ -329,17 +329,15 @@ const firstTime = async (req, res) => {
                 console.log("No rows were affected");
             }
         });
-        // NOTE: new query for the new database - AL
-        /* db.query("UPDATE member_profile SET s_bio = ?, s_profile_pic = ?, s_cover_pic = ? WHERE access_key = ?", [description, newNameProfile, newNameCover, hash(token)], (err, result) => {
-            if (err) {
-                console.log('Error updating member settings:', err);
-                success = false;
-            } else {
-                console.log("No rows were affected");
-            }
-        }); */
 
-        db.query("UPDATE member_i SET member_first_time = 0 WHERE member_access = ?", [hash(token)], (err, result) => {
+        const updateFirstTimeLoginQuery = `
+            UPDATE member_i SET member_first_time = 0 WHERE member_access = ?
+        `;
+        // NOTE: new query for the new database - AL
+        // const updateFirstTimeLoginQuery = `
+        //     UPDATE member_profile SET first_time_login = 0 WHERE access_key = ?
+        // `;
+        db.query(updateFirstTimeLoginQuery, [hash(token)], (err, result) => {
             if (err) {
                 console.log('Error updating member_first_time:', err);
                 success = false;
@@ -347,15 +345,6 @@ const firstTime = async (req, res) => {
                 console.log("No rows were affected");
             }
         });
-        // NOTE: new query for the new database - AL
-        /* db.query("UPDATE member_profile SET first_time_login = 0 WHERE access_key = ?", [hash(token)], (err, result) => {
-            if (err) {
-                console.log('Error updating member_first_time:', err);
-                success = false;
-            } else {
-                console.log("No rows were affected");
-            }
-        }); */
 
         if (success) {
             res.json(true);
