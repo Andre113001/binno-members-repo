@@ -60,7 +60,7 @@ const account_application = async (req, res) => {
         if (result.length > 0) {
             return res.json({
                 result: 'Sorry you are already registered to the platform',
-            })
+            });
         } else {
             // Check if email is under processing in application
             const checkApplicationQuery = `
@@ -72,24 +72,22 @@ const account_application = async (req, res) => {
             //     SELECT email, name FROM pending_application
             //     WHERE email = ? OR name = ?
             // `;
-            db.query(
-                checkApplicationQuery, [email, institution], (EmailError, EmailResult) => {
-                    // this must be modular
-                    if (EmailError) {
-                        // console.log(updateError);
-                        return res.status(500).json({
-                            error: 'Failed to retrieve Email from application',
-                        })
-                    }
-
-                    if (EmailResult.length > 0) {
-                        return res.json({ result: 'processing' })
-                        
-                    } else {
-                        return res.json({ appId: id })
-                    }
+            db.query(checkApplicationQuery, [email, institution], (EmailError, EmailResult) => {
+                // this must be modular
+                if (EmailError) {
+                    // console.log(updateError);
+                    return res.status(500).json({
+                        error: 'Failed to retrieve Email from application',
+                    })
                 }
-            )
+
+                if (EmailResult.length > 0) {
+                    return res.json({ result: 'processing' })
+
+                } else {
+                    return res.json({ appId: id })
+                }
+            });
         }
     } catch (error) {
         console.log(error)
