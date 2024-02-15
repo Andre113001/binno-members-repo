@@ -233,7 +233,7 @@ const create_update = async (req, res) => {
             //     image = ?,
             //     date_modified = NOW()
             //     WHERE event_id = ?
-            // `
+            // `;
             db.query(
                 update_event_query,
                 [

@@ -28,39 +28,36 @@ const authenticateUser = async (accessKey, password) => {
         const query = "SELECT * FROM member_i WHERE member_accessKey = ?";
         // NOTE: new query for the new database - AL
         // const query = "SELECT * FROM member_profile WHERE access_key = ?";
-        db.query(
-            query, [hashedAccesskey], async (err, result) => {
-                if (err) {
-                    reject({ error: 'Internal server error' })
-                }
-
-                if (
-                    result.length === 0 ||
-                    !result[0].hasOwnProperty('member_password')
-                ) {
-                    resolve({ error: 'User not found' })
-                } else {
-                    const DBpassword = result[0].member_password
-
-                    if (!DBpassword) {
-                        resolve({ error: 'User password not found' })
-                    }
-
-                    const passwordMatch = await bcrypt.compare(password, DBpassword)
-
-                    if (passwordMatch) {
-                        const otpSent = twoAuth(accessKey);
-                        if (otpSent) {
-                            resolve({ twoAuth: true })
-                        }
-                    } else {
-                        console.log('invalid pw');
-                        resolve({ twoAuth: false })
-                    }
-                }
-
+        db.query(query, [hashedAccesskey], async (err, result) => {
+            if (err) {
+                reject({ error: 'Internal server error' })
             }
-        )
+
+            if (
+                result.length === 0 ||
+                !result[0].hasOwnProperty('member_password')
+            ) {
+                resolve({ error: 'User not found' })
+            } else {
+                const DBpassword = result[0].member_password
+
+                if (!DBpassword) {
+                    resolve({ error: 'User password not found' })
+                }
+
+                const passwordMatch = await bcrypt.compare(password, DBpassword)
+
+                if (passwordMatch) {
+                    const otpSent = twoAuth(accessKey);
+                    if (otpSent) {
+                        resolve({ twoAuth: true })
+                    }
+                } else {
+                    console.log('invalid pw');
+                    resolve({ twoAuth: false })
+                }
+            }
+        });
     })
 }
 
@@ -103,60 +100,58 @@ const twoAuth = async (accesskey) => {
         //     SELECT contact_email from member_profile
         //     where access_key = ?
         // `;
-        db.query(
-            emailQuery, [convertedAccessKey], (err, result) => {
-                if (err) {
-                    console.log(err);
-                }
+        db.query(emailQuery, [convertedAccessKey], (err, result) => {
+            if (err) {
+                console.log(err);
+            }
 
-                if (result.length > 0) {
-                    const email = result[0].email_address;
-                    const otp = generateOTP();
-                    const convertedOtp = hash(otp);
+            if (result.length > 0) {
+                const email = result[0].email_address;
+                const otp = generateOTP();
+                const convertedOtp = hash(otp);
 
-                    const query = `
+                const query = `
                         UPDATE member_i SET
                         member_twoauth = ?,
                         member_twoauth_valid = DATE_ADD(NOW(), INTERVAL 30 MINUTE)
                         WHERE member_accesskey = ?
                     `;
-                    // NOTE: new query for the new database - AL
-                    // const query = `
-                    //     UPDATE member_profile SET
-                    //     twoauth_token = ?,
-                    //     WHERE access_key = ?
-                    // `;
-                    db.query(
-                        query, [convertedOtp, convertedAccessKey], (updateError, updateRes) => {
-                            if (updateError) {
-                                console.log(updateError);
-                            }
+                // NOTE: new query for the new database - AL
+                // const query = `
+                //     UPDATE member_profile SET
+                //     twoauth_token = ?,
+                //     WHERE access_key = ?
+                // `;
+                db.query(query, [convertedOtp, convertedAccessKey], (updateError, updateRes) => {
+                    if (updateError) {
+                        console.log(updateError);
+                    }
 
-                            if (updateRes.affectedRows > 0) {
-                                // Email notif here
-                                // console.log(email, otp);
-                                axios.post(`https://binno-email-production.up.railway.app/others/twoAuth`, {
-                                    receiver: email,
-                                    otp: otp
-                                })
-                                    .then(response => {
-                                        console.log('Response from server', response.data);
-                                        return true;
-                                        // Add any additional logic here based on the response if needed
-                                    })
-                                    .catch(error => {
-                                        console.error('Error making request', error.message);
-                                        return false;
-                                        // Handle error
-                                    });
-                            } else {
-                                console.error("Fields unsuccessfully updated");
-                            }
-                        });
-                } else {
-                    console.error("Email cannot be found");
-                }
-            });
+                    if (updateRes.affectedRows > 0) {
+                        // Email notif here
+                        // console.log(email, otp);
+                        axios.post(`https://binno-email-production.up.railway.app/others/twoAuth`, {
+                            receiver: email,
+                            otp: otp
+                        })
+                            .then(response => {
+                                console.log('Response from server', response.data);
+                                return true;
+                                // Add any additional logic here based on the response if needed
+                            })
+                            .catch(error => {
+                                console.error('Error making request', error.message);
+                                return false;
+                                // Handle error
+                            });
+                    } else {
+                        console.error("Fields unsuccessfully updated");
+                    }
+                });
+            } else {
+                console.error("Email cannot be found");
+            }
+        });
     } catch (error) {
         console.log(error);
     }
