@@ -186,6 +186,7 @@ const create_update = async (req, res) => {
         const formattedDate = dateObject.toISOString().split('T')[0];
         // const date = new Date(eventDate);
 
+        // if an event already exist then update event
         if (retrieveEvent.length > 0 && retrieveEvent[0].hasOwnProperty('event_id')) {
             const OldimageId = path.basename(retrieveEvent[0].event_img, path.extname(retrieveEvent[0].event_img));
             let currentImg = retrieveEvent[0].event_img;
@@ -265,19 +266,22 @@ const create_update = async (req, res) => {
                     }
                 }
             )
+
+        // if an event doesnt exist then create new event
         } else {
             const newId = uniqueId.uniqueIdGenerator()
             const insert_event_query = `
                 INSERT INTO event_i (
-                event_id,
-                event_author,
-                event_datecreated,
-                event_address,
-                event_date,
-                event_time,
-                event_title,
-                event_description,
-                event_img)
+                    event_id,
+                    event_author,
+                    event_datecreated,
+                    event_address,
+                    event_date,
+                    event_time,
+                    event_title,
+                    event_description,
+                    event_img
+                )
                 VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)
             `
             // NOTE: new query for the new database - AL
