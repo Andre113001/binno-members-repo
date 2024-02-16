@@ -196,8 +196,6 @@ const updateProfile = async (req, res) => {
         member_id,
         description,
         contactNumber,
-        profilepic,
-        coverpic,
     } = req.body
 
     try {
