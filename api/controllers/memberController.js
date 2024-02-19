@@ -17,7 +17,11 @@ const getMemberById = (memberId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT * FROM member_i WHERE member_id = ?`
+            SELECT member_i.*, member_settings.*, member_contact.contact_number , email_i.email_address FROM member_i 
+            INNER JOIN member_settings ON member_settings.setting_memberId = member_i.member_id 
+            INNER JOIN member_contact ON member_contact.contact_id = member_i.member_contact_id
+            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
+            WHERE member_id = ?`
         db.query(sql, [sanitizedMemberId(memberId)], (err, data) => {
             if (err) {
                 reject(err)

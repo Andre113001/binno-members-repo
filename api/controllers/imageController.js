@@ -121,8 +121,33 @@ const updateImage = async (req, res) => {
     }
 }
 
+const deleteImage = async (req, res) => {
+    try {
+        const { filePath } = req.query;
+
+        if (!filePath) {
+            return res.status(400).json({ error: 'Missing filePath parameter' });
+        }
+
+        const imagePath = path.join(__dirname, `../../public/img/${filePath}`);
+
+        // Check if the file exists
+        if (fs.existsSync(imagePath)) {
+            // Delete the file
+            fs.unlinkSync(imagePath);
+            return res.status(200).json({ message: 'File deleted successfully' });
+        } else {
+            return res.status(404).json({ error: 'File not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
 module.exports = {
     getImage,
     uploadImage,
-    updateImage
+    updateImage,
+    deleteImage
 }
