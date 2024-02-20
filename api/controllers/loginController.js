@@ -110,7 +110,7 @@ const twoAuth = async (accesskey) => {
                     if (updateRes.affectedRows > 0) {
                         // Email notif here
                         // console.log(email, otp);
-                        axios.post(`https://binno-email-production.up.railway.app/others/twoAuth`, {
+                        axios.post(`${process.env.EMAIL_DOMAIN}/others/twoAuth`, {
                             receiver: email,
                             otp: otp
                         })

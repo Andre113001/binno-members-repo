@@ -216,7 +216,7 @@ const updateCreatePost = async (req, res) => {
                             postAuthor, newId, username, 'created a', 'post', postHeading
                         );
 
-                        axios.post("https://binno-email-production.up.railway.app/newsletter", {
+                        axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
                             username: username,
                             type: 'Post',
                             title: postHeading,

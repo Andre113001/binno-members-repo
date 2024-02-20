@@ -250,7 +250,7 @@ const postBlog = async (req, res) => {
                             authorId, newId, username, 'posted a', 'blog', blogTitle
                         )
 
-                        axios.post("https://binno-email-production.up.railway.app/newsletter", {
+                        axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
                             username: username,
                             type: 'Blog',
                             title: blogTitle,
