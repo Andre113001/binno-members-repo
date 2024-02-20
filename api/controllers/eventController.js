@@ -327,7 +327,7 @@ const create_update = async (req, res) => {
                             eventAuthor, newId, username, 'posted an', 'event', eventTitle
                         );
 
-                        axios.post("https://binno-email-production.up.railway.app/newsletter", {
+                        axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
                             username: username,
                             type: 'Event',
                             title: eventTitle,

@@ -60,7 +60,7 @@ app.use('/api/password', passwordRoute)
 app.use('/api/register', registerRoute)
 app.use('/api/newsletter', newsletterRoute)
 // app.use('/test', testRoute)
-
+  
 
 app.get('/', (req, res) => {
     res.status(200).json({  

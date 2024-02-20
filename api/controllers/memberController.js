@@ -16,7 +16,13 @@ const generateToken = require('../middlewares/generateTokenMiddleware')
 const getMemberById = (memberId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
-        const getMemberByIdQuery = "SELECT * FROM member_i WHERE member_id = ?";
+        const getMemberByIdQuery = `
+            SELECT member_i.*, member_settings.*, member_contact.contact_number , email_i.email_address FROM member_i
+            INNER JOIN member_settings ON member_settings.setting_memberId = member_i.member_id
+            INNER JOIN member_contact ON member_contact.contact_id = member_i.member_contact_id
+            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
+            WHERE member_id = ?
+        `;
         // NOTE: new query for the new database - AL
         // const getMemberByIdQuery = "SELECT * FROM member_profile WHERE member_id = ?";
         db.query(getMemberByIdQuery, [sanitizedMemberId(memberId)], (err, data) => {
