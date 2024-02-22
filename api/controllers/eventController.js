@@ -30,7 +30,7 @@ const event = async (req, res) => {
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
         db.query(
-            'SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1',
+            'SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE event_id = ? AND member_restrict IS NULL AND member_flag = 1',
             [eventSanitizeInput(eventId)],
             (err, result) => {
                 if (err) {
