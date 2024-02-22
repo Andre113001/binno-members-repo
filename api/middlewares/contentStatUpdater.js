@@ -13,9 +13,9 @@ const updateContentStat = async (content_type) => {
 		let currentFormattedDate = `${currentYear}-${currentMonth}-${currentDay}`;
 
 		const checkContentStatDateQuery = `
-		 SELECT * FROM content_stat WHERE
-		 date = ? AND content_type = ?
-	`;
+			 SELECT * FROM content_stat WHERE
+			 date = ? AND content_type = ?
+		`;
 		db.query(checkContentStatDateQuery, [currentFormattedDate, content_type], (error, result) => {
 			if (error) reject(error);
 			else if (result.length > 0) {
