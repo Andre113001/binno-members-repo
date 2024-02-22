@@ -13,8 +13,8 @@ const fetchProgramById = (programId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT * FROM program_i
-        WHERE program_id = ? ORDER BY program_dateadded DESC`
+        SELECT program_i.* FROM program_i INNER JOIN member_i ON member_i.member_id = program_i.program_author
+        WHERE program_id = ? AND member_restrict IS NULL AND member_flag = 1 ORDER BY program_dateadded DESC`
         db.query(sql, [sanitizeId(programId)], (err, data) => {
             if (err) {
                 reject(err)
@@ -29,7 +29,7 @@ const allPrograms = async (req, res) => {
     const programs = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT * FROM program_i WHERE program_flag = 1 ORDER BY program_dateadded DESC`
+        SELECT program_i.* FROM program_i INNER JOIN member_i ON member_i.member_id = program_i.program_author WHERE program_flag = 1 AND member_restrict IS NULL AND member_flag = 1 ORDER BY program_dateadded DESC`
         db.query(sql, (err, data) => {
             if (err) {
                 reject(err)

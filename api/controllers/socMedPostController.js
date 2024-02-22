@@ -12,7 +12,7 @@ const axios = require('axios')
 
 const post = async (req, res) => {
     try {
-        db.query('SELECT * FROM post_i WHERE post_flag = 1', [], (err, result) => {
+        db.query('SELECT post_i.* FROM post_i INNER JOIN member_i ON member_i.member_id = post_i.post_author WHERE post_flag = 1 AND member_restrict IS NULL and member_flag = 1', [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -33,7 +33,7 @@ const fetchPostById = (postId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT * FROM post_i WHERE post_id = ? AND post_flag = 1`
+            SELECT post_i.* FROM post_i INNER JOIN member_i ON member_i.member_id = post_i.post_author WHERE post_id = ? AND post_flag = 1 AND member_restrict IS NULL and member_flag = 1`
         db.query(sql, [sanitizeId(postId)], (err, data) => {
             if (err) {
                 reject(err)
@@ -53,7 +53,7 @@ const getUserPosts = (userId) => {
         FROM post_i
         INNER JOIN member_i ON post_i.post_author = member_i.member_id
         INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-        WHERE post_author = ? AND post_flag = 1`
+        WHERE post_author = ? AND post_flag = 1 AND member_restrict IS NULL AND member_flag = 1`
         db.query(sql, [sanitizeId(userId)], (err, data) => {
             if (err) {
                 reject(err)

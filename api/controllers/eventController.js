@@ -10,7 +10,7 @@ const axios = require('axios');
 
 const event = async (req, res) => {
     try {
-        db.query("SELECT * FROM event_i WHERE event_flag = 1", [], (err, result) => {
+        db.query("SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE member_restrict IS NULL AND member_flag = 1", [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -30,7 +30,7 @@ const event = async (req, res) => {
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
         db.query(
-            'SELECT * FROM event_i WHERE event_id = ? AND event_flag = 1',
+            'SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1',
             [eventSanitizeInput(eventId)],
             (err, result) => {
                 if (err) {
@@ -68,7 +68,7 @@ const events_user = async (req, res) => {
             FROM event_i
             INNER JOIN member_i ON event_i.event_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE event_author = ? AND event_flag = 1 ORDER BY event_date DESC`,
+            WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1 ORDER BY event_date DESC`,
             [userId],
             (eventError, eventRes) => {
                 if (eventError) {
