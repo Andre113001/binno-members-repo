@@ -127,6 +127,7 @@ const fetchAllBlogs = async (req, res) => {
             INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
             WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1
+            ORDER BY blog_dateadded DESC
         `;
         // NOTE: new query for the new database - AL
         // const getAllBlogsByAuthorQuery = `
@@ -141,8 +142,7 @@ const fetchAllBlogs = async (req, res) => {
             } else {
                 return res.status(200).json(blogRes)
             }
-        }
-        )
+        })
     } catch (error) {
         res.status(500).json({ error })
     }
