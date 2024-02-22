@@ -120,7 +120,7 @@ const fetchAllBlogs = async (req, res) => {
             FROM blog_i
             INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1 
+            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1
             ORDER BY blog_dateadded DESC`,
             [userId],
             (blogError, blogRes) => {
@@ -171,7 +171,7 @@ const postBlog = async (req, res) => {
             let currentImg = result[0].blog_img;
             // Delete the old image file
             const oldImagePath = path.join(__dirname, '../../public/img/blog-pics/', result[0].blog_img);
-            
+
             const base64Image = blogImg.split(';base64,').pop();
             const imageName = OldimageId + '.' + getFileExtensionFromDataURL(blogImg);
             const blogImgPath = path.join(__dirname, '../../public/img/blog-pics/', imageName);
@@ -193,7 +193,7 @@ const postBlog = async (req, res) => {
                 });
                 currentImg = imageName;
             }
-            
+
             db.query(
                 'UPDATE blog_i SET blog_title = ?, blog_content = ?, blog_img = ?, blog_lastmodified = NOW() WHERE blog_id = ?',
                 [blogTitle, blogContent, currentImg, result[0].blog_id],
@@ -208,7 +208,7 @@ const postBlog = async (req, res) => {
                         const logRes = uploadToLog(
                             authorId, blogId, username, 'updated a', 'blog', blogTitle
                         )
-                        
+
                         if (logRes) {
                             return res.status(200).json({ message: 'Blog updated successfully' });
                         }
@@ -294,13 +294,13 @@ const deleteBlog = async (req, res) => {
                     const logRes = uploadToLog(
                         result[0].blog_author, result[0].blog_id, username, 'deleted a', 'blog', result[0].blog_title
                     )
-                    
+
                     if (logRes) {
                         return res.status(201).json({ message: 'Blog deleted successfully' });
                     }
                 } else {
                     return res.status(500).json({ error: 'Failed to delete blog' });
-                }            
+                }
             });
         } else {
             return res.status(500).json({ error: 'Blog does not exist!' })
