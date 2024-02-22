@@ -10,7 +10,7 @@ const axios = require('axios');
 
 const event = async (req, res) => {
     try {
-        const query = "SELECT * FROM event_i";
+        const query = "SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE member_restrict IS NULL AND member_flag = 1";
         // NOTE: new quer for the new database
         // const query = "SELECT * FROM event";
         db.query(query, [], (err, result) => {
@@ -32,20 +32,16 @@ const event = async (req, res) => {
 // Event Finder by ID
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT * FROM event_i WHERE event_id = ?";
+        const query = "SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1";
         // NOTE: new quer for the new database
         // const query = "SELECT * FROM event WHERE event_id = ?";
-        db.query(
-            query,
-            [eventSanitizeInput(eventId)],
-            (err, result) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve(result)
-                }
+        db.query(query, [eventSanitizeInput(eventId)], (err, result) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(result)
             }
-        )
+        });
     })
 }
 
@@ -74,7 +70,7 @@ const events_user = async (req, res) => {
             FROM event_i
             INNER JOIN member_i ON event_i.event_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE event_author = ? AND event_flag = 1 ORDER BY event_date DESC
+            WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1 AND event_flag = 1 ORDER BY event_date DESC
         `;
         // NOTE: new quer for the new database
         // const query = `
@@ -82,20 +78,16 @@ const events_user = async (req, res) => {
         //     WHERE event_author = ? AND archive = 0
         //     ORDER BY date DESC
         // `;
-        db.query(
-            query,
-            [userId],
-            (eventError, eventRes) => {
-                if (eventError) {
-                    console.log(eventError)
-                    return res
-                        .status(500)
-                        .json({ error: 'Failed to fetch events', eventError })
-                } else {
-                    return res.status(200).json(eventRes)
-                }
+        db.query(query, [userId], (eventError, eventRes) => {
+            if (eventError) {
+                console.log(eventError)
+                return res
+                    .status(500)
+                    .json({ error: 'Failed to fetch events', eventError })
+            } else {
+                return res.status(200).json(eventRes)
             }
-        )
+        });
     } catch (error) {
         res.status(500).json(Error, error)
     }
@@ -267,7 +259,7 @@ const create_update = async (req, res) => {
                 }
             )
 
-        // if an event doesnt exist then create new event
+            // if an event doesnt exist then create new event
         } else {
             const newId = uniqueId.uniqueIdGenerator()
             const insert_event_query = `

@@ -39,9 +39,7 @@ const fetchEnablers = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const getEnablersQuery = `
-            SELECT * FROM member_i
-            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE member_type = '2'
+            SELECT * FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_type = '2' AND member_restrict IS NULL AND member_flag = 1
         `;
         // NOTE: new query for the new database - AL
         // const getEnablersQuery = "SELECT * FROM member_profile WHERE member_class = 2";
@@ -61,9 +59,7 @@ const fetchCompanies = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const getCompaniesQuery = `
-            SELECT * FROM member_i
-            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE member_type = '1'
+            SELECT * FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id  WHERE member_type = '1' AND member_restrict IS NULL AND member_flag = 1
         `;
         // NOTE: new query for the new database - AL
         // const getCompaniesQuery = "SELECT * FROM member_profile WHERE member_type = 1";

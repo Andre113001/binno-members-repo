@@ -15,7 +15,7 @@ const axios = require('axios')
 // NOTE: should be renamed to fetchAllPost()
 const post = async (req, res) => {
     try {
-        const getAllPostQuery = "SELECT * FROM post_i WHERE post_flag = 1";
+        const getAllPostQuery = "SELECT post_i.* FROM post_i INNER JOIN member_i ON member_i.member_id = post_i.post_author WHERE post_flag = 1 AND member_restrict IS NULL and member_flag = 1";
         // NOTE: new query for the new database - AL
         // const getAllPostQuery = "SELECT * FROM post WHERE archive = 0";
         db.query(getAllPostQuery, [], (err, result) => {
@@ -39,7 +39,7 @@ const fetchPostById = (postId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const getPostByIdQuery = `
-            SELECT * FROM post_i WHERE post_id = ? AND post_flag = 1
+            SELECT post_i.* FROM post_i INNER JOIN member_i ON member_i.member_id = post_i.post_author WHERE post_id = ? AND post_flag = 1 AND member_restrict IS NULL and member_flag = 1
         `;
         // NOTE: new query for the new database - AL
         // const getPostByIdQuery = `
@@ -61,10 +61,11 @@ const getUserPosts = (userId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const getPostByUserIdQuery = `
-            SELECT post_i.*, member_settings.setting_institution FROM post_i
+            SELECT post_i.*, member_settings.setting_institution
+            FROM post_i
             INNER JOIN member_i ON post_i.post_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE post_author = ? AND post_flag = 1
+            WHERE post_author = ? AND post_flag = 1 AND member_restrict IS NULL AND member_flag = 1
         `;
         // NOTE: new query for the new database - AL
         // const getPostByUserIdQuery = `

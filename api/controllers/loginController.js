@@ -178,6 +178,10 @@ function formatDate() {
 
 const verify_twoAuth = async (req, res) => {
     const { otp, accesskey } = req.body;
+    console.log({
+        otp: otp, 
+        accesskey: accesskey
+    });
     const hashedOtp = hash(otp);
     const hashedAccesskey = hash(accesskey);
 
