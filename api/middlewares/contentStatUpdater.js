@@ -16,16 +16,17 @@ const updateContentStat = async (content_type) => {
 			 SELECT * FROM content_stat WHERE
 			 date = ? AND content_type = ?
 		`;
-		db.query(checkContentStatDateQuery, [currentFormattedDate, content_type], (error, result) => {
-			if (error) reject(error);
-			else if (result.length > 0) {
+		db.query(checkContentStatDateQuery, [currentFormattedDate, content_type], (checkError, checkResult) => {
+			if (checkError) reject(checkError);
+			else if (checkResult.length > 0) {
 				const updateContentStatQuery = `
 					UPDATE content_stat SET
 					count = count + 1
 					WHERE date = ? AND content_type = ?
 			  `;
-				db.query(updateContentStatQuery, [currentFormattedDate, content_type], (error, result) => {
-					if (error) reject(error);
+				db.query(updateContentStatQuery, [currentFormattedDate, content_type], (updateError, updateResult) => {
+					if (updateError) reject(updateError);
+					else resolve(updateResult);
 				});
 			}
 			else {
@@ -35,8 +36,9 @@ const updateContentStat = async (content_type) => {
 					)
 					VALUES (?, NOW(), 1)
 			  `;
-				db.query(createContentStatQuery, content_type, (error, result) => {
-					if (error) reject(error);
+				db.query(createContentStatQuery, content_type, (createError, createResult) => {
+					if (createError) reject(createError);
+					else resolve(createResult);
 				});
 			}
 		});
