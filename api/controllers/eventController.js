@@ -32,7 +32,11 @@ const event = async (req, res) => {
 // Event Finder by ID
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
-        const query = "SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1";
+        const query = `
+            SELECT event_i.* FROM event_i
+            INNER JOIN member_i ON member_i.member_id = event_i.event_author
+            WHERE event_id = ? AND member_restrict IS NULL AND member_flag = 1
+        `;
         // NOTE: new quer for the new database
         // const query = "SELECT * FROM event WHERE event_id = ?";
         db.query(query, [eventSanitizeInput(eventId)], (err, result) => {
@@ -120,37 +124,33 @@ const getEventImage = async (req, res) => {
     const query = `SELECT event_img FROM event_i WHERE event_id = ?`;
     // NOTE: new query for the new database
     // const query = `SELECT image FROM event WHERE event_id = ?`;
-    db.query(
-        query,
-        [eventId],
-        (err, result) => {
-            if (err) {
-                return res.status(500).json(err)
-            }
-
-            if (result.length > 0) {
-                const imgPath = path.join(
-                    __dirname,
-                    '../../public/img/event-pics',
-                    result[0].event_img
-                )
-                try {
-                    const imageBlob = getImageBlob(imgPath)
-
-                    // Set the appropriate content type for the image
-                    res.setHeader('Content-Type', 'image/jpeg') // Adjust the content type based on your image format
-
-                    // Send the image binary data as the response
-                    res.send(imageBlob)
-                } catch (error) {
-                    console.error('Error fetching image:', error)
-                    res.status(500).send('Internal Server Error')
-                }
-            } else {
-                return res.status(500).json(err)
-            }
+    db.query(query, [eventId], (err, result) => {
+        if (err) {
+            return res.status(500).json(err)
         }
-    )
+
+        if (result.length > 0) {
+            const imgPath = path.join(
+                __dirname,
+                '../../public/img/event-pics',
+                result[0].event_img
+            )
+            try {
+                const imageBlob = getImageBlob(imgPath)
+
+                // Set the appropriate content type for the image
+                res.setHeader('Content-Type', 'image/jpeg') // Adjust the content type based on your image format
+
+                // Send the image binary data as the response
+                res.send(imageBlob)
+            } catch (error) {
+                console.error('Error fetching image:', error)
+                res.status(500).send('Internal Server Error')
+            }
+        } else {
+            return res.status(500).json(err)
+        }
+    });
 }
 
 function getFileExtensionFromDataURL(dataURL) {
@@ -355,13 +355,13 @@ const deleteEvent = async (req, res) => {
                 UPDATE event_i
                 SET event_flag = 0
                 WHERE event_id = ?
-            `
+            `;
             // NOTE: new query for the new database - AL
             // const query = `
             //     UPDATE event
             //     SET archive = 1
             //     WHERE event_id = ?
-            // `
+            // `;
             db.query(
                 query, [eventId], (eventDeleteError, eventDeleteResult) => {
                     if (eventDeleteError) {
