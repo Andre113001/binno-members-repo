@@ -354,10 +354,38 @@ const deletePost = async (req, res) => {
     }
 }
 
+const updatePostPin = async (request, result) => {
+    const { postId, pinStatus } = request.body;
+    try {
+        const postExist = fetchPostById(postId);
+        if (postExist.length > 0) {
+            const updatePostPinQuery = `
+                UPDATE post_i
+                SET post_pin = ?
+                WHERE post_id = ?
+            `;
+            db.query(updatePostPinQuery, [pinStatus, postId], (updateError, updateResult) => {
+                if (updateError) {
+                    console.log(updateError)
+                    return result.status(500).json({ error: 'Failed to update post pin' })
+                }
+            });
+        }
+        else {
+            return result.status(500).json({ error: 'Post does not exist!' })
+        }
+    }
+    catch (error) {
+        console.error(error)
+        return result.status(500).json({ error: 'Internal server error' })
+    }
+}
+
 module.exports = {
     post,
     fetchPost,
     updateCreatePost,
     deletePost,
     fetchMemberPosts,
+    updatePostPin
 }
