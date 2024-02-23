@@ -19,7 +19,7 @@ const verifyChangePassword = async (req, res) => {
             INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email
             INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
             LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE member_i.member_accesskey = ?
+            WHERE member_i.member_accesskey = ? AND member_restrict IS NULL AND member_flag = 1
         `;
         // NOTE: new query for the new database - AL
         // const getEmailAndInstitutionQuery = `
@@ -78,7 +78,7 @@ const verifyChangePassword = async (req, res) => {
                     }
                 });
             } else {
-                return res.status(200).json({ message: "Email cannot be found" });
+                return res.status(200).json({ message: "Member cannot be found" });
             }
         });
     } catch (error) {
@@ -92,9 +92,8 @@ const resetTokenChecker = async (req, res) => {
         const { token } = req.body;
 
         const getPasswordResetTokenQuery = `
-            SELECT member_id, member_resetpassword_token, member_resetpassword_token_valid
-            FROM member_i
-            WHERE member_resetpassword_token = ?
+            SELECT member_id, member_resetpassword_token, member_resetpassword_token_valid FROM member_i
+            WHERE member_resetpassword_token = ? AND member_restrict IS NULL AND member_flag = 1
         `;
         // NOTE: new query for the new database - AL
         // const getPasswordResetTokenQuery = `

@@ -25,7 +25,10 @@ const authenticateUser = async (accessKey, password) => {
     const hashedAccesskey = hash(accessKey).toString('base64')
 
     return new Promise((resolve, reject) => {
-        const query = "SELECT * FROM member_i WHERE member_accessKey = ?";
+        const query = `
+            SELECT * FROM member_i
+            WHERE member_accessKey = ? AND member_restrict IS NULL AND member_flag = 1
+        `;
         // NOTE: new query for the new database - AL
         // const query = "SELECT * FROM member_profile WHERE access_key = ?";
         db.query(query, [hashedAccesskey], async (err, result) => {
@@ -33,10 +36,7 @@ const authenticateUser = async (accessKey, password) => {
                 reject({ error: 'Internal server error' })
             }
 
-            if (
-                result.length === 0 ||
-                !result[0].hasOwnProperty('member_password')
-            ) {
+            if (result.length === 0 || !result[0].hasOwnProperty('member_password')) {
                 resolve({ error: 'User not found' })
             } else {
                 const DBpassword = result[0].member_password
@@ -87,7 +87,6 @@ function generateOTP() {
 const twoAuth = async (accesskey) => {
     try {
         const convertedAccessKey = hash(accesskey);
-        // NOTE: ang haba ng query para lang sa email add?? - AL
         const emailQuery = `
             SELECT email_i.email_address FROM member_i
             INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email
@@ -111,11 +110,11 @@ const twoAuth = async (accesskey) => {
                 const convertedOtp = hash(otp);
 
                 const query = `
-                        UPDATE member_i SET
-                        member_twoauth = ?,
-                        member_twoauth_valid = DATE_ADD(NOW(), INTERVAL 30 MINUTE)
-                        WHERE member_accesskey = ?
-                    `;
+                    UPDATE member_i SET
+                    member_twoauth = ?,
+                    member_twoauth_valid = DATE_ADD(NOW(), INTERVAL 30 MINUTE)
+                    WHERE member_accesskey = ?
+                `;
                 // NOTE: new query for the new database - AL
                 // const query = `
                 //     UPDATE member_profile SET
@@ -179,7 +178,7 @@ function formatDate() {
 const verify_twoAuth = async (req, res) => {
     const { otp, accesskey } = req.body;
     console.log({
-        otp: otp, 
+        otp: otp,
         accesskey: accesskey
     });
     const hashedOtp = hash(otp);
