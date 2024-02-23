@@ -26,7 +26,7 @@ const authenticateUser = async (accessKey, password) => {
 
     return new Promise((resolve, reject) => {
         db.query(
-            `SELECT * FROM member_i WHERE member_accessKey = ?`,
+            `SELECT * FROM member_i WHERE member_accessKey = ? AND member_restrict IS NULL AND member_flag = 1`,
             [hashedAccesskey],
             async (err, result) => {
                 if (err) {

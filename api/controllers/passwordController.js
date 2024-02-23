@@ -14,7 +14,7 @@ const verifyChangePassword = async (req, res) => {
 
     try {
         const convertedAccessKey = sha256(accesskey);
-        db.query("SELECT email_i.email_address, member_settings.setting_institution FROM member_i INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email INNER JOIN email_i ON member_contact.contact_email = email_i.email_id LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_accesskey = ?", [convertedAccessKey], (err, result) => {
+        db.query("SELECT email_i.email_address, member_settings.setting_institution FROM member_i INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email INNER JOIN email_i ON member_contact.contact_email = email_i.email_id LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_accesskey = ? AND member_restrict IS NULL AND member_flag = 1", [convertedAccessKey], (err, result) => {
             if (err) {
                 return res.status(500).json({ err });
             }
@@ -57,7 +57,7 @@ const verifyChangePassword = async (req, res) => {
                     }
                 });
             } else {
-                return res.status(200).json({ message: "Email cannot be found" });
+                return res.status(200).json({ message: "Member cannot be found" });
             }
         });
     } catch (error) {
@@ -70,7 +70,7 @@ const resetTokenChecker = async (req, res) => {
     try {
         const { token }= req.body;
 
-        db.query("SELECT member_id, member_resetpassword_token, member_resetpassword_token_valid FROM member_i WHERE member_resetpassword_token = ?", [sha256(token)], (err, result) => {
+        db.query("SELECT member_id, member_resetpassword_token, member_resetpassword_token_valid FROM member_i WHERE member_resetpassword_token = ? AND member_restrict IS NULL AND member_flag = 1", [sha256(token)], (err, result) => {
             if (result.length > 0) {
                 const tokenData = result[0];
                 const currentTimestamp = new Date().getTime();
