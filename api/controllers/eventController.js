@@ -10,10 +10,18 @@ const axios = require('axios');
 
 const event = async (req, res) => {
     try {
-        const query = "SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE member_restrict IS NULL AND member_flag = 1";
-        // NOTE: new quer for the new database
-        // const query = "SELECT * FROM event";
-        db.query(query, [], (err, result) => {
+        const getAllEventsQuery = `
+            SELECT event_i.* FROM event_i
+            INNER JOIN member_i ON member_i.member_id = event_i.event_author
+            WHERE member_restrict IS NULL AND member_flag = 1
+        `;
+        // NOTE: new query for the new database - AL
+        // const getAllEventsQuery = `
+        //     SELECT event.* FROM event
+        //     INNER JOIN member_profile ON member_profile.member_id = event.author_id
+        //     WHERE member_profile.date_lift_restriction IS NULL AND member.archive = 0
+        // `;
+        db.query(getAllEventsQuery, [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
@@ -32,14 +40,18 @@ const event = async (req, res) => {
 // Event Finder by ID
 const getEventById = async (eventId) => {
     return new Promise((resolve, reject) => {
-        const query = `
+        const getEventByIdQuery = `
             SELECT event_i.* FROM event_i
             INNER JOIN member_i ON member_i.member_id = event_i.event_author
             WHERE event_id = ? AND member_restrict IS NULL AND member_flag = 1
         `;
-        // NOTE: new quer for the new database
-        // const query = "SELECT * FROM event WHERE event_id = ?";
-        db.query(query, [eventSanitizeInput(eventId)], (err, result) => {
+        // NOTE: new quer for the new database - AL
+        // const getEventByIdQuery = `
+        //     SELECT event.* FROM event
+        //     INNER JOIN member_profile ON member_profile.member_id = event.author_id
+        //     WHERE member_profile.date_lift_restriction IS NULL AND member.archive = 0 AND event_id = ?
+        // `;
+        db.query(getEventByIdQuery, [eventSanitizeInput(eventId)], (err, result) => {
             if (err) {
                 reject(err)
             } else {
@@ -69,20 +81,22 @@ const events_user = async (req, res) => {
     const { userId } = req.params
 
     try {
-        const query = `
+        const getEventsByUserIdQuery = `
             SELECT event_i.*, member_settings.setting_institution
             FROM event_i
             INNER JOIN member_i ON event_i.event_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
             WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1 AND event_flag = 1 ORDER BY event_date DESC
         `;
-        // NOTE: new quer for the new database
-        // const query = `
-        //     SELECT * FROM event
-        //     WHERE event_author = ? AND archive = 0
+        // NOTE: new query for the new database - AL
+        // const getEventsByUserIdQuery = `
+        //     SELECT event.*, member_profile.name FROM event
+        //     INNER JOIN member_profile ON event.author_id = member_profile.member_id
+        //     WHERE event.author_id = ? AND event.archive = 0
+        //     AND member_profile.date_lift_restriction IS NULL AND member_profile.archive = 0
         //     ORDER BY date DESC
         // `;
-        db.query(query, [userId], (eventError, eventRes) => {
+        db.query(getEventsByUserIdQuery, [userId], (eventError, eventRes) => {
             if (eventError) {
                 console.log(eventError)
                 return res
