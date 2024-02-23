@@ -49,7 +49,7 @@ const getUserPosts = (userId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT post_i.*, member_settings.setting_institution 
+        SELECT post_i.*, member_settings.setting_institution
         FROM post_i
         INNER JOIN member_i ON post_i.post_author = member_i.member_id
         INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
@@ -100,7 +100,7 @@ const fetchMemberPosts = async (req, res) => {
 function getFileExtensionFromDataURL(dataURL) {
     const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
     if (match && match[1]) {
-      return match[1];
+        return match[1];
     }
     return null;
 }
@@ -131,7 +131,7 @@ const updateCreatePost = async (req, res) => {
             let currentImg = result[0].post_img;
             // Delete the old image file
             const oldImagePath = path.join(__dirname, '../../public/img/post-pics/', result[0].post_img);
-            
+
             const base64Image = postImg.split(';base64,').pop();
             const imageName = OldimageId + '.' + getFileExtensionFromDataURL(postImg);
             const imgPath = path.join(__dirname, '../../public/img/post-pics/', imageName);
@@ -143,7 +143,7 @@ const updateCreatePost = async (req, res) => {
                     } else {
                         // console.log('Old image deleted successfully');
                         // Continue with saving the new image
-                        fs.writeFile(imgPath, base64Image, { encoding: 'base64' }, function (err) {
+                        fs.writeFile(imgPath, base64Image, { encoding: 'base64' }, function(err) {
                             if (err) {
                                 console.log('Error saving post image:', err);
                                 success = false;
@@ -178,7 +178,7 @@ const updateCreatePost = async (req, res) => {
                             const logRes = uploadToLog(
                                 postAuthor, post_id, username, 'updated a', 'post', postHeading
                             )
-    
+
                             if (logRes) {
                                 return res.status(200).json({ message: 'Post updated successfully' })
                             }
@@ -264,11 +264,11 @@ const deletePost = async (req, res) => {
                         const logRes = uploadToLog(
                             result[0].post_author, result[0].post_id, username, 'deleted a', 'post', result[0].post_heading
                         )
-                        
+
                         if (logRes) {
                             return res.status(201).json({ message: 'Post deleted successfully' })
                         }
-                        
+
                     } else {
                         return res
                             .status(500)
@@ -285,10 +285,38 @@ const deletePost = async (req, res) => {
     }
 }
 
+const updatePostPin = async (request, result) => {
+    const { postId, pinStatus } = request.body;
+    try {
+        const postExist = fetchPostById(postId);
+        if (postExist.length > 0) {
+            const updatePostPinQuery = `
+                UPDATE post_i
+                SET post_pin = ?
+                WHERE post_id = ?
+            `;
+            db.query(updatePostPinQuery, [pinStatus, postId], (updateError, updateResult) => {
+                if (updateError) {
+                    console.log(updateError)
+                    return result.status(500).json({ error: 'Failed to update post pin' })
+                }
+            });
+        }
+        else {
+            return result.status(500).json({ error: 'Post does not exist!' })
+        }
+    }
+    catch (error) {
+        console.error(error)
+        return result.status(500).json({ error: 'Internal server error' })
+    }
+}
+
 module.exports = {
     post,
     fetchPost,
     updateCreatePost,
     deletePost,
     fetchMemberPosts,
+    updatePostPin
 }
