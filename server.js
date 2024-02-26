@@ -18,14 +18,14 @@ const urlencodedMiddleware = require('./api/middlewares/urlencodedMiddleware')
 app.use(corsMiddleware)
 app.use(jsonMiddleware)
 app.use(urlencodedMiddleware)
-app.use(bodyParser.json({limit: '35mb'}));
+app.use(bodyParser.json({ limit: '35mb' }));
 
 app.use(
-  bodyParser.urlencoded({
-    extended: true,
-    limit: '35mb',
-    parameterLimit: 50000,
-  }),
+    bodyParser.urlencoded({
+        extended: true,
+        limit: '35mb',
+        parameterLimit: 50000,
+    }),
 );
 
 
@@ -60,10 +60,10 @@ app.use('/api/password', passwordRoute)
 app.use('/api/register', registerRoute)
 app.use('/api/newsletter', newsletterRoute)
 // app.use('/test', testRoute)
-  
+
 
 app.get('/', (req, res) => {
-    res.status(200).json({  
+    res.status(200).json({
         success: true,
         data: {
             message: "Connected!"
