@@ -14,15 +14,15 @@ const updateContentStat = async (content_type) => {
 
 		const checkContentStatDateQuery = `
 			 SELECT * FROM content_stat WHERE
-			 date = ? AND content_type = ?
+			 stat_date = ? AND content_type = ?
 		`;
 		db.query(checkContentStatDateQuery, [currentFormattedDate, content_type], (checkError, checkResult) => {
 			if (checkError) reject(checkError);
 			else if (checkResult.length > 0) {
 				const updateContentStatQuery = `
 					UPDATE content_stat SET
-					count = count + 1
-					WHERE date = ? AND content_type = ?
+					stat_count = stat_count + 1
+					WHERE stat_date = ? AND content_type = ?
 			  `;
 				db.query(updateContentStatQuery, [currentFormattedDate, content_type], (updateError, updateResult) => {
 					if (updateError) reject(updateError);
@@ -32,7 +32,7 @@ const updateContentStat = async (content_type) => {
 			else {
 				const createContentStatQuery = `
 					INSERT INTO content_stat (
-						 content_type, date, count
+						 content_type, stat_date, stat_count
 					)
 					VALUES (?, NOW(), 1)
 			  `;
