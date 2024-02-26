@@ -36,7 +36,7 @@ const fetchEnablers = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT * FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_type = '2' AND member_restrict IS NULL AND member_flag = 1`
+            SELECT member_settings.*, email_i.email_address, member_contact.contact_number FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id INNER JOIN email_i ON member_contact.contact_email = email_i.email_id WHERE member_type = '2' AND member_restrict IS NULL AND member_flag = 1`
         db.query(sql, (err, data) => {
             if (err) {
                 reject(err)
@@ -52,7 +52,7 @@ const fetchCompanies = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT * FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id  WHERE member_type = '1' AND member_restrict IS NULL AND member_flag = 1`
+        SELECT member_settings.*, email_i.email_address, member_contact.contact_number FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id INNER JOIN email_i ON member_contact.contact_email = email_i.email_id WHERE member_type = '1' AND member_restrict IS NULL AND member_flag = 1`
         db.query(sql, (err, data) => {
             if (err) {
                 reject(err)

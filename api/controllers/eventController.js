@@ -68,7 +68,7 @@ const events_user = async (req, res) => {
             FROM event_i
             INNER JOIN member_i ON event_i.event_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE event_author = ? AND member_restrict IS NULL AND member_flag = 1 ORDER BY event_date DESC`,
+            WHERE event_author = ? AND event_flag = 1 AND member_restrict IS NULL AND member_flag = 1 ORDER BY event_date DESC`,
             [userId],
             (eventError, eventRes) => {
                 if (eventError) {
