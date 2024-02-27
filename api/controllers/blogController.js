@@ -9,10 +9,19 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const { uploadToLog } = require('../middlewares/activityLogger');
 
 const blog = async (req, res) => {
+    console.log(`blog() from ${req.ip}`);
     try {
-        const getBlogsQuery = "SELECT blog_i.* FROM blog_i INNER JOIN member_i ON blog_i.blog_author = member_i.member_id WHERE blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1";
+        const getBlogsQuery = `
+            SELECT blog_i.* FROM blog_i
+            INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
+            WHERE blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
+        `;
         // NOTE: new query for the new database - AL
-        // const getBlogsQuery = "SELECT * FROM blog where archive = 0";
+        // const getBlogsQuery = `
+        //     SELECT * FROM blog
+        //     INNER JOIN member_profile ON blog.author_id = member_profile.member_id
+        //     WHERE blog.archive = 0 AND member_profile.date_restrict is null AND member_profile.archive = 0
+        // `;
         db.query(getBlogsQuery, [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
@@ -31,10 +40,20 @@ const blog = async (req, res) => {
 
 // Reusable function to get a blog by ID
 const getBlogById = async (blogId) => {
+    console.log(`getBlogById(${blogId})`);
     return new Promise((resolve, reject) => {
-        const getBlogByIdQuery = "SELECT blog_i.* FROM blog_i INNER JOIN member_i ON blog_i.blog_author = member_i.member_id WHERE blog_id = ? AND blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1";
+        const getBlogByIdQuery = `
+            SELECT blog_i.* FROM blog_i
+            INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
+            WHERE blog_id = ? AND blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
+        `;
         // NOTE: new query for the new database - AL
-        // const getBlogByIdQuery = "SELECT * FROM blog WHERE blog_id = ?";
+        // const getBlogByIdQuery = `
+        //     SELECT * FROM blog
+        //     INNER JOIN member_profile ON blog.author_id = member_profile.member_id
+        //     WHERE blog.blog_id = ? AND blog.archive = 0
+        //     AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+        // `;
         db.query(
             getBlogByIdQuery, [blogId], (err, result) => {
                 if (err) {
@@ -163,6 +182,7 @@ function getFileExtensionFromDataURL(dataURL) {
 }
 
 const postBlog = async (req, res) => {
+    console.log(`postBlog() from ${req.ip}`);
     const {
         blogId,
         authorId,
