@@ -11,17 +11,17 @@ const { uploadToLog } = require('../middlewares/activityLogger');
 const blog = async (req, res) => {
     console.log(`blog() from ${req.ip}`);
     try {
-        const getBlogsQuery = `
-            SELECT blog_i.* FROM blog_i
-            INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
-            WHERE blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
-        `;
-        // NOTE: new query for the new database - AL
         // const getBlogsQuery = `
-        //     SELECT * FROM blog
-        //     INNER JOIN member_profile ON blog.author_id = member_profile.member_id
-        //     WHERE blog.archive = 0 AND member_profile.date_restrict is null AND member_profile.archive = 0
+        //     SELECT blog_i.* FROM blog_i
+        //     INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
+        //     WHERE blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
         // `;
+        // NOTE: new query for the new database - AL
+        const getBlogsQuery = `
+            SELECT blog.* FROM blog
+            INNER JOIN member_profile ON blog.author_id = member_profile.member_id
+            WHERE blog.archive = 0 AND member_profile.date_restrict is null AND member_profile.archive = 0
+        `;
         db.query(getBlogsQuery, [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
@@ -42,18 +42,18 @@ const blog = async (req, res) => {
 const getBlogById = async (blogId) => {
     console.log(`getBlogById(${blogId})`);
     return new Promise((resolve, reject) => {
-        const getBlogByIdQuery = `
-            SELECT blog_i.* FROM blog_i
-            INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
-            WHERE blog_id = ? AND blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
-        `;
-        // NOTE: new query for the new database - AL
         // const getBlogByIdQuery = `
-        //     SELECT * FROM blog
-        //     INNER JOIN member_profile ON blog.author_id = member_profile.member_id
-        //     WHERE blog.blog_id = ? AND blog.archive = 0
-        //     AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+        //     SELECT blog_i.* FROM blog_i
+        //     INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
+        //     WHERE blog_id = ? AND blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
         // `;
+        // NOTE: new query for the new database - AL
+        const getBlogByIdQuery = `
+            SELECT blog.* FROM blog
+            INNER JOIN member_profile ON blog.author_id = member_profile.member_id
+            WHERE blog.blog_id = ? AND blog.archive = 0
+            AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+        `;
         db.query(
             getBlogByIdQuery, [blogId], (err, result) => {
                 if (err) {
@@ -68,16 +68,24 @@ const getBlogById = async (blogId) => {
 
 // Controller to get a blog by ID
 const getBlog = async (req, res) => {
+    console.log(`getBlog() from ${req.ip}`);
     const { blogId } = req.params
     try {
         const result = await getBlogById(blogId)
         if (result.length > 0) {
             const blog = result[0]
 
+            // const blog_pic_path = path.join(
+            //     __dirname,
+            //     '../../public/img/blog-pics',
+            //     blog.blog_img
+            // )
+
+            // NOTE: the difference is blog.image - AL
             const blog_pic_path = path.join(
                 __dirname,
                 '../../public/img/blog-pics',
-                blog.blog_img
+                blog.image
             )
 
             // Assuming your image file has the same name as the blog ID with an extension
@@ -99,11 +107,12 @@ const getImageBlob = (imagePath) => {
 }
 
 const getBlogImage = async (req, res) => {
+    console.log(`getBlogImage() from ${req.ip}`)
     const { blogId } = req.params
 
-    const getBlogImageQuery = "SELECT blog_img FROM blog_i WHERE blog_id = ?";
+    // const getBlogImageQuery = "SELECT blog_img FROM blog_i WHERE blog_id = ?";
     // NOTE: new query for the new database - AL
-    // const getBlogImageQuery = "SELECT image FROM blog WHERE blog_id = ?";
+    const getBlogImageQuery = "SELECT image FROM blog WHERE blog_id = ?";
     db.query(
         getBlogImageQuery, [blogId], (err, result) => {
             if (err) {
@@ -111,11 +120,17 @@ const getBlogImage = async (req, res) => {
             }
 
             if (result.length > 0) {
+                // const imgPath = path.join(
+                //     __dirname,
+                //     '../../public/img/blog-pics',
+                //     result[0].blog_img
+                // )
+                // NOTE: the difference is result[0].image - AL
                 const imgPath = path.join(
                     __dirname,
                     '../../public/img/blog-pics',
-                    result[0].blog_img
-                )
+                    result[0].image
+                );
                 try {
                     const imageBlob = getImageBlob(imgPath)
 
@@ -137,21 +152,24 @@ const getBlogImage = async (req, res) => {
 
 // NOTE: function name should be getAllBlogsByAuthorId(), getAllBlogsById() or getAllBlogsByUser() - AL
 const fetchAllBlogs = async (req, res) => {
+    console.log(`fetchAllBlogs() from ${req.ip}`);
     const { userId } = req.params
 
     try {
-        const getAllBlogsByAuthorQuery = `
-            SELECT blog_i.*, member_settings.setting_institution
-            FROM blog_i
-            INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
-            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1
-            ORDER BY blog_dateadded DESC
-        `;
-        // NOTE: new query for the new database - AL
         // const getAllBlogsByAuthorQuery = `
-        //     SELECT * FROM blog WHERE author_id = ? AND archive = 0
+        //     SELECT blog_i.*, member_settings.setting_institution
+        //     FROM blog_i
+        //     INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
+        //     INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+        //     WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1
+        //     ORDER BY blog_dateadded DESC
         // `;
+        // NOTE: new query for the new database - AL
+        const getAllBlogsByAuthorQuery = `
+            SELECT blog.*, member_profile.name FROM blog
+            INNER JOIN member_profile ON blog.author_id = member_profile.member_id
+            WHERE blog.author_id = ? AND blog.archive = 0
+        `;
         db.query(getAllBlogsByAuthorQuery, [userId], (blogError, blogRes) => {
             if (blogError) {
                 console.log(blogError)
@@ -281,37 +299,35 @@ const postBlog = async (req, res) => {
             const shortenedBlogContent = limitWords(blogContent, 60)
 
             // Create a new blog
-            const createBlogQuery = `
-                INSERT INTO blog_i (
-                    blog_id,
-                    blog_author,
-                    blog_dateadded,
-                    blog_title,
-                    blog_content,
-                    blog_img
-                )
-                VALUES (?, ?, NOW(), ?, ?, ?)
-            `;
-            // NOTE: new query for the new database - AL
             // const createBlogQuery = `
-            //     INSERT INTO blog (
+            //     INSERT INTO blog_i (
             //         blog_id,
-            //         author_id,
-            //         date_created,
-            //         title,
-            //         body,
-            //         image
+            //         blog_author,
+            //         blog_dateadded,
+            //         blog_title,
+            //         blog_content,
+            //         blog_img
             //     )
             //     VALUES (?, ?, NOW(), ?, ?, ?)
             // `;
+            // NOTE: new query for the new database - AL
+            const createBlogQuery = `
+                INSERT INTO blog (
+                    blog_id,
+                    author_id,
+                    date_created,
+                    title,
+                    body,
+                    image
+                )
+                VALUES (?, ?, NOW(), ?, ?, ?)
+            `;
             db.query(
                 createBlogQuery, [newId, authorId, blogTitle, blogContent, newImageName],
                 (createError, createRes) => {
                     if (createError) {
                         console.log(createError)
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to create blog' })
+                        return res.status(500).json({ error: 'Failed to create blog' })
                     }
 
                     if (createRes.affectedRows > 0) {
@@ -334,9 +350,7 @@ const postBlog = async (req, res) => {
                             return res.status(201).json({ message: 'Blog created successfully' });
                         }
                     } else {
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to create blog' })
+                        return res.status(500).json({ error: 'Failed to create blog' })
                     }
                 }
             )
