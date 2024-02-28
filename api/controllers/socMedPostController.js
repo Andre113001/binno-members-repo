@@ -316,7 +316,7 @@ const getPostPinned = async (req, res) => {
     try {
         db.query('SELECT * FROM post_i WHERE post_pin = 1', [], (err, result) => {
             if (result.length > 0) {
-                return res.status(200).json(result[0].post_id);
+                return res.status(200).json(result[0]);
             } else {
                 return res.status(200).json('No Post Pinned yet');
             }
