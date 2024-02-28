@@ -286,27 +286,42 @@ const deletePost = async (req, res) => {
 }
 
 const updatePostPin = async (request, result) => {
-    const { postId, pinStatus } = request.body;
+    const { postId } = request.body;
     try {
-        const postExist = fetchPostById(postId);
-        if (postExist.length > 0) {
-            const updatePostPinQuery = `
-                UPDATE post_i
-                SET post_pin = ?
-                WHERE post_id = ?
-            `;
-            db.query(updatePostPinQuery, [pinStatus, postId], (updateError, updateResult) => {
-                if (updateError) {
-                    console.log(updateError)
-                    return result.status(500).json({ error: 'Failed to update post pin' })
-                }
-            });
-        }
-        else {
-            return result.status(500).json({ error: 'Post does not exist!' })
-        }
+        db.query('UPDATE post_i SET post_pin = 0');
+
+        const updatePostPinQuery = `
+            UPDATE post_i
+            SET post_pin = 1
+            WHERE post_id = ?
+        `;
+        db.query(updatePostPinQuery, [postId], (updateError, updateResult) => {
+            if (updateError) {
+                console.log(updateError)
+                return result.status(500).json({ error: 'Failed to update post pin' })
+            }
+
+            if (updateResult.affectedRows > 0)  {
+                return result.status(200).json(`Post Pinned: ${postId}`);
+            }
+        });
     }
     catch (error) {
+        console.error(error)
+        return result.status(500).json({ error: 'Internal server error' })
+    }
+}
+
+const getPostPinned = async (req, res) => {
+    try {
+        db.query('SELECT * FROM post_i WHERE post_pin = 1', [], (err, result) => {
+            if (result.length > 0) {
+                return res.status(200).json(result[0].post_id);
+            } else {
+                return res.status(200).json('No Post Pinned yet');
+            }
+        });
+    } catch (error) {
         console.error(error)
         return result.status(500).json({ error: 'Internal server error' })
     }
@@ -318,5 +333,6 @@ module.exports = {
     updateCreatePost,
     deletePost,
     fetchMemberPosts,
-    updatePostPin
+    updatePostPin,
+    getPostPinned
 }
