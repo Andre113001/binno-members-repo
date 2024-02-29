@@ -42,11 +42,6 @@ const blog = async (req, res) => {
 const getBlogById = async (blogId) => {
     console.log(`getBlogById(${blogId})`);
     return new Promise((resolve, reject) => {
-        // const getBlogByIdQuery = `
-        //     SELECT blog_i.* FROM blog_i
-        //     INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
-        //     WHERE blog_id = ? AND blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
-        // `;
         // NOTE: new query for the new database - AL
         const getBlogByIdQuery = `
             SELECT blog.* FROM blog
@@ -120,17 +115,9 @@ const getBlogImage = async (req, res) => {
             }
 
             if (result.length > 0) {
-                // const imgPath = path.join(
-                //     __dirname,
-                //     '../../public/img/blog-pics',
-                //     result[0].blog_img
-                // )
+                // const imgPath = path.join(__dirname, '../../public/img/blog-pics', result[0].blog_img);
                 // NOTE: the difference is result[0].image - AL
-                const imgPath = path.join(
-                    __dirname,
-                    '../../public/img/blog-pics',
-                    result[0].image
-                );
+                const imgPath = path.join(__dirname, '../../public/img/blog-pics', result[0].image);
                 try {
                     const imageBlob = getImageBlob(imgPath)
 
@@ -212,12 +199,18 @@ const postBlog = async (req, res) => {
 
     try {
         const result = await getBlogById(blogId);
-
         if (result.length > 0) {
-            const OldimageId = path.basename(result[0].blog_img, path.extname(result[0].blog_img));
-            let currentImg = result[0].blog_img;
+            // const OldimageId = path.basename(result[0].blog_img, path.extname(result[0].blog_img));
+            // let currentImg = result[0].blog_img;
+            // // Delete the old image file
+            // const oldImagePath = path.join(__dirname, '../../public/img/blog-pics/', result[0].blog_img);
+
+            // NOTE: the difference is result[0].image
+            const OldimageId = path.basename(result[0].image, path.extname(result[0].image));
+            console.log("OldimageId", OldimageId);
+            let currentImg = result[0].image;
             // Delete the old image file
-            const oldImagePath = path.join(__dirname, '../../public/img/blog-pics/', result[0].blog_img);
+            const oldImagePath = path.join(__dirname, '../../public/img/blog-pics/', result[0].image);
 
             const base64Image = blogImg.split(';base64,').pop();
             const imageName = OldimageId + '.' + getFileExtensionFromDataURL(blogImg);
@@ -242,41 +235,31 @@ const postBlog = async (req, res) => {
                 currentImg = imageName;
             }
 
+            // NOTE: new query for the new database - AL
             const updateBlogQuery = `
-                UPDATE blog_i SET
-                blog_title = ?,
-                blog_content = ?,
-                blog_img = ?,
-                blog_lastmodified = NOW()
+                UPDATE blog SET
+                title = ?,
+                body = ?,
+                image = ?,
+                date_modified = NOW()
                 WHERE blog_id = ?
             `;
-            // NOTE: new query for the new database - AL
-            // const updateBlogQuery = `
-            //     UPDATE blog SET
-            //     title = ?,
-            //     body = ?,
-            //     image = ?,
-            //     date_modified = NOW()
-            //     WHERE blog_id = ?
-            // `;
-            db.query(
-                updateBlogQuery, [blogTitle, blogContent, currentImg, result[0].blog_id],
+            db.query(updateBlogQuery, [blogTitle, blogContent, currentImg, result[0].blog_id],
                 (updateError, updateRes) => {
                     if (updateError) {
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to update blog' })
+                        console.log(`Blog (${blogId}) updated failed`);
+                        console.error(updateError);
+                        return res.status(500).json({ error: 'Failed to update blog' });
                     }
 
                     if (updateRes.affectedRows > 0) {
-                        const logRes = uploadToLog(
-                            authorId, blogId, username, 'updated a', 'blog', blogTitle
-                        )
-
+                        const logRes = uploadToLog(authorId, blogId, username, 'updated a', 'blog', blogTitle);
                         if (logRes) {
+                            console.log(`Blog (${blogId}) updated successfully`);
                             return res.status(200).json({ message: 'Blog updated successfully' });
                         }
                     } else {
+                        console.log(`Blog (${blogId}) updated failed`);
                         return res.status(500).json({ message: 'Failed to update blog' });
                     }
                 }
@@ -288,11 +271,7 @@ const postBlog = async (req, res) => {
             // Handle image upload and renaming
             if (req.file) {
                 // WARN: moveFileToDirectory() is undeclared - AL
-                newImageName = moveFileToDirectory(
-                    req.file,
-                    newId,
-                    '../../public/img/blog-pics'
-                )
+                newImageName = moveFileToDirectory(req.file, newId, '../../public/img/blog-pics');
             }
 
             newImageName = blogImg.replace(/\\\\/g, '\\')
@@ -322,38 +301,32 @@ const postBlog = async (req, res) => {
                 )
                 VALUES (?, ?, NOW(), ?, ?, ?)
             `;
-            db.query(
-                createBlogQuery, [newId, authorId, blogTitle, blogContent, newImageName],
-                (createError, createRes) => {
-                    if (createError) {
-                        console.log(createError)
-                        return res.status(500).json({ error: 'Failed to create blog' })
-                    }
-
-                    if (createRes.affectedRows > 0) {
-                        const logRes = uploadToLog(
-                            authorId, newId, username, 'posted a', 'blog', blogTitle
-                        )
-
-                        console.log("Posting Email Notification");
-
-                        axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
-                            username: username,
-                            type: 'Blog',
-                            title: blogTitle,
-                            img: `blog-pics/${newImageName}`,
-                            details: shortenedBlogContent,
-                            contentId: newId
-                        })
-
-                        if (logRes) {
-                            return res.status(201).json({ message: 'Blog created successfully' });
-                        }
-                    } else {
-                        return res.status(500).json({ error: 'Failed to create blog' })
-                    }
+            db.query(createBlogQuery, [newId, authorId, blogTitle, blogContent, newImageName], (createError, createRes) => {
+                if (createError) {
+                    console.log(createError)
+                    return res.status(500).json({ error: 'Failed to create blog' })
                 }
-            )
+
+                if (createRes.affectedRows > 0) {
+                    const logRes = uploadToLog(authorId, newId, username, 'posted a', 'blog', blogTitle);
+                    console.log("Posting Email Notification");
+                    axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
+                        username: username,
+                        type: 'Blog',
+                        title: blogTitle,
+                        img: `blog-pics/${newImageName}`,
+                        details: shortenedBlogContent,
+                        contentId: newId
+                    })
+
+                    if (logRes) {
+                        console.log(`Blog (${newId}) created successfully`);
+                        return res.status(201).json({ message: 'Blog created successfully' });
+                    }
+                } else {
+                    return res.status(500).json({ error: 'Failed to create blog' })
+                }
+            })
         }
     } catch (error) {
         console.error(error)
@@ -363,30 +336,32 @@ const postBlog = async (req, res) => {
 
 // Controller to delete a blog
 const deleteBlog = async (req, res) => {
+    console.log(`deleteBlog() from ${req.ip}`);
     const { blogId, username } = req.body
 
     try {
         const result = await getBlogById(blogId)
 
         if (result.length > 0 && result[0].hasOwnProperty('blog_id')) {
-            const deleteBlogQuery = "UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?";
-            // NOTE: new query for the new database - AL
-            // const deleteBlogQuery = "UPDATE blog SET archive = 1 WHERE blog_id = ?";
+            const deleteBlogQuery = "UPDATE blog SET archive = 1 WHERE blog_id = ?";
             db.query(deleteBlogQuery, [blogId], (deleteError, deleteRes) => {
                 if (deleteError) {
-                    console.log(deleteError);
+                    console.log(`Blog (${blogId}) delete failed`);
+                    console.error(deleteError);
                     return res.status(500).json({ error: 'Failed to delete blog' });
                 }
 
                 if (deleteRes.affectedRows > 0) {
                     const logRes = uploadToLog(
-                        result[0].blog_author, result[0].blog_id, username, 'deleted a', 'blog', result[0].blog_title
-                    )
+                        result[0].author_id, result[0].blog_id, username, 'deleted a', 'blog', result[0].title
+                    );
 
                     if (logRes) {
+                        console.log(`Blog (${blogId}) deleted successfully`);
                         return res.status(201).json({ message: 'Blog deleted successfully' });
                     }
                 } else {
+                    console.log(`Blog (${blogId}) delete failed`);
                     return res.status(500).json({ error: 'Failed to delete blog' });
                 }
             });
