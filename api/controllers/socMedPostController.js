@@ -286,9 +286,16 @@ const deletePost = async (req, res) => {
 }
 
 const updatePostPin = async (request, result) => {
-    const { postId } = request.body;
+    const { postId, postAuthorId } = request.body;
     try {
-        db.query('UPDATE post_i SET post_pin = 0');
+        // unpin all author post
+        const unpinAllAuthorPostQuery = `
+            UPDATE post_i SET post_pin = 0 WHERE post_author = ?
+        `;
+        db.query(unpinAllAuthorPostQuery, postAuthorId, (unpinError, unpinResult) => {
+            if (unpinError)
+                console.error(unpinError);
+        });
 
         const updatePostPinQuery = `
             UPDATE post_i
@@ -301,7 +308,7 @@ const updatePostPin = async (request, result) => {
                 return result.status(500).json({ error: 'Failed to update post pin' })
             }
 
-            if (updateResult.affectedRows > 0)  {
+            if (updateResult.affectedRows > 0) {
                 return result.status(200).json(`Post Pinned: ${postId}`);
             }
         });
