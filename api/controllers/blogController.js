@@ -1,99 +1,103 @@
-const { default: axios } = require('axios')
-const db = require('../../database/db')
-const fs = require('fs')
-const path = require('path')
+const { default: axios } = require('axios');
+const db = require('../../database/db');
+const fs = require('fs');
+const path = require('path');
 
 //Middlewares
-const sanitizeId = require('../middlewares/querySanitizerMiddleware')
-const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
+const sanitizeId = require('../middlewares/querySanitizerMiddleware');
+const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 const { uploadToLog } = require('../middlewares/activityLogger');
 
-const blog = async (req, res) => {
-    console.log(`blog() from ${req.ip}`);
+/**
+ * Retrieves all non-archived blogs from the database.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with the database query or any other error occurs.
+ * @returns {Object} Returns a JSON response with the retrieved blogs or an error status.
+ */
+const getAllBlogs = async (req, res) => {
+    console.log(`getAllBlogs() from ${req.ip}`);
     try {
-        // const getBlogsQuery = `
-        //     SELECT blog_i.* FROM blog_i
-        //     INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
-        //     WHERE blog_flag = 1 AND member_restrict IS NULL AND member_flag = 1
-        // `;
-        // NOTE: new query for the new database - AL
         const getBlogsQuery = `
             SELECT blog.* FROM blog
             INNER JOIN member_profile ON blog.author_id = member_profile.member_id
             WHERE blog.archive = 0 AND member_profile.date_restrict is null AND member_profile.archive = 0
         `;
-        db.query(getBlogsQuery, [], (err, result) => {
-            if (err) {
-                return res.status(500).json(err)
+        db.query(getBlogsQuery, [], (getError, getResult) => {
+            if (getError) {
+                console.error(getError);
+                return res.status(500).json(getError);
             }
 
-            if (result.length > 0) {
-                return res.status(200).json(result)
-            } else {
-                return res.status(500).json(err)
-            }
+            if (getResult.length > 0)
+                return res.status(200).json(getResult);
         })
     } catch (error) {
-        return res.status(500).json(error)
+        return res.status(500).json(error);
     }
 }
 
-// Reusable function to get a blog by ID
+/**
+ * Retrieves a blog by its unique identifier from the database.
+ *
+ * @function
+ * @async
+ * @param {string} blogId - The unique identifier of the blog to retrieve.
+ * @throws {Error} Throws an error if there is an issue with the database query or any other error occurs.
+ * @returns {Promise<Array<Object>>} A promise that resolves with an array containing the retrieved blog or rejects with an error.
+ */
 const getBlogById = async (blogId) => {
     console.log(`getBlogById(${blogId})`);
     return new Promise((resolve, reject) => {
-        // NOTE: new query for the new database - AL
         const getBlogByIdQuery = `
             SELECT blog.* FROM blog
             INNER JOIN member_profile ON blog.author_id = member_profile.member_id
             WHERE blog.blog_id = ? AND blog.archive = 0
             AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
         `;
-        db.query(
-            getBlogByIdQuery, [blogId], (err, result) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve(result)
-                }
+        db.query(getBlogByIdQuery, [blogId], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
             }
-        )
-    })
+        });
+    });
 }
 
-// Controller to get a blog by ID
+/**
+ * Retrieves a blog by its unique identifier from the database and sends the blog information as a JSON response.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.blogId - The unique identifier of the blog to retrieve.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with retrieving the blog, the database query, or any other error occurs.
+ * @returns {Object} Returns a JSON response with the retrieved blog information or an error status.
+ */
 const getBlog = async (req, res) => {
     console.log(`getBlog() from ${req.ip}`);
-    const { blogId } = req.params
+    const { blogId } = req.params;
     try {
-        const result = await getBlogById(blogId)
+        const result = await getBlogById(blogId);
         if (result.length > 0) {
             const blog = result[0]
+            const blog_pic_path = path.join(__dirname, '../../public/img/blog-pics', blog.image);
 
-            // const blog_pic_path = path.join(
-            //     __dirname,
-            //     '../../public/img/blog-pics',
-            //     blog.blog_img
-            // )
-
-            // NOTE: the difference is blog.image - AL
-            const blog_pic_path = path.join(
-                __dirname,
-                '../../public/img/blog-pics',
-                blog.image
-            )
-
-            // Assuming your image file has the same name as the blog ID with an extension
-            // const blog_pic_path = `/static/img/blog-pics/${blog.blog_img}`;
-
-            // Add the imageURL to your response
-            return res.json({ ...blog, blog_pic_path })
+            // Add the imageURL to the response
+            return res.json({ ...blog, blog_pic_path });
         } else {
-            return res.status(500).json({ error: 'Blog does not exist' })
+            console.log(`Blog (${blogId}) does not exist`);
+            return res.status(500).json({ error: 'Blog does not exist' });
         }
     } catch (error) {
-        console.error(error)
-        return res.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -101,6 +105,18 @@ const getImageBlob = (imagePath) => {
     return fs.readFileSync(imagePath)
 }
 
+/**
+ * Retrieves and sends the image associated with a blog by its unique identifier as the HTTP response.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.blogId - The unique identifier of the blog for which to retrieve the image.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with retrieving the image, the database query, or any other error occurs.
+ * @returns {void} Sends the image binary data as the HTTP response or an error status.
+ */
 const getBlogImage = async (req, res) => {
     console.log(`getBlogImage() from ${req.ip}`)
     const { blogId } = req.params
@@ -108,50 +124,48 @@ const getBlogImage = async (req, res) => {
     // const getBlogImageQuery = "SELECT blog_img FROM blog_i WHERE blog_id = ?";
     // NOTE: new query for the new database - AL
     const getBlogImageQuery = "SELECT image FROM blog WHERE blog_id = ?";
-    db.query(
-        getBlogImageQuery, [blogId], (err, result) => {
-            if (err) {
-                return res.status(500).json(err)
-            }
-
-            if (result.length > 0) {
-                // const imgPath = path.join(__dirname, '../../public/img/blog-pics', result[0].blog_img);
-                // NOTE: the difference is result[0].image - AL
-                const imgPath = path.join(__dirname, '../../public/img/blog-pics', result[0].image);
-                try {
-                    const imageBlob = getImageBlob(imgPath)
-
-                    // Set the appropriate content type for the image
-                    res.setHeader('Content-Type', 'image/jpeg') // Adjust the content type based on your image format
-
-                    // Send the image binary data as the response
-                    res.send(imageBlob)
-                } catch (error) {
-                    console.error('Error fetching image:', error)
-                    res.status(500).send('Internal Server Error')
-                }
-            } else {
-                return res.status(500).json(err)
-            }
+    db.query(getBlogImageQuery, [blogId], (err, result) => {
+        if (err) {
+            return res.status(500).json(err);
         }
-    )
+
+        if (result.length > 0) {
+            const imgPath = path.join(__dirname, '../../public/img/blog-pics', result[0].image);
+            try {
+                const imageBlob = getImageBlob(imgPath);
+                // Set the appropriate content type for the image
+                // Adjust the content type based on your image format
+                res.setHeader('Content-Type', 'image/jpeg');
+
+                // Send the image binary data as the response
+                res.send(imageBlob)
+            } catch (error) {
+                console.error('Error fetching image:', error);
+                res.status(500).send('Internal Server Error');
+            }
+        } else {
+            return res.status(500).json(err);
+        }
+    });
 }
 
-// NOTE: function name should be getAllBlogsByAuthorId(), getAllBlogsById() or getAllBlogsByUser() - AL
-const fetchAllBlogs = async (req, res) => {
+/**
+ * Retrieves all non-archived blogs written by a specific author from the database and sends the blog information as a JSON response.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.userId - The unique identifier of the author for whom to retrieve the blogs.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with retrieving the blogs, the database query, or any other error occurs.
+ * @returns {void} Sends the retrieved blog information as a JSON response or an error status.
+ */
+const getAllBlogsByAuthorId = async (req, res) => {
     console.log(`fetchAllBlogs() from ${req.ip}`);
     const { userId } = req.params
 
     try {
-        // const getAllBlogsByAuthorQuery = `
-        //     SELECT blog_i.*, member_settings.setting_institution
-        //     FROM blog_i
-        //     INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
-        //     INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-        //     WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1
-        //     ORDER BY blog_dateadded DESC
-        // `;
-        // NOTE: new query for the new database - AL
         const getAllBlogsByAuthorQuery = `
             SELECT blog.*, member_profile.name FROM blog
             INNER JOIN member_profile ON blog.author_id = member_profile.member_id
@@ -160,15 +174,13 @@ const fetchAllBlogs = async (req, res) => {
         db.query(getAllBlogsByAuthorQuery, [userId], (blogError, blogRes) => {
             if (blogError) {
                 console.log(blogError)
-                return res
-                    .status(500)
-                    .json({ error: 'Failed to fetch blogs', blogError })
+                return res.status(500).json({ error: `Failed to fetch blogs for Author (${userId})`, blogError })
             } else {
-                return res.status(200).json(blogRes)
+                return res.status(200).json(blogRes);
             }
         })
     } catch (error) {
-        res.status(500).json({ error })
+        res.status(500).json({ error: error });
     }
 }
 
@@ -186,6 +198,7 @@ function getFileExtensionFromDataURL(dataURL) {
     return null;
 }
 
+// WARN: Needs refactoring - AL
 const postBlog = async (req, res) => {
     console.log(`postBlog() from ${req.ip}`);
     const {
@@ -277,19 +290,6 @@ const postBlog = async (req, res) => {
             newImageName = blogImg.replace(/\\\\/g, '\\')
             const shortenedBlogContent = limitWords(blogContent, 60)
 
-            // Create a new blog
-            // const createBlogQuery = `
-            //     INSERT INTO blog_i (
-            //         blog_id,
-            //         blog_author,
-            //         blog_dateadded,
-            //         blog_title,
-            //         blog_content,
-            //         blog_img
-            //     )
-            //     VALUES (?, ?, NOW(), ?, ?, ?)
-            // `;
-            // NOTE: new query for the new database - AL
             const createBlogQuery = `
                 INSERT INTO blog (
                     blog_id,
@@ -334,7 +334,19 @@ const postBlog = async (req, res) => {
     }
 }
 
-// Controller to delete a blog
+/**
+ * Deletes a blog by setting its archive flag to 1 in the database and logs the deletion.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with body.
+ * @param {Object} req.body - The request body containing information about the blog to delete.
+ * @param {string} req.body.blogId - The unique identifier of the blog to delete.
+ * @param {string} req.body.username - The username of the user performing the deletion.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with deleting the blog, the database query, or any other error occurs.
+ * @returns {Object} Returns a JSON response indicating the success or failure of the blog deletion.
+ */
 const deleteBlog = async (req, res) => {
     console.log(`deleteBlog() from ${req.ip}`);
     const { blogId, username } = req.body
@@ -352,9 +364,7 @@ const deleteBlog = async (req, res) => {
                 }
 
                 if (deleteRes.affectedRows > 0) {
-                    const logRes = uploadToLog(
-                        result[0].author_id, result[0].blog_id, username, 'deleted a', 'blog', result[0].title
-                    );
+                    const logRes = uploadToLog(result[0].author_id, result[0].blog_id, username, 'deleted a', 'blog', result[0].title);
 
                     if (logRes) {
                         console.log(`Blog (${blogId}) deleted successfully`);
@@ -375,10 +385,10 @@ const deleteBlog = async (req, res) => {
 }
 
 module.exports = {
-    blog,
+    getAllBlogs,
     getBlog,
     getBlogImage,
-    fetchAllBlogs,
+    getAllBlogsByAuthorId,
     postBlog,
     deleteBlog,
 }

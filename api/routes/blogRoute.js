@@ -11,14 +11,12 @@ router.use(express.urlencoded({ extended: true }))
 
 // const activityLogging = require('../middlewares/activityLogging')
 // router.use(activityLogging)
-router.get('/', blogController.blog);
+router.get('/', blogController.getAllBlogs);
 router.get('/img/:blogId', blogController.getBlogImage);
+router.get('/:blogId', blogController.getBlog);
+router.get('/user/:userId', blogController.getAllBlogsByAuthorId);
 
-router.get('/:blogId', blogController.getBlog)
-router.get('/user/:userId', blogController.fetchAllBlogs)
-
-router.post('/post', upload.single('image'), blogController.postBlog)
-
-router.post('/delete', blogController.deleteBlog)
+router.post('/post', upload.single('image'), blogController.postBlog);
+router.post('/delete', blogController.deleteBlog);
 
 module.exports = router
