@@ -198,7 +198,24 @@ function getFileExtensionFromDataURL(dataURL) {
     return null;
 }
 
-// WARN: Needs refactoring - AL
+/**
+ * Creates a new blog or updates an existing blog in the database based on the provided data.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with body and file (if applicable).
+ * @param {Object} req.body - The request body containing information about the blog to create or update.
+ * @param {string} req.body.blogId - The unique identifier of the blog to update (optional for creating a new blog).
+ * @param {string} req.body.authorId - The unique identifier of the blog author.
+ * @param {string} req.body.blogTitle - The title of the blog.
+ * @param {string} req.body.blogContent - The content/body of the blog.
+ * @param {string} req.body.blogImg - The base64-encoded image data of the blog (optional for updating an existing blog).
+ * @param {string} req.body.username - The username of the user performing the action.
+ * @param {Object} req.file - The file object containing the uploaded image (if applicable).
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with creating or updating the blog, the database query, or any other error occurs.
+ * @returns {Object} Returns a JSON response indicating the success or failure of the blog creation or update.
+ */
 const postBlog = async (req, res) => {
     console.log(`postBlog() from ${req.ip}`);
     const {
@@ -213,12 +230,6 @@ const postBlog = async (req, res) => {
     try {
         const result = await getBlogById(blogId);
         if (result.length > 0) {
-            // const OldimageId = path.basename(result[0].blog_img, path.extname(result[0].blog_img));
-            // let currentImg = result[0].blog_img;
-            // // Delete the old image file
-            // const oldImagePath = path.join(__dirname, '../../public/img/blog-pics/', result[0].blog_img);
-
-            // NOTE: the difference is result[0].image
             const OldimageId = path.basename(result[0].image, path.extname(result[0].image));
             console.log("OldimageId", OldimageId);
             let currentImg = result[0].image;
@@ -248,7 +259,6 @@ const postBlog = async (req, res) => {
                 currentImg = imageName;
             }
 
-            // NOTE: new query for the new database - AL
             const updateBlogQuery = `
                 UPDATE blog SET
                 title = ?,
@@ -317,7 +327,7 @@ const postBlog = async (req, res) => {
                         img: `blog-pics/${newImageName}`,
                         details: shortenedBlogContent,
                         contentId: newId
-                    })
+                    });
 
                     if (logRes) {
                         console.log(`Blog (${newId}) created successfully`);
@@ -326,7 +336,7 @@ const postBlog = async (req, res) => {
                 } else {
                     return res.status(500).json({ error: 'Failed to create blog' })
                 }
-            })
+            });
         }
     } catch (error) {
         console.error(error)
