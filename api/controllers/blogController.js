@@ -7,6 +7,7 @@ const path = require('path');
 const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 const { uploadToLog } = require('../middlewares/activityLogger');
+const { updateContentStat, deductContentStat } = require("../middlewares/contentStatUpdater");
 
 /**
  * Retrieves all non-archived blogs from the database.
@@ -331,6 +332,7 @@ const postBlog = async (req, res) => {
 
                     if (logRes) {
                         console.log(`Blog (${newId}) created successfully`);
+                        updateContentStat("blog");
                         return res.status(201).json({ message: 'Blog created successfully' });
                     }
                 } else {
@@ -363,7 +365,6 @@ const deleteBlog = async (req, res) => {
 
     try {
         const result = await getBlogById(blogId)
-
         if (result.length > 0 && result[0].hasOwnProperty('blog_id')) {
             const deleteBlogQuery = "UPDATE blog SET archive = 1 WHERE blog_id = ?";
             db.query(deleteBlogQuery, [blogId], (deleteError, deleteRes) => {
@@ -375,8 +376,9 @@ const deleteBlog = async (req, res) => {
 
                 if (deleteRes.affectedRows > 0) {
                     const logRes = uploadToLog(result[0].author_id, result[0].blog_id, username, 'deleted a', 'blog', result[0].title);
-
                     if (logRes) {
+                        const blogDateCreated = result[0].date_created.toISOString().split("T")[0];
+                        deductContentStat(blogDateCreated, "blog");
                         console.log(`Blog (${blogId}) deleted successfully`);
                         return res.status(201).json({ message: 'Blog deleted successfully' });
                     }
