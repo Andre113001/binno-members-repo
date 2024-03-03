@@ -3,6 +3,7 @@ const dotenv = require('dotenv')
 const axios = require('axios')
 const { uniqueIdGenerator } = require('../middlewares/uniqueIdGeneratorMiddleware');
 const sanitizeId = require('../middlewares/querySanitizerMiddleware')
+const { updateEmailStat } = require('../middlewares/newsletterStatUpdater');
 
 const subscribe = async (req, res) => {
     const { email } = req.body;
@@ -38,6 +39,7 @@ const subscribe = async (req, res) => {
                     }
 
                     if (insertRes.affectedRows > 0) {
+                        updateEmailStat();
                         res.json({result: "Email Added"});
                     } else {
                         res.json({result: "Email Not Added"});
