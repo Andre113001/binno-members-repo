@@ -6,6 +6,7 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const fs = require('fs')
 const path = require('path')
 const { uploadToLog } = require('../middlewares/activityLogger');
+const { updateContentStat } = require('../middlewares/contentStatUpdater');
 const axios = require('axios');
 
 const event = async (req, res) => {
@@ -278,7 +279,9 @@ const create_update = async (req, res) => {
                             img: `event-pics/${eventImg}`,
                             details: limitWords(eventDescription, 60),
                             contentId: newId
-                        })
+                        });
+
+                        updateContentStat('event');
 
                         if (logRes) {
                             return res.json({ result: true })

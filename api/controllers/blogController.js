@@ -7,6 +7,7 @@ const path = require('path')
 const sanitizeId = require('../middlewares/querySanitizerMiddleware')
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const { uploadToLog } = require('../middlewares/activityLogger');
+const { updateContentStat } = require('../middlewares/contentStatUpdater');
 
 const blog = async (req, res) => {
     try {
@@ -264,6 +265,8 @@ const postBlog = async (req, res) => {
                             details: shortenedBlogContent,
                             contentId: newId
                         })
+
+                        updateContentStat('blog');
 
                         if (logRes) {
                             return res.status(201).json({ message: 'Blog created successfully' });
