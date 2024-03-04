@@ -11,7 +11,7 @@ const axios = require('axios');
 
 const event = async (req, res) => {
     try {
-        db.query("SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE member_restrict IS NULL AND member_flag = 1", [], (err, result) => {
+        db.query("SELECT event_i.* FROM event_i INNER JOIN member_i ON member_i.member_id = event_i.event_author WHERE event_flag = 1 AND member_restrict IS NULL AND member_flag = 1", [], (err, result) => {
             if (err) {
                 return res.status(500).json(err)
             }
