@@ -6,17 +6,20 @@ const bodyParser = require('body-parser');
 
 dotenv.config()
 
-const app = express()
-const port = process.env.PORT
+const app = express();
+const port = process.env.PORT;
+const corsOptions = {
+  origin: 'https://member.binnostartup.site',
+  // Add additional origins as needed
+};
 
 // Require middleware functions
-const corsMiddleware = require('./api/middlewares/corsMiddleware')
 const jsonMiddleware = require('./api/middlewares/jsonMiddleware')
 const urlencodedMiddleware = require('./api/middlewares/urlencodedMiddleware')
 
 // Use Middleware
-app.use(corsMiddleware)
-app.use(jsonMiddleware)
+app.use(cors(corsOptions));
+app.use(jsonMiddleware);
 app.use(urlencodedMiddleware)
 app.use(bodyParser.json({ limit: '35mb' }));
 
