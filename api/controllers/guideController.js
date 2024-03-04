@@ -11,217 +11,218 @@ const sha256 = require('sha256')
 const fs = require('fs');
 const path = require('path');
 
-// Reusable function to get a program by ID
-// NOTE: should be renamed as fetchGuideById() - AL
-const fetchProgramById = (programId) => {
+/**
+ * Fetches guide information by its unique identifier from the database.
+ *
+ * @function
+ * @param {string} programId - The unique identifier of the guide to fetch.
+ * @returns {Promise<Object>} A promise that resolves with the retrieved guide information or rejects with an error.
+ */
+const fetchGuideById = (programId) => {
+    console.log(`fetchGuideById(${programId})`)
     return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
-        const getGuideById = `
-            SELECT program_i.* FROM program_i INNER JOIN member_i ON member_i.member_id = program_i.program_author
-            WHERE program_id = ? AND member_restrict IS NULL AND member_flag = 1 ORDER BY program_dateadded DESC
+        const fetchGuideByIdQuery = `
+            SELECT guide.* FROM guide
+            INNER JOIN member_profile ON member_profile.member_id = guide.author_id
+            WHERE guide_id = ? AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+            ORDER BY date_created DESC
         `;
-        // NOTE: new query for the new database - AL
-        // const getGuideById = `
-        //     SELECT * FROM guide
-        //     WHERE guide_id = ?
-        //     ORDER BY date_created DESC
-        // `;
-        db.query(getGuideById, [sanitizeId(programId)], (err, data) => {
-            if (err) {
-                reject(err)
+        db.query(fetchGuideByIdQuery, [sanitizeId(programId)], (fetchError, fetchData) => {
+            if (fetchError) {
+                reject(fetchError)
             } else {
-                resolve(data[0])
+                resolve(fetchData[0])
             }
-        })
-    })
+        });
+    });
 }
 
-// NOTE: should be renamed as fetchAllGuides()
-const allPrograms = async (req, res) => {
+/**
+ * Retrieves all guides from the database and sends them as a JSON response.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with retrieving the guides, the database query, or any other error occurs.
+ * @returns {void} Sends the retrieved guides as a JSON response or an empty array if no guides are found.
+ */
+const getAllGuides = async (req, res) => {
+    console.log(`getAllGuides() from ${req.ip}`);
     const programs = await new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getAllGuidesQuery = `
-            SELECT program_i.* FROM program_i INNER JOIN member_i ON member_i.member_id = program_i.program_author WHERE program_flag = 1 AND member_restrict IS NULL AND member_flag = 1 ORDER BY program_dateadded DESC
+            SELECT guide.* FROM guide
+            INNER JOIN member_profile ON member_profile.member_id = guide.author_id
+            WHERE guide.archive = 0 AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+            ORDER BY date_created DESC
         `;
-        // NOTE: new query for the new database - AL
-        // const getAllGuidesQuery = `
-        //     SELECT * FROM guide
-        //     WHERE archive = 0
-        //     ORDER BY date_created DESC
-        // `;
-        db.query(getAllGuidesQuery, (err, data) => {
-            if (err) {
-                reject(err)
+        db.query(getAllGuidesQuery, (getError, getData) => {
+            if (getError) {
+                reject(getError);
             } else {
-                resolve(data)
+                resolve(getData);
             }
-        })
-    })
+        });
+    });
 
     if (programs.length > 0) {
-        res.status(200).send(programs)
+        res.status(200).send(programs);
     } else {
-        res.status(404).send([])
+        res.status(404).send([]);
     }
 }
 
 // Function to fetch a program page by ID
 // NOTE: should be renamed to fetchGuidePagesById() - AL
-const fetchProgramPageById = (programPageId) => {
+const fetchProgramPageById = (guidePageId) => {
+    console.log(`fetchProgramResult(${guidePageId})`);
     return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getGuidePagesByIdQuery = `
-            SELECT * FROM program_pages WHERE program_pages_id = ?
+            SELECT * FROM guide_page WHERE guide_page_id = ? AND archive = 0
         `;
-        // NOTE: new query for the new database - AL
-        // const getGuidePagesByIdQuery = `
-        //     SELECT * FROM guide_page WHERE guide_page_id = ?
-        // `;
-        db.query(getGuidePagesByIdQuery, [sanitizeId(programPageId)], async (err, data) => {
+        db.query(getGuidePagesByIdQuery, [sanitizeId(guidePageId)], async (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
                 if (data.length === 0) {
-                    resolve([])
+                    resolve([]);
                 } else {
-                    // console.log(data);
-                    const elementsData = await readElements(
-                        data[0].program_pages_path
-                    )
-                    resolve({ ...data[0], elements: elementsData })
-                    // resolve({ ...data[0], elements: elementsData })
+                    const elementsData = await readElements(data[0].filename);
+                    resolve({ ...data[0], elements: elementsData });
                 }
             }
-        })
-    })
+        });
+    });
 }
 
-// Function to fetch a program page by ID
-// NOTE: should be renamed to fetchGuidePagesByIdDesc() - AL
-const fetchProgramPageElements = (programPageId) => {
+/**
+ * Fetches page elements associated with a specific guide page from the database.
+ *
+ * @function
+ * @param {string} guidePageId - The unique identifier of the guide page for which to fetch elements.
+ * @returns {Promise<Array<Object>>} A promise that resolves with an array of page elements or rejects with an error.
+ */
+const fetchPageElementsByPageId = (guidePageId) => {
+    console.log(`fetchPageElementsByPageId(${guidePageId})`);
     return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getGuidePagesByIdQuery = `
-            SELECT * FROM program_pages
-            WHERE program_pages_id = ?
-            ORDER BY program_pages_dateadded DESC
+            SELECT * FROM guide_page
+            WHERE guide_page_id = ?
+            ORDER BY date_created DESC
         `;
-        // NOTE: new query for the new database - AL
-        // const getGuidePagesByIdQuery = `
-        //     SELECT * FROM guide_page
-        //     WHERE guide_page_id = ?
-        //     ORDER BY date_created DESC
-        // `;
-        db.query(getGuidePagesByIdQuery, [sanitizeId(programPageId)], async (err, data) => {
+        db.query(getGuidePagesByIdQuery, [sanitizeId(guidePageId)], async (err, data) => {
             if (err) {
                 reject(err)
             } else {
-                // console.log(programPageId)
                 if (data.length === 0) {
                     resolve([])
                 } else {
-                    const elementsData = await readElements(
-                        data[0].program_pages_path
-                    )
+                    const elementsData = await readElements(data[0].filename);
                     resolve(elementsData)
-                    // resolve({ ...data[0], elements: elementsData })
                 }
             }
-        })
-    })
+        });
+    });
 }
 
-// Function to fetch a program page by ID
-// NOTE: should be renamed to fetchGuidePagesByGuideId()
-const fetchProgramPages = (programPageId) => {
+/**
+ * Fetches guide pages associated with a specific guide from the database.
+ *
+ * @function
+ * @param {string} guideId - The unique identifier of the guide for which to fetch pages.
+ * @returns {Promise<Array<Object>>} A promise that resolves with an array of guide pages or rejects with an error.
+ */
+const fetchGuidePagesByGuideId = (guideId) => {
+    console.log(`fetchGuidePagesByGuideId(${guideId})`);
     return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getGuidePagesByGuideIdQuery = `
-            SELECT program_pages.*, program_i.program_img FROM program_pages
-            INNER JOIN program_i ON program_i.program_id = program_pages.program_id
-            WHERE program_pages.program_id = ? AND program_pages.program_pages_flag = 1
-            ORDER BY program_pages.program_pages_dateadded ASC
+            SELECT * FROM guide_page
+            WHERE guide_id = ? AND archive = 0
+            ORDER BY date_created ASC
         `;
-        // NOTE: new query for the new database - AL
-        // const getGuidePagesByGuideIdQuery = `
-        //     SELECT * FROM guide_page
-        //     WHERE guide_id = ? AND archive = 0
-        //     ORDER BY date_created ASC
-        // `;
-        db.query(getGuidePagesByGuideIdQuery, [sanitizeId(programPageId)], async (err, data) => {
+        db.query(getGuidePagesByGuideIdQuery, [sanitizeId(guideId)], async (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
-                if (data.length === 0) {
-                    resolve([])
+                if (data.length == 0) {
+                    resolve([]);
                 } else {
-                    const updatedData = await Promise.all(
-                        (data || []).map(async (program) => {
-                            const elements = await fetchProgramPageElements(
-                                program.program_pages_id
-                            )
-                            return { ...program, elements: elements }
-                        })
-                    )
-
-                    const elementsData = await readElements(
-                        data[0].program_pages_path
-                    )
-                    resolve(updatedData)
+                    const updatedData = await Promise.all((data || []).map(async (guide) => {
+                        const elements = await fetchPageElementsByPageId(guide.guide_page_id);
+                        return { ...guide, elements: elements };
+                    }));
+                    resolve(updatedData);
                 }
             }
-        })
+        });
     })
 }
 
-// Fetch All programs
-// NOTE: should be renamed as fetchAllGuidesByAuthor()
-const fetchAllPrograms = async (req, res) => {
-    const { id } = req.params
-
-    const getGuidesByAuthorID = `
-        SELECT * FROM program_i WHERE
-        program_author = ? AND program_flag = 1
-        ORDER BY program_dateadded DESC
+/**
+ * Retrieves all guides authored by a specific user from the database and sends them as a JSON response.
+ *
+ * @function
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.authorId - The unique identifier of the author for whom to retrieve guides.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with retrieving the guides, the database query, or any other error occurs.
+ * @returns {void} Sends the retrieved guides as a JSON response or an error status with details.
+ */
+const getAllGuidesByAuthorId = async (req, res) => {
+    console.log(`getAllGuidesByAuthorId() from ${req.ip}`);
+    const { authorId } = req.params;
+    const getGuidesByAuthorIDQuery = `
+        SELECT guide.* FROM guide
+        inner join member_profile on member_profile.member_id = guide.author_id
+        WHERE guide.author_id = ? AND guide.archive = 0
+        AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+        ORDER BY date_created DESC
     `;
-    // NOTE: new query for the new database - AL
-    // const getGuidesByAuthorID = `
-    //     SELECT * FROM guide WHERE
-    //     author_id = ? AND archive = 0
-    //     ORDER BY date_created DESC
-    // `;
-    db.query(getGuidesByAuthorID, [sanitizeId(id)], (err, data) => {
-        if (err) {
-            console.error(err)
+    db.query(getGuidesByAuthorIDQuery, [sanitizeId(authorId)], (getError, getData) => {
+        if (getError) {
+            console.error(getError)
             res.status(500).json({
                 error: 'Error fetching programs',
-                details: err,
-            })
+                details: getError,
+            });
         } else {
-            res.status(200).json(data)
+            res.status(200).json(getData);
         }
-    })
+    });
 }
 
-// Find Program
-// NOTE: should be renamed as fetchGuide() - AL
-const fetchProgram = async (req, res) => {
-    const { program_id } = req.params
+/**
+ * Retrieves guide information and its associated pages by its unique identifier from the database.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.guideId - The unique identifier of the guide to retrieve.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with retrieving the guide or its pages, the database query, or any other error occurs.
+ * @returns {void} Sends the retrieved guide information and pages as a JSON response or an error status.
+ */
+const getGuide = async (req, res) => {
+    console.log(`getGuide() from ${req.ip}`);
+    const { guideId } = req.params
 
     try {
-        const fetchProgramResult = await fetchProgramById(program_id)
-        const fetchProgramPagesResult = await fetchProgramPages(program_id)
-        if (fetchProgramResult) {
+        const fetchGuideResult = await fetchGuideById(guideId)
+        const fetchGuidePagesResult = await fetchGuidePagesByGuideId(guideId)
+        if (fetchGuideResult) {
             return res.status(200).json({
-                ...fetchProgramResult,
-                program_pages: fetchProgramPagesResult,
+                ...fetchGuideResult,
+                guidePages: fetchGuidePagesResult,
             })
         } else {
-            return res.status(500).json({ error: 'Program does not exist' })
+            console.log(`Guide (${guideId}) does not exist`);
+            return res.status(404).json({ error: 'Guide does not exist' })
         }
     } catch (error) {
         console.error(error)
-        return res.status(500).json({ error: 'Internal server error', error })
+        return res.status(500).json({ error: 'Internal server error' })
     }
 }
 
@@ -239,20 +240,21 @@ const saveElementsController = async (req, res) => {
     }
 }
 
-// Fetch Program Page
-const fetchProgramPage = async (req, res) => {
-    const { pageId } = req.params
+const getGuidePageByPageId = async (req, res) => {
+    console.log(`getGuidePageByPageId() from ${req.ip}`);
+    const { pageId } = req.params;
 
     try {
-        const fetchPageResult = await fetchProgramPageById(pageId)
+        const fetchPageResult = await fetchProgramPageById(pageId);
         if (fetchPageResult) {
-            return res.status(200).json(fetchPageResult)
+            return res.status(200).json(fetchPageResult);
         } else {
-            return res.status(500).json({ error: 'Page does not exist' })
+            console.error(`Guide page (${pageId}) does not exist`);
+            return res.status(404).json({ error: 'Guide Page does not exist' });
         }
     } catch (error) {
-        console.error(error)
-        return res.status(500).json({ error: 'Internal server error', error })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error', error });
     }
 }
 
@@ -507,7 +509,7 @@ const deleteProgam = async (req, res) => {
     const { username } = req.body;
 
     try {
-        const result = await fetchProgramById(program_id)
+        const result = await fetchGuideById(program_id)
 
         if (result) {
             const deleteGuideQuery = `
@@ -608,15 +610,15 @@ const deletePage = async (req, res) => {
 };
 
 module.exports = {
-    fetchProgram,
-    fetchProgramPage,
+    getGuide,
+    getGuidePageByPageId,
     saveElementsController,
-    fetchAllPrograms,
+    getAllGuidesByAuthorId,
     changeCoverPic,
     changeTitlePage,
     createProgram,
     createUpdatePage,
     deleteProgam,
     deletePage,
-    allPrograms,
+    getAllGuides,
 }

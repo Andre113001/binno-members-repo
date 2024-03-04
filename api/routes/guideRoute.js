@@ -9,10 +9,10 @@ router.use(express.urlencoded({ extended: true }));
 // const activityLogging = require('../middlewares/activityLogging')
 // router.use(activityLogging)
 
-router.get('/', guideController.allPrograms);
-router.get('/:program_id', guideController.fetchProgram);
-router.get('/user/:id', guideController.fetchAllPrograms);
-router.get('/page/:pageId', guideController.fetchProgramPage);
+router.get('/', guideController.getAllGuides);
+router.get('/:guideId', guideController.getGuide);
+router.get('/user/:authorId', guideController.getAllGuidesByAuthorId);
+router.get('/page/:pageId', guideController.getGuidePageByPageId);
 router.post('/page/save/:pageId', guideController.saveElementsController);
 
 router.post('/delete/:program_id', guideController.deleteProgam);
