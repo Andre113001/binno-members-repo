@@ -1,3 +1,5 @@
+// NOTE: Work in Progress for refactoring - AL
+
 const db = require('../../database/db')
 
 // Middlewares
