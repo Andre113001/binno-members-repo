@@ -13,14 +13,14 @@ router.get('/', guideController.getAllGuides);
 router.get('/:guideId', guideController.getGuide);
 router.get('/user/:authorId', guideController.getAllGuidesByAuthorId);
 router.get('/page/:pageId', guideController.getGuidePageByPageId);
-router.post('/page/save/:pageId', guideController.saveGuidePageElements);
+router.post('/page/save/:pageId', guideController.saveElementsController);
 
-router.post('/delete/:guideId', guideController.deleteGuide);
+router.post('/delete/:program_id', guideController.deleteProgam);
 router.get('/delete/page/:page_id', guideController.deletePage);
 
-router.post('/create_guide', guideController.createGuide);
-router.post('/create_page', guideController.createUpdateGuidePage);
 router.post('/change_img', guideController.changeCoverPic);
 router.post('/change_title', guideController.changeTitlePage);
+router.post('/create_program', guideController.createProgram);
+router.post('/create_page', guideController.createUpdatePage);
 
 module.exports = router;

@@ -10,7 +10,6 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const sha256 = require('sha256')
 const fs = require('fs');
 const path = require('path');
-const { updateContentStat, deductContentStat } = require("../middlewares/contentStatUpdater");
 
 /**
  * Fetches guide information by its unique identifier from the database.
@@ -25,8 +24,7 @@ const fetchGuideById = (programId) => {
         const fetchGuideByIdQuery = `
             SELECT guide.* FROM guide
             INNER JOIN member_profile ON member_profile.member_id = guide.author_id
-            WHERE member_profile.date_restrict IS NULL AND member_profile.archive = 0
-            AND guide.guide_id = ? AND guide.archive = 0
+            WHERE guide_id = ? AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
             ORDER BY date_created DESC
         `;
         db.query(fetchGuideByIdQuery, [sanitizeId(programId)], (fetchError, fetchData) => {
@@ -74,15 +72,10 @@ const getAllGuides = async (req, res) => {
     }
 }
 
-/**
- * Fetches a specific guide page by its unique identifier from the database.
- *
- * @function
- * @param {string} guidePageId - The unique identifier of the guide page to fetch.
- * @returns {Promise<Object>} A promise that resolves with the guide page and its elements or rejects with an error.
- */
-const fetchGuidePageByPageId = (guidePageId) => {
-    console.log(`fetchGuidePageByPageId(${guidePageId})`);
+// Function to fetch a program page by ID
+// NOTE: should be renamed to fetchGuidePagesById() - AL
+const fetchProgramPageById = (guidePageId) => {
+    console.log(`fetchProgramResult(${guidePageId})`);
     return new Promise((resolve, reject) => {
         const getGuidePagesByIdQuery = `
             SELECT * FROM guide_page WHERE guide_page_id = ? AND archive = 0
@@ -233,51 +226,26 @@ const getGuide = async (req, res) => {
     }
 }
 
-/**
- * Saves elements for a specific guide page in the database.
- *
- * @function
- * @async
- * @param {Object} req - Express request object with parameters and body.
- * @param {Object} req.params - Parameters extracted from the request URL.
- * @param {string} req.params.pageId - The unique identifier of the guide page for which to save elements.
- * @param {Object} req.body - The request body containing the new elements data.
- * @param {Object} req.body.newFile - The new elements data to be saved.
- * @param {Object} res - Express response object.
- * @throws {Error} Throws an error if there is an issue with saving the guide page elements or any other error occurs.
- * @returns {void} Sends a JSON response indicating the success or failure of the operation.
- */
-const saveGuidePageElements = async (req, res) => {
-    const { pageId } = req.params;
-    const { newFile } = req.body;
+// Controller to save elements by ID
+const saveElementsController = async (req, res) => {
+    const { pageId } = req.params
+    const { newFile } = req.body
 
-    const result = await saveElements(pageId, newFile);
+    const result = await saveElements(pageId, newFile)
 
     if (result.success) {
-        res.status(200).json(result);
+        res.status(200).json(result)
     } else {
-        res.status(500).json(result);
+        res.status(500).json(result)
     }
 }
 
-/**
- * Retrieves a specific guide page by its unique identifier from the database and sends it as a JSON response.
- *
- * @function
- * @async
- * @param {Object} req - Express request object with parameters.
- * @param {Object} req.params - Parameters extracted from the request URL.
- * @param {string} req.params.pageId - The unique identifier of the guide page to retrieve.
- * @param {Object} res - Express response object.
- * @throws {Error} Throws an error if there is an issue with retrieving the guide page, the database query, or any other error occurs.
- * @returns {void} Sends the retrieved guide page as a JSON response or an error status with details.
- */
 const getGuidePageByPageId = async (req, res) => {
     console.log(`getGuidePageByPageId() from ${req.ip}`);
     const { pageId } = req.params;
 
     try {
-        const fetchPageResult = await fetchGuidePageByPageId(pageId);
+        const fetchPageResult = await fetchProgramPageById(pageId);
         if (fetchPageResult) {
             return res.status(200).json(fetchPageResult);
         } else {
@@ -290,51 +258,62 @@ const getGuidePageByPageId = async (req, res) => {
     }
 }
 
-/**
- * Creates a new guide in the database with the provided information.
- *
- * @function
- * @async
- * @param {Object} req - Express request object with body.
- * @param {Object} req.body - The request body containing information to create the guide.
- * @param {string} req.body.guideAuthor - The unique identifier of the guide's author.
- * @param {string} req.body.fileName - The image filename associated with the guide.
- * @param {string} req.body.guideTitle - The title of the guide.
- * @param {Object} res - Express response object.
- * @throws {Error} Throws an error if there is an issue with creating the guide or any other error occurs.
- * @returns {void} Sends a JSON response indicating the success or failure of the guide creation.
- */
-const createGuide = async (req, res) => {
-    console.log(`createGuide() from ${req.ip}`);
-    const { guideAuthor, fileName, guideTitle } = req.body;
+// Create & Update program
+// NOTE: should be renamed to createGuide() - AL
+const createProgram = async (req, res) => {
+    const { programAuthor, fileName, programTitle } =
+        req.body
 
     try {
         const newId = uniqueId.uniqueIdGenerator()
+
+        // Create a new blog
         const createGuideQuery = `
-            INSERT INTO guide (
-                guide_id,
-                date_created,
-                author_id,
-                title,
-                image
+            INSERT INTO program_i (
+                program_id,
+                program_dateadded,
+                program_author,
+                program_heading,
+                program_img
             )
             VALUES (?, NOW(), ?, ?, ?)
         `;
-        db.query(createGuideQuery, [newId, guideAuthor, guideTitle, fileName], (createError, createRes) => {
-            if (createError) {
-                console.log(createError);
-                return res.status(501).json({ error: 'Failed to create Guide' });
-            }
+        // NOTE: new query for the new database - AL
+        // const createGuideQuery = `
+        //     INSERT INTO guide (
+        //         guide_id,
+        //         date_created,
+        //         author_id,
+        //         title,
+        //         image
+        //     )
+        //     VALUES (?, NOW(), ?, ?, ?)
+        // `;
+        db.query(
+            createGuideQuery, [newId, programAuthor, programTitle, fileName],
+            (createError, createRes) => {
+                if (createError) {
+                    return res.status(500).json({
+                        error: 'Failed to create Program',
+                        createError,
+                    })
+                }
 
-            if (createRes.affectedRows > 0) {
-                console.log(`Guide (${newId}) created successfully`);
-                updateContentStat("guide");
-                return res.status(201).json({ message: 'Guide created successfully' });
+                if (createRes.affectedRows > 0) {
+                    return res
+                        .status(201)
+                        .json({ message: 'Program created successfully', id: newId })
+                } else {
+                    return res.status(500).json({
+                        error: 'Failed to create program',
+                        createError,
+                    })
+                }
             }
-        });
+        )
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Internal server error' });
+        console.error(error)
+        return res.status(500).json({ error: 'Internal server error' })
     }
 }
 
@@ -407,36 +386,50 @@ const changeTitlePage = async (req, res) => {
 }
 
 // Create & Update Pages
-const createUpdateGuidePage = async (req, res) => {
-    console.log(`createUpdateGuidePage() from ${req.ip}`);
-    const { pageId, pageGuideId, pageTitle, pagePath } = req.body
+const createUpdatePage = async (req, res) => {
+    const { pageId, pageProgramId, pageTitle, pagePath } = req.body
 
     try {
-        const fetchGuidePageResult = await fetchGuidePageByPageId(pageId);
-        console.log(fetchGuidePageResult);
+        const fetchProgramResult = await fetchProgramPageById(pageId)
 
-        // old condition (fetchGuidePageResult.length > 0)
-        if (fetchGuidePageResult) {
+        if (fetchProgramResult.length > 0) {
+            // Update Program
             const updateGuidePageQuery = `
-                UPDATE guide_page SET
-                guide_id = ?,
-                title = ?,
-                filename = ?,
-                date_modified = NOW()
-                WHERE guide_page_id = ?
-            `;
-            db.query(updateGuidePageQuery, [pageGuideId, pageTitle, pagePath, pageId], (updateError, updateResult) => {
-                if (updateError) {
-                    console.log(`Blog (${pageId}) updated failed`);
-                    console.error(updateError);
-                    return res.status(501).json({ error: 'Failed to update page' });
-                }
+                UPDATE program_pages SET
+                program_id = ?,
+                program_pages_title = ?,
+                program_pages_path = ?,
+                program_pages_datemodified = NOW()
+                WHERE program_pages_id = ?
+            `
+            // NOTE: new query for the new database - AL
+            // const updateGuidePageQuery = `
+            //     UPDATE guide_page SET
+            //     guide_id = ?,
+            //     title = ?,
+            //     filename = ?,
+            //     date_modified = NOW()
+            //     WHERE guide_page_id = ?
+            // `;
+            db.query(updateGuidePageQuery, [pageProgramId, pageTitle, pagePath, pageId],
+                (err, result) => {
+                    if (err) {
+                        return res
+                            .status(500)
+                            .json({ error: 'Failed to update page', err })
+                    }
 
-                if (updateResult.affectedRows > 0) {
-                    console.log(`Guide page (${pageId}) updated successfully`);
-                    return res.status(200).json({ message: 'Guide page updated successfully' });
+                    if (result.affectedRows > 0) {
+                        return res
+                            .status(200)
+                            .json({ message: 'Page updated successfully' })
+                    } else {
+                        return res
+                            .status(500)
+                            .json({ message: 'Failed to update page', err })
+                    }
                 }
-            });
+            )
         } else {
             // Generate a new unique ID
             const newId = uniqueId.uniqueIdGenerator();
@@ -452,43 +445,55 @@ const createUpdateGuidePage = async (req, res) => {
             fs.writeFile(filePath, jsonData, (err) => {
                 if (err) {
                     console.error('Error creating JSON file:', err);
-                    return res.status(501).json({ error: 'Failed to create JSON file' });
+                    return res.status(500).json({
+                        error: 'Failed to create JSON file',
+                        err,
+                    });
                 }
 
                 // Continue with the database query
                 // Insert the program_pages_path as the <insert newId>.json
-                // const createGuidePageQuery = `
-                //     INSERT INTO program_pages (
-                //         program_pages_id,
-                //         program_id,
-                //         program_pages_dateadded,
-                //         program_pages_title,
-                //         program_pages_path
-                //     )
-                //     VALUES (?, ?, NOW(), ?, ?)
-                // `;
-                // NOTE: new query for the new database - AL
                 const createGuidePageQuery = `
-                    INSERT INTO guide_page (
-                        guide_page_id,
-                        guide_id,
-                        date_created,
-                        title,
-                        filename
+                    INSERT INTO program_pages (
+                        program_pages_id,
+                        program_id,
+                        program_pages_dateadded,
+                        program_pages_title,
+                        program_pages_path
                     )
                     VALUES (?, ?, NOW(), ?, ?)
                 `;
-                db.query(createGuidePageQuery, [newId, pageGuideId, 'Untitled', fileName], (createError, createRes) => {
-                    if (createError) {
-                        console.error(createError);
-                        return res.status(501).json({ error: 'Failed to create Guide page' });
-                    }
+                // NOTE: new query for the new database - AL
+                // const createGuidePageQuery = `
+                //     INSERT INTO guide_page (
+                //         guide_page_id,
+                //         guide_id,
+                //         date_created,
+                //         title,
+                //         filename
+                //     )
+                //     VALUES (?, ?, NOW(), ?, ?)
+                // `;
+                db.query(
+                    createGuidePageQuery, [newId, pageProgramId, 'Untitled', fileName], // Use the filePath as the program_pages_path
+                    (createError, createRes) => {
+                        if (createError) {
+                            return res.status(500).json({
+                                error: 'Failed to create Page',
+                                createError,
+                            });
+                        }
 
-                    if (createRes.affectedRows > 0) {
-                        console.log(`Guide page (${newId}) created successfully`);
-                        return res.json('Guide page created successfully');
+                        if (createRes.affectedRows > 0) {
+                            return res.json('Page created successfully');
+                        } else {
+                            return res.status(500).json({
+                                error: 'Failed to create page',
+                                createError,
+                            });
+                        }
                     }
-                });
+                );
             });
         }
     } catch (error) {
@@ -499,37 +504,47 @@ const createUpdateGuidePage = async (req, res) => {
 
 // Delete Program
 // NOTE: should be renamed to deleteGuide() - AL
-const deleteGuide = async (req, res) => {
-    const { guideId } = req.params;
+const deleteProgam = async (req, res) => {
+    const { program_id } = req.params;
+    const { username } = req.body;
 
     try {
-        const result = await fetchGuideById(guideId);
+        const result = await fetchGuideById(program_id)
 
         if (result) {
             const deleteGuideQuery = `
-                UPDATE guide SET archive = 1 WHERE guide_id = ?
+                UPDATE program_i SET program_flag = 0 WHERE program_id = ?
             `;
-            db.query(deleteGuideQuery, [guideId], (deleteError, deleteRes) => {
-                if (deleteError) {
-                    console.log(`Guide (${guideId}) delete failed`);
-                    console.log(deleteError);
-                    return res.status(501).json({ error: 'Failed to delete program' });
-                }
+            // NOTE: new query for the new database - AL
+            // const deleteGuideQuery = `
+            //     UPDATE guide SET archive = 1 WHERE guide_id = ?
+            // `;
+            db.query(
+                deleteGuideQuery, [program_id], (deleteError, deleteRes) => {
+                    if (deleteError) {
+                        console.log(deleteError)
+                        return res.status(500).json({
+                            error: 'Failed to delete program',
+                            deleteError,
+                        })
+                    }
 
-                if (deleteRes.affectedRows > 0) {
-                    const guideDateCreated = result.date_created.toISOString().split("T")[0];
-                    deductContentStat(guideDateCreated, "guide");
-                    console.log(`Guide (${guideId}) deleted successfully`);
-                    return res.json({ message: 'Guide deleted successfully' });
+                    if (deleteRes.affectedRows > 0) {
+                        return res.json({ message: 'Program deleted successfully' })
+                    } else {
+                        return res.status(500).json({
+                            error: 'Failed to delete program',
+                            deleteError,
+                        })
+                    }
                 }
-            });
+            )
         } else {
-            console.log(`Guide (${guideId}) does not exist`);
-            return res.status(404).json({ error: 'Guide does not exist!' });
+            return res.status(500).json({ error: 'Program does not exist!' })
         }
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Internal server error' });
+        console.error(error)
+        return res.status(500).json({ error: 'Internal server error' })
     }
 }
 
@@ -540,7 +555,7 @@ const deletePage = async (req, res) => {
 
     try {
         // Fetch the program page by ID to get the corresponding file path
-        const result = await fetchGuidePageByPageId(page_id);
+        const result = await fetchProgramPageById(page_id);
 
         if (result) {
             const filePath = path.join(__dirname, `../../public/guide-pages/`, `${page_id}.json`);
@@ -597,13 +612,13 @@ const deletePage = async (req, res) => {
 module.exports = {
     getGuide,
     getGuidePageByPageId,
-    saveGuidePageElements,
+    saveElementsController,
     getAllGuidesByAuthorId,
     changeCoverPic,
     changeTitlePage,
-    createGuide,
-    createUpdateGuidePage,
-    deleteGuide,
+    createProgram,
+    createUpdatePage,
+    deleteProgam,
     deletePage,
     getAllGuides,
 }

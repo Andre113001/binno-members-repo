@@ -7,11 +7,11 @@ const readElements = async (fileId) => {
     try {
         // Read the JSON file
         const data = await fs.readFile(`./public/guide-pages/${fileId}`, 'utf8');
-
+        
         // Parse the JSON data
         const jsonData = JSON.parse(data);
         // console.log(jsonData);
-
+        
         // Now you can work with the parsed JSON data
         return jsonData;
     } catch (error) {
@@ -28,7 +28,7 @@ const saveElements = async (file, newFile) => {
         await fs.writeFile(filePath, JSON.stringify(newFile, null, 2));
 
         return { success: true, message: 'Elements saved successfully' };
-    } catch (error) {
+    } catch (error) {   
         console.error('Error saving elements:', error);
         return { success: false, error: error };
     }
