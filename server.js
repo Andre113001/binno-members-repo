@@ -42,7 +42,7 @@ app.use('/public', express.static(path.join(__dirname, '../../public')));
 const memberRoute = require('./api/routes/memberRoute')
 const blogRoute = require('./api/routes/blogRoute')
 const eventRoute = require('./api/routes/eventRoute')
-const postRoute = require('./api/routes/socMedPostRoute')
+const postRoute = require('./api/routes/postRoute')
 const guideRoute = require('./api/routes/guideRoute')
 const loginRoute = require('./api/routes/loginRoute')
 const passwordRoute = require('./api/routes/passwordRoute')
