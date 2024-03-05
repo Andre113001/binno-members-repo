@@ -12,19 +12,19 @@ const sanitizedMemberId = require('../middlewares/querySanitizerMiddleware')
 const bcryptConverter = require('../middlewares/bcryptConverter')
 const generateToken = require('../middlewares/generateTokenMiddleware')
 
-// Reusable function to get a member by ID
-const getMemberById = (memberId) => {
+/**
+ * Fetches information about a specific member based on the provided member ID.
+ *
+ * @function
+ * @async
+ * @param {string} memberId - The unique identifier of the member to fetch.
+ * @throws {Error} Throws an error if there is an issue with fetching the member or any other error occurs.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array containing information about the requested member.
+ */
+const fetchMemberById = (memberId) => {
+    console.log(`fetchMemberById(${memberId})`);
     return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
-        const getMemberByIdQuery = `
-            SELECT member_i.*, member_settings.*, member_contact.contact_number , email_i.email_address FROM member_i
-            INNER JOIN member_settings ON member_settings.setting_memberId = member_i.member_id
-            INNER JOIN member_contact ON member_contact.contact_id = member_i.member_contact_id
-            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
-            WHERE member_id = ?
-        `;
-        // NOTE: new query for the new database - AL
-        // const getMemberByIdQuery = "SELECT * FROM member_profile WHERE member_id = ?";
+        const getMemberByIdQuery = "SELECT * FROM member_profile WHERE member_id = ?";
         db.query(getMemberByIdQuery, [sanitizedMemberId(memberId)], (err, data) => {
             if (err) {
                 reject(err)
@@ -35,52 +35,60 @@ const getMemberById = (memberId) => {
     })
 }
 
-const fetchEnablers = async (req, res) => {
+/**
+ * Fetches information about enabler members (members with class 2) that are not restricted and not archived.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching enablers or any other error occurs.
+ * @returns {void} Responds with a JSON array containing information about enabler members.
+ */
+const getEnablers = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getEnablersQuery = `
-            SELECT member_i.member_id, member_settings.*, email_i.email_address, member_contact.contact_number FROM member_i
-            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id
-            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
-            WHERE member_type = '2' AND member_restrict IS NULL AND member_flag = 1
+            SELECT * FROM member_profile
+            WHERE member_class = 2 AND date_restrict IS NULL and archive = 0
         `;
-        // NOTE: new query for the new database - AL
-        // const getEnablersQuery = "SELECT * FROM member_profile WHERE member_class = 2";
         db.query(getEnablersQuery, (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
-                resolve(data)
+                resolve(data);
             }
-        })
-    })
+        });
+    });
 
-    res.status(200).json(query)
+    res.status(200).json(query);
 }
 
-const fetchCompanies = async (req, res) => {
+/**
+ * Fetches information about companies (members with class 1) that are not restricted and not archived.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching companies or any other error occurs.
+ * @returns {void} Responds with a JSON array containing information about companies.
+ */
+const getCompanies = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getCompaniesQuery = `
-            SELECT member_i.member_id, member_settings.*, email_i.email_address, member_contact.contact_number FROM member_i
-            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id
-            INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
-            WHERE member_type = '1' AND member_restrict IS NULL AND member_flag = 1
+            SELECT * FROM member_profile
+            WHERE member_class = 1 AND date_restrict IS NULL AND archive = 0
         `;
-        // NOTE: new query for the new database - AL
-        // const getCompaniesQuery = "SELECT * FROM member_profile WHERE member_type = 1";
         db.query(getCompaniesQuery, (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
-                resolve(data)
+                resolve(data);
             }
-        })
-    })
+        });
+    });
 
-    res.status(200).json(query)
+    res.status(200).json(query);
 }
 
 const getMemberByEmail = (memberEmail) => {
@@ -166,20 +174,33 @@ const getProfileSettings = (settingId) => {
     })
 }
 
-// Controller to get a member by ID
+/**
+ * Fetches information about a specific member based on the provided member ID.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.member_id - The unique identifier of the member to fetch.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching the member or any other error occurs.
+ * @returns {Object} Returns a JSON response containing information about the requested member.
+ */
 const getMember = async (req, res) => {
+    console.log(`getMember() from ${req.ip}`);
     const { member_id } = req.params
 
     try {
-        const result = await getMemberById(member_id)
+        const result = await fetchMemberById(member_id);
         if (result.length > 0) {
-            return res.json(result)
+            return res.status(200).json(result);
         } else {
-            return res.status(500).json({ error: 'Member does not exist' })
+            console.log(`Member (${member_id}) does not exist`);
+            return res.status(404).json({ error: 'Member does not exist' });
         }
     } catch (error) {
-        console.error(error)
-        return res.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -211,7 +232,7 @@ const updateProfile = async (req, res) => {
     } = req.body
 
     try {
-        const result = await getMemberById(member_id)
+        const result = await fetchMemberById(member_id)
 
         if (result.length > 0) {
             const getSettingsResult = await getProfileSettings(
@@ -316,7 +337,7 @@ const changeStatus = async (req, res) => {
 
     try {
         // Fetch the current status of the member
-        const result = await getMemberById(member_id)
+        const result = await fetchMemberById(member_id)
 
         if (result.length > 0) {
             const settingFetch = await getProfileSettings(
@@ -496,8 +517,8 @@ module.exports = {
     fetchProfileByToken,
     updateProfile,
     changeStatus,
-    fetchEnablers,
-    fetchCompanies,
+    getEnablers,
+    getCompanies,
     updateProfilePic,
     updateCoverPic
 }
