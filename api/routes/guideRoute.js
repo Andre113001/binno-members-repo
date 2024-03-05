@@ -15,8 +15,9 @@ router.get('/user/:authorId', guideController.getAllGuidesByAuthorId);
 router.get('/page/:pageId', guideController.getGuidePageByPageId);
 router.post('/page/save/:pageId', guideController.saveElementsController);
 
-router.post('/delete/:program_id', guideController.deleteProgam);
-router.get('/delete/page/:page_id', guideController.deletePage);
+router.post('/delete/:guideId', guideController.deleteGuide);
+// NOTE:  Why GET?? - AL
+router.get('/delete/page/:pageId', guideController.deleteGuidePage);
 
 router.post('/change_img', guideController.changeCoverPic);
 router.post('/change_title', guideController.changeTitlePage);
