@@ -257,8 +257,6 @@ const createUpdateEvent = async (req, res) => {
     try {
         const retrieveEvent = await getEventById(eventId);
         const dateObject = new Date(eventDate);
-        const eventObject = new Date(eventTime);
-        const event_time = eventObject.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
         const formattedDate = dateObject.toISOString().split('T')[0];
         // const date = new Date(eventDate);
 
