@@ -1,6 +1,3 @@
-// WARN: file might be renamed to guideController.js - AL
-// because program is not called guide
-
 const db = require('../../database/db')
 
 // Middlewares
@@ -72,8 +69,16 @@ const getAllGuides = async (req, res) => {
     }
 }
 
-// Function to fetch a program page by ID
-// NOTE: should be renamed to fetchGuidePagesById() - AL
+/**
+ * Retrieves details of a guide page based on the provided guide page ID.
+ *
+ * @function
+ * @async
+ * @param {string} guidePageId - The unique identifier of the guide page to be retrieved.
+ * @throws {Error} Throws an error if there is an issue with fetching the guide page or if it does not exist.
+ * @returns {Promise<Object>} A promise that resolves to an object containing details of the guide page,
+ *                           including its unique identifier, elements, and other relevant information.
+ */
 const fetchGuidePageById = (guidePageId) => {
     console.log(`fetchGuidePageById(${guidePageId})`);
     return new Promise((resolve, reject) => {
@@ -240,6 +245,18 @@ const saveElementsController = async (req, res) => {
     }
 }
 
+/**
+ * Retrieves details of a guide page based on the provided page ID.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - The parameters extracted from the request URL.
+ * @param {string} req.params.pageId - The unique identifier of the guide page to be retrieved.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching the guide page or if it does not exist.
+ * @returns {void} Sends a JSON response containing the details of the guide page.
+ */
 const getGuidePageByPageId = async (req, res) => {
     console.log(`getGuidePageByPageId() from ${req.ip}`);
     const { pageId } = req.params;
