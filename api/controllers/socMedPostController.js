@@ -8,6 +8,7 @@ const {
     uniqueIdGenerator,
 } = require('../middlewares/uniqueIdGeneratorMiddleware')
 const { uploadToLog } = require('../middlewares/activityLogger');
+const { updateContentStat } = require('../middlewares/contentStatUpdater');
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
@@ -288,6 +289,8 @@ const updateCreatePost = async (req, res) => {
                             details: limitWords(postText, 60),
                             contentId: newId
                         })
+
+                        updateContentStat('post');
 
                         if (logRes) {
                             return res.status(201).json({ message: 'Post created successfully' })

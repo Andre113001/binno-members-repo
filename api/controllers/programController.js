@@ -10,6 +10,7 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
 const sha256 = require('sha256')
 const fs = require('fs');
 const path = require('path');
+const { updateContentStat } = require('../middlewares/contentStatUpdater');
 
 // Reusable function to get a program by ID
 // NOTE: should be renamed as fetchGuideById() - AL
@@ -298,6 +299,7 @@ const createProgram = async (req, res) => {
                 }
 
                 if (createRes.affectedRows > 0) {
+                    updateContentStat('guide');
                     return res
                         .status(201)
                         .json({ message: 'Program created successfully', id: newId })

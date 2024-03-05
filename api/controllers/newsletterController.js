@@ -3,6 +3,7 @@ const dotenv = require('dotenv')
 const axios = require('axios')
 const { uniqueIdGenerator } = require('../middlewares/uniqueIdGeneratorMiddleware');
 const sanitizeId = require('../middlewares/querySanitizerMiddleware')
+const { updateEmailStat } = require('../middlewares/newsletterStatUpdater');
 
 const subscribe = async (req, res) => {
     const { email } = req.body;
@@ -67,6 +68,7 @@ const subscribe = async (req, res) => {
                     }
 
                     if (insertRes.affectedRows > 0) {
+                        updateEmailStat();
                         res.json({ result: "Email Added" });
                     } else {
                         res.json({ result: "Email Not Added" });
@@ -78,6 +80,24 @@ const subscribe = async (req, res) => {
         console.log(error);
     }
 }
+
+// const check = async (req, res) => {
+//     const { email } = req.query;
+
+//     try {
+//         db.query('SELECT * FROM email_i WHERE email_address = ?', [email], (err, result) => {
+//             if (err) {
+//                 console.log('An error occured on EmailCheck: ', err);
+//             }
+
+//             if (result.length > 0) {
+//                 // axios.post()
+//             }
+//         })
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
 // Unsubscribe function
 const unsubscribe = async (req, res) => {

@@ -29,6 +29,8 @@ const updateContentStat = async (content_type) => {
 					if (updateError) reject(updateError);
 					else resolve(updateResult);
 				});
+
+				// console.log('content stat updater: update');
 			}
 			else {
 				const createContentStatQuery = `
@@ -41,6 +43,7 @@ const updateContentStat = async (content_type) => {
 					if (createError) reject(createError);
 					else resolve(createResult);
 				});
+				// console.log('content stat updater: insert');
 			}
 		});
 	});
