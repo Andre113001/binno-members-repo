@@ -275,59 +275,47 @@ const getGuidePageByPageId = async (req, res) => {
     }
 }
 
-// Create & Update program
-// NOTE: should be renamed to createGuide() - AL
-const createProgram = async (req, res) => {
-    const { programAuthor, fileName, programTitle } =
-        req.body
+/**
+ * Creates a guide in the database with the provided information and logs the creation.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with body.
+ * @param {Object} req.body - The request body containing information for creating the guide.
+ * @param {string} req.body.guideAuthor - The unique identifier of the guide's author.
+ * @param {string} req.body.guideImageName - The name of the image associated with the guide.
+ * @param {string} req.body.guideTitle - The title of the guide.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with creating the guide, the database query, or any other error occurs.
+ * @returns {Object} Returns a JSON response indicating the success or failure of the guide creation.
+ */
+const createGuide = async (req, res) => {
+    console.log(`createGuide() from ${req.ip}`);
+    const { guideAuthor, guideImageName, guideTitle } = req.body;
 
     try {
         const newId = uniqueId.uniqueIdGenerator()
-
-        // Create a new blog
         const createGuideQuery = `
-            INSERT INTO program_i (
-                program_id,
-                program_dateadded,
-                program_author,
-                program_heading,
-                program_img
+            INSERT INTO guide (
+                guide_id,
+                date_created,
+                author_id,
+                title,
+                image
             )
             VALUES (?, NOW(), ?, ?, ?)
         `;
-        // NOTE: new query for the new database - AL
-        // const createGuideQuery = `
-        //     INSERT INTO guide (
-        //         guide_id,
-        //         date_created,
-        //         author_id,
-        //         title,
-        //         image
-        //     )
-        //     VALUES (?, NOW(), ?, ?, ?)
-        // `;
-        db.query(
-            createGuideQuery, [newId, programAuthor, programTitle, fileName],
-            (createError, createRes) => {
-                if (createError) {
-                    return res.status(500).json({
-                        error: 'Failed to create Program',
-                        createError,
-                    })
-                }
-
-                if (createRes.affectedRows > 0) {
-                    return res
-                        .status(201)
-                        .json({ message: 'Program created successfully', id: newId })
-                } else {
-                    return res.status(500).json({
-                        error: 'Failed to create program',
-                        createError,
-                    })
-                }
+        db.query(createGuideQuery, [newId, guideAuthor, guideTitle, guideImageName], (createError, createRes) => {
+            if (createError) {
+                console.log(createError);
+                return res.status(501).json({ error: 'Guide create failed' });
             }
-        )
+
+            if (createRes.affectedRows > 0) {
+                console.log(`Guide (${newId}) created successfully`);
+                return res.status(201).json({ message: 'Guide created successfully' });
+            }
+        });
     } catch (error) {
         console.error(error)
         return res.status(500).json({ error: 'Internal server error' })
@@ -580,7 +568,7 @@ module.exports = {
     getAllGuidesByAuthorId,
     changeCoverPic,
     changeTitlePage,
-    createProgram,
+    createGuide,
     createUpdatePage,
     deleteGuide,
     deleteGuidePage,

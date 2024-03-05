@@ -19,9 +19,9 @@ router.post('/delete/:guideId', guideController.deleteGuide);
 // NOTE:  Why GET?? - AL
 router.get('/delete/page/:pageId', guideController.deleteGuidePage);
 
+router.post('/create_guide', guideController.createGuide);
+router.post('/create_page', guideController.createUpdatePage);
 router.post('/change_img', guideController.changeCoverPic);
 router.post('/change_title', guideController.changeTitlePage);
-router.post('/create_program', guideController.createProgram);
-router.post('/create_page', guideController.createUpdatePage);
 
 module.exports = router;
