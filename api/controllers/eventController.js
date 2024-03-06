@@ -8,6 +8,7 @@ const path = require('path')
 const { uploadToLog } = require('../middlewares/activityLogger');
 const axios = require('axios');
 const { updateContentStat, deductContentStat } = require("../middlewares/contentStatUpdater");
+const { limitWords } = require("../middlewares/limitWords");
 
 /**
  * Retrieves all non-archived events from the database and sends the event information as a JSON response.
@@ -215,20 +216,6 @@ function getFileExtensionFromDataURL(dataURL) {
         return match[1];
     }
     return null;
-}
-
-/**
- * Limits the number of words in a given text.
- *
- * @function
- * @param {string} text - The input text to limit.
- * @param {number} limit - The maximum number of words to include in the result.
- * @returns {string} Returns a new string with the specified number of words from the beginning of the input text.
- */
-function limitWords(text, limit) {
-    const words = text.split(' ')
-    const limitedWords = words.slice(0, limit)
-    return limitedWords.join(' ')
 }
 
 /**

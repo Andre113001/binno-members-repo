@@ -8,6 +8,7 @@ const sanitizeId = require('../middlewares/querySanitizerMiddleware');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 const { uploadToLog } = require('../middlewares/activityLogger');
 const { updateContentStat, deductContentStat } = require("../middlewares/contentStatUpdater");
+const { limitWords } = require("../middlewares/limitWords");
 
 /**
  * Retrieves all non-archived blogs from the database.
@@ -183,12 +184,6 @@ const getAllBlogsByAuthorId = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error });
     }
-}
-
-function limitWords(text, limit) {
-    const words = text.split(' ')
-    const limitedWords = words.slice(0, limit)
-    return limitedWords.join(' ')
 }
 
 function getFileExtensionFromDataURL(dataURL) {

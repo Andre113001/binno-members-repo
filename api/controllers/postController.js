@@ -10,6 +10,7 @@ const { updateContentStat, deductContentStat } = require('../middlewares/content
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
+const { limitWords } = require("../middlewares/limitWords");
 
 /**
  * Fetches all posts that are not archived and belong to members who are not restricted or archived.
@@ -171,12 +172,6 @@ function getFileExtensionFromDataURL(dataURL) {
         return match[1];
     }
     return null;
-}
-
-function limitWords(text, limit) {
-    const words = text.split(' ')
-    const limitedWords = words.slice(0, limit)
-    return limitedWords.join(' ')
 }
 
 /**
