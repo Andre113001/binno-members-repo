@@ -1,1 +1,0 @@
-# Guide Pages JSON Directory
