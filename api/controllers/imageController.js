@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
+const { getFileExtensionFromDataURL } = require("../middlewares/getFileExtensionFromDataURL");
 
 const getImageBlob = (imagePath) => {
     return fs.readFileSync(imagePath)
@@ -17,7 +18,7 @@ const moveFileToDirectory = (file, destinationDirectory) => {
          if (!fs.existsSync(path.join(__dirname, destinationDirectory))) {
             fs.mkdirSync(path.join(__dirname, destinationDirectory), { recursive: true });
         }
-        
+
         // Write the file, overwriting if it already exists
         fs.writeFileSync(filePath, file.buffer)
 
@@ -37,7 +38,7 @@ const getImage = async (req, res) => {
 
     const [folder, filename] = filePath.split('/');
     const imgPath = path.join(__dirname, `../../public/img/${folder}`, filename);
-    
+
     try {
         const imageBlob = getImageBlob(imgPath);
 
@@ -66,7 +67,7 @@ const uploadImage = async (req, res) => {
             image,
             `../../public/img/${file_path}`
         )
-        
+
 
         return res.status(200).json({
             message: 'File uploaded successfully',
@@ -76,14 +77,6 @@ const uploadImage = async (req, res) => {
         console.error('Error uploading image:', error)
         return res.status(500).json({ error: 'Internal Server Error' })
     }
-}
-
-function getFileExtensionFromDataURL(dataURL) {
-    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
-    if (match && match[1]) {
-      return match[1];
-    }
-    return null;
 }
 
 const updateImage = async (req, res) => {

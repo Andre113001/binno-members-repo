@@ -11,6 +11,7 @@ const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 const { limitWords } = require("../middlewares/limitWords");
+const { getFileExtensionFromDataURL } = require("../middlewares/getFileExtensionFromDataURL");
 
 /**
  * Fetches all posts that are not archived and belong to members who are not restricted or archived.
@@ -164,14 +165,6 @@ const getMemberPosts = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: 'Internal server error' });
     }
-}
-
-function getFileExtensionFromDataURL(dataURL) {
-    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
-    if (match && match[1]) {
-        return match[1];
-    }
-    return null;
 }
 
 /**

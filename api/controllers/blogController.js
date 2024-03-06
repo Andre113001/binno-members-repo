@@ -9,6 +9,7 @@ const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware');
 const { uploadToLog } = require('../middlewares/activityLogger');
 const { updateContentStat, deductContentStat } = require("../middlewares/contentStatUpdater");
 const { limitWords } = require("../middlewares/limitWords");
+const { getFileExtensionFromDataURL } = require("../middlewares/getFileExtensionFromDataURL");
 
 /**
  * Retrieves all non-archived blogs from the database.
@@ -184,14 +185,6 @@ const getAllBlogsByAuthorId = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error });
     }
-}
-
-function getFileExtensionFromDataURL(dataURL) {
-    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
-    if (match && match[1]) {
-        return match[1];
-    }
-    return null;
 }
 
 /**

@@ -8,6 +8,7 @@ const { promisify } = require('util');
 const fs = require('fs');
 const path = require('path');
 const uniqueId = require('../middlewares/uniqueIdGeneratorMiddleware')
+const { getFileExtensionFromDataURL } = require("../middlewares/getFileExtensionFromDataURL");
 
 const { converBase64ToImage } = require('convert-base64-to-image')
 
@@ -227,14 +228,6 @@ const verify_twoAuth = async (req, res) => {
         return res.json({ error: error }); // Return false in case of an error
     }
 };
-
-function getFileExtensionFromDataURL(dataURL) {
-    const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
-    if (match && match[1]) {
-        return match[1];
-    }
-    return null;
-}
 
 const firstTime = async (req, res) => {
     try {
