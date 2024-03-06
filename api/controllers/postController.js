@@ -6,7 +6,7 @@ const {
     uniqueIdGenerator,
 } = require('../middlewares/uniqueIdGeneratorMiddleware')
 const { uploadToLog } = require('../middlewares/activityLogger');
-const { updateContentStat } = require('../middlewares/contentStatUpdater');
+const { updateContentStat, deductContentStat } = require('../middlewares/contentStatUpdater');
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
@@ -87,6 +87,7 @@ const fetchPostById = async (postId) => {
  * @returns {Promise<Array<Object>>} A promise that resolves to an array containing information about the posts authored by the member.
  */
 const fetchMemberPosts = (userId) => {
+    console.log(`fetchMemberPosts(${userId})`);
     return new Promise((resolve, reject) => {
         const getPostByUserIdQuery = `
             SELECT post.* FROM post
@@ -200,6 +201,7 @@ function limitWords(text, limit) {
  * @returns {Object} Returns a JSON response indicating the success or failure of the post update or creation.
  */
 const updateCreatePost = async (req, res) => {
+    console.log(`updateCreatePost() from ${req.ip}`);
     const { post_id, postAuthor, postCategory, postHeading, postText, username, postImg } = req.body;
 
     try {
@@ -309,51 +311,58 @@ const updateCreatePost = async (req, res) => {
     }
 }
 
+/**
+ * Deletes a post by setting its archive flag to 1 in the database and logs the deletion.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with body.
+ * @param {Object} req.body - The request body containing information about the post to delete.
+ * @param {string} req.body.post_id - The unique identifier of the post to delete.
+ * @param {string} req.body.username - The username of the user performing the deletion.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with deleting the post, the database query, or any other error occurs.
+ * @returns {Object} Returns a JSON response indicating the success or failure of the post deletion.
+ */
 const deletePost = async (req, res) => {
+    console.log(`deletePost() from ${req.ip}`);
     const { post_id, username } = req.body
 
     try {
-        const result = await fetchPostById(post_id)
+        const result = await fetchPostById(post_id);
 
         if (result.length > 0 && result[0].hasOwnProperty('post_id')) {
             const deletePostQuery = `
-                UPDATE post_i SET post_flag = 0 WHERE post_id = ?
+                UPDATE post SET archive = 1 WHERE post_id = ?
             `;
-            // NOTE: new query for the new database - AL
-            // const deletePostQuery = `
-            //     UPDATE post SET archive = 1 WHERE post_id = ?
-            // `;
-            db.query(
-                deletePostQuery, [post_id], (deleteError, deleteRes) => {
-                    if (deleteError) {
-                        console.log(deleteError)
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to delete post' })
-                    }
-
-                    if (deleteRes.affectedRows > 0) {
-                        const logRes = uploadToLog(
-                            result[0].post_author, result[0].post_id, username, 'deleted a', 'post', result[0].post_heading
-                        )
-
-                        if (logRes) {
-                            return res.status(201).json({ message: 'Post deleted successfully' })
-                        }
-
-                    } else {
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to delete post' })
-                    }
+            db.query(deletePostQuery, post_id, (deleteError, deleteRes) => {
+                if (deleteError) {
+                    console.log(`501 Post (${post_id}) delete failed`);
+                    console.log(deleteError);
+                    return res.status(501).json({ error: 'Post delete failed' });
                 }
-            )
+
+                if (deleteRes.affectedRows > 0) {
+                    const logRes = uploadToLog(result[0].post_author, result[0].post_id, username, 'deleted a', 'post', result[0].post_heading);
+
+                    if (logRes) {
+                        const postDateCreated = result[0].date_created.toISOString().split("T")[0];
+                        deductContentStat(postDateCreated, "post");
+                        console.log(`200 Post (${post_id}) deleted successfully`);
+                        return res.status(200).json({ message: 'Post deleted successfully' });
+                    }
+                } else {
+                    console.log(`501 Post (${post_id}) delete failed`);
+                    return res.status(501).json({ error: 'Post delete failed' });
+                }
+            });
         } else {
-            return res.status(500).json({ error: 'Post does not exist!' })
+            console.log(`404 Post (${post_id}) does not exist`);
+            return res.status(404).json({ error: 'Post does not exist' });
         }
     } catch (error) {
-        console.error(error)
-        return res.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
