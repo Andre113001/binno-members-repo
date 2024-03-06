@@ -57,7 +57,7 @@ const getAllPosts = async (req, res) => {
  * @throws {Error} Throws an error if there is an issue with fetching posts or any other error occurs.
  * @returns {void} Responds with a JSON array containing information about posts.
  */
-const fetchPostById = (postId) => {
+const fetchPostById = async (postId) => {
     console.log(`fetchPostById(${postId})`);
     return new Promise((resolve, reject) => {
         const getPostByIdQuery = `
@@ -76,31 +76,31 @@ const fetchPostById = (postId) => {
     })
 }
 
-// Reusable function to get a post by ID
-// NOTE: getPostByUserId() or getPostByAuthorId()
+/**
+ * Fetches posts authored by a specific member based on the provided user ID.
+ *
+ * @function
+ * @async
+ * @param {string} userId - The unique identifier of the member whose posts to fetch.
+ * @throws {Error} Throws an error if there is an issue with fetching posts or any other error occurs.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array containing information about the posts authored by the member.
+ */
 const fetchMemberPosts = (userId) => {
     return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getPostByUserIdQuery = `
-            SELECT post_i.*, member_settings.setting_institution
-            FROM post_i
-            INNER JOIN member_i ON post_i.post_author = member_i.member_id
-            INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE post_author = ? AND post_flag = 1 AND member_restrict IS NULL AND member_flag = 1
+            SELECT post.* FROM post
+            INNER JOIN member_profile ON member_profile.member_id = post.author_id
+            WHERE member_profile.date_restrict IS NULL AND member_profile.archive = 0
+            AND post.author_id = ? AND post.archive = 0
         `;
-        // NOTE: new query for the new database - AL
-        // const getPostByUserIdQuery = `
-        //     SELECT * FROM post
-        //     WHERE author_id = ? AND archive = 0
-        // `;
         db.query(getPostByUserIdQuery, [sanitizeId(userId)], (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
-                resolve(data)
+                resolve(data);
             }
-        })
-    })
+        });
+    });
 }
 
 /**
@@ -133,19 +133,33 @@ const getPost = async (req, res) => {
     }
 }
 
+/**
+ * Retrieves posts authored by a specific member based on the provided member ID.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.user_id - The unique identifier of the member for whom to fetch posts.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching the member's posts or any other error occurs.
+ * @returns {Object} Returns a JSON response containing posts authored by the requested member.
+ */
 const getMemberPosts = async (req, res) => {
-    const { user_id } = req.params
+    console.log(`getMemberPosts() from ${req.ip}`);
+    const { user_id } = req.params;
 
     try {
         const result = await fetchMemberPosts(user_id);
         if (result.length > 0) {
-            return res.json(result)
+            return res.status(200).json(result);
         } else {
-            return res.status(404).json({ error: 'Post does not exist' })
+            console.log(`Member (${user_id}) has no post/s`);
+            return res.status(404).json({ error: "Member has no post/s" });
         }
     } catch (error) {
-        console.error(error)
-        return res.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -426,16 +440,23 @@ const updatePostPin = async (request, result) => {
 
 const getPostPinned = async (req, res) => {
     try {
-        db.query('SELECT * FROM post_i WHERE post_pin = 1', [], (err, result) => {
+        const getAllPinnedPostQuery = `
+            SELECT * FROM post WHERE pin = 1
+        `;
+        db.query(getAllPinnedPostQuery, (err, result) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err);
+            }
             if (result.length > 0) {
                 return res.status(200).json(result[0]);
             } else {
-                return res.status(200).json('No Post Pinned yet');
+                return res.status(404).json({ message: "No posts pinned" });
             }
         });
     } catch (error) {
-        console.error(error)
-        return result.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
