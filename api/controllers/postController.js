@@ -28,6 +28,7 @@ const getAllPosts = async (req, res) => {
             SELECT post.* FROM post
             INNER JOIN member_profile ON member_profile.member_id = post.author_id
             WHERE post.archive = 0 AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+            ORDER BY post.date_created DESC
         `;
         db.query(getAllPostQuery, (err, result) => {
             if (err) {
@@ -55,7 +56,7 @@ const getAllPosts = async (req, res) => {
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
  * @throws {Error} Throws an error if there is an issue with fetching posts or any other error occurs.
- * @returns {void} Responds with a JSON array containing information about posts.
+ * @returns {Promise<Array<Object>>} Responds with a JSON array containing information about posts.
  */
 const fetchPostById = async (postId) => {
     console.log(`fetchPostById(${postId})`);
@@ -177,26 +178,38 @@ function limitWords(text, limit) {
     return limitedWords.join(' ')
 }
 
-// Controller to update or create post
+/**
+ * Updates or creates a post based on the provided information in the request body.
+ *
+ * If the post with the specified ID exists, it updates the post. If the post ID is not provided
+ * or the post does not exist, a new post is created.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with body.
+ * @param {Object} req.body - The request body containing information about the post.
+ * @param {string} req.body.post_id - The unique identifier of the post to update. If not provided or empty, a new post will be created.
+ * @param {string} req.body.postAuthor - The unique identifier of the post author.
+ * @param {string} req.body.postCategory - The category of the post.
+ * @param {string} req.body.postHeading - The title or heading of the post.
+ * @param {string} req.body.postText - The body or text content of the post.
+ * @param {string} req.body.username - The username of the user performing the update or create action.
+ * @param {string} req.body.postImg - The base64-encoded image data for the post.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with updating or creating the post, the database query, or any other error occurs.
+ * @returns {Object} Returns a JSON response indicating the success or failure of the post update or creation.
+ */
 const updateCreatePost = async (req, res) => {
-    const {
-        post_id,
-        postAuthor,
-        postCategory,
-        postHeading,
-        postText,
-        username,
-        postImg,
-    } = req.body
+    const { post_id, postAuthor, postCategory, postHeading, postText, username, postImg } = req.body;
 
     try {
-        const result = await fetchPostById(post_id)
+        const result = await fetchPostById(post_id);
 
         if (result.length > 0 && result[0].hasOwnProperty('post_id')) {
-            const OldimageId = path.basename(result[0].post_img, path.extname(result[0].post_img));
+            const OldimageId = path.basename(result[0].image, path.extname(result[0].image));
             let currentImg = result[0].post_img;
             // Delete the old image file
-            const oldImagePath = path.join(__dirname, '../../public/img/post-pics/', result[0].post_img);
+            const oldImagePath = path.join(__dirname, '../../public/img/post-pics/', result[0].image);
 
             const base64Image = postImg.split(';base64,').pop();
             const imageName = OldimageId + '.' + getFileExtensionFromDataURL(postImg);
@@ -207,12 +220,10 @@ const updateCreatePost = async (req, res) => {
                     if (err) {
                         console.error('Error deleting old post image:', err);
                     } else {
-                        // console.log('Old image deleted successfully');
                         // Continue with saving the new image
                         fs.writeFile(imgPath, base64Image, { encoding: 'base64' }, function(err) {
                             if (err) {
                                 console.log('Error saving post image:', err);
-                                success = false;
                             }
                         });
                     }
@@ -220,139 +231,81 @@ const updateCreatePost = async (req, res) => {
                 currentImg = imageName;
             }
 
-            // Update the existing post
             const updateExistingPostQuery = `
-                UPDATE post_i SET
-                post_author = ?,
-                post_category = ?,
-                post_heading = ?,
-                post_bodytext = ?,
-                post_img = ?,
-                post_datemodified = NOW()
+                UPDATE post SET
+                author_id = ?,
+                category = ?,
+                title = ?,
+                body = ?,
+                image = ?,
+                date_modified = NOW()
                 WHERE post_id = ?
             `;
-            // NOTE: new query for the new database - AL
-            // const updateExistingPostQuery = `
-            //     UPDATE post SET
-            //     author_id = ?,
-            //     category = ?,
-            //     title = ?,
-            //     body = ?,
-            //     image = ?,
-            //     date_modified = NOW()
-            //     WHERE post_id = ?
-            // `;
-            db.query(
-                updateExistingPostQuery,
-                [
-                    postAuthor,
-                    postCategory,
-                    postHeading,
-                    postText,
-                    currentImg,
-                    result[0].post_id,
-                ],
-                (updateError, updateRes) => {
-                    {
-                        if (updateError) {
-                            return res.status(500).json({
-                                error: 'Failed to update post',
-                                updateError,
-                            })
-                        }
-
-                        if (updateRes.affectedRows > 0) {
-                            const logRes = uploadToLog(
-                                postAuthor, post_id, username, 'updated a', 'post', postHeading
-                            )
-
-                            if (logRes) {
-                                return res.status(200).json({ message: 'Post updated successfully' })
-                            }
-                        } else {
-                            return res
-                                .status(500)
-                                .json({ message: 'Failed to update post' })
-                        }
-                    }
+            const updateExistingPostParameters = [postAuthor, postCategory, postHeading, postText, currentImg, result[0].post_id];
+            db.query(updateExistingPostQuery, updateExistingPostParameters, (updateError, updateRes) => {
+                if (updateError) {
+                    console.log(`501 Post (${result[0].post_id}) update failed`);
+                    console.error(updateError);
+                    return res.status(501).json({ error: 'Post update failed' });
                 }
-            )
+
+                if (updateRes.affectedRows > 0) {
+                    const logRes = uploadToLog(postAuthor, post_id, username, 'updated a', 'post', postHeading);
+                    if (logRes) {
+                        return res.status(200).json({ message: 'Post updated successfully' });
+                    }
+                } else {
+                    console.log(`501 Post (${result[0].post_id}) update failed`);
+                    return res.status(501).json({ error: 'Post update failed' });
+                }
+            });
         } else {
             const newId = uniqueIdGenerator()
-            // Create a new post
             const createPostQuery = `
-                INSERT INTO post_i (
+                INSERT INTO post (
                     post_id,
-                    post_dateadded,
-                    post_author,
-                    post_category,
-                    post_heading,
-                    post_bodytext,
-                    post_img
+                    date_created,
+                    author_id,
+                    category,
+                    title,
+                    body,
+                    image
                 )
                 VALUES (?, NOW(), ?, ?, ?, ?, ?)
             `;
-            // NOTE: new query for the new database - AL
-            // const createPostQuery = `
-            //     INSERT INTO post_i (
-            //         post_id,
-            //         date_created,
-            //         author_id,
-            //         category,
-            //         title,
-            //         body,
-            //         image,
-            //     )
-            //     VALUES (?, NOW(), ?, ?, ?, ?, ?)
-            // `;
-            db.query(
-                createPostQuery,
-                [
-                    newId,
-                    postAuthor,
-                    postCategory,
-                    postHeading,
-                    postText,
-                    postImg,
-                ],
-                (createError, createRes) => {
-                    if (createError) {
-                        return res.status(500).json({
-                            error: 'Failed to create Post',
-                            createError,
-                        })
-                    }
-
-                    if (createRes.affectedRows > 0) {
-                        const logRes = uploadToLog(
-                            postAuthor, newId, username, 'created a', 'post', postHeading
-                        );
-
-                        axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
-                            username: username,
-                            type: 'Post',
-                            title: postHeading,
-                            img: `post-pics/${postImg}`,
-                            details: limitWords(postText, 60),
-                            contentId: newId
-                        })
-
-                        updateContentStat('post');
-
-                        if (logRes) {
-                            return res.status(201).json({ message: 'Post created successfully' })
-                        }
-                    } else {
-                        return res
-                            .status(500)
-                            .json({ error: 'Failed to create post' })
-                    }
+            const createPostParameters = [newId, postAuthor, postCategory, postHeading, postText, postImg];
+            db.query(createPostQuery, createPostParameters, (createError, createRes) => {
+                if (createError) {
+                    console.log("501 Post create failed");
+                    console.error(createError);
+                    return res.status(500).json({ error: 'Post create failed' });
                 }
-            )
+
+                if (createRes.affectedRows > 0) {
+                    const logRes = uploadToLog(postAuthor, newId, username, 'created a', 'post', postHeading);
+                    axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
+                        username: username,
+                        type: 'Post',
+                        title: postHeading,
+                        img: `post-pics/${postImg}`,
+                        details: limitWords(postText, 60),
+                        contentId: newId
+                    });
+
+                    if (logRes) {
+                        console.log(`201 Post (${newId}) created successfully`);
+                        updateContentStat('post');
+                        return res.status(201).json({ message: 'Post created successfully' });
+                    }
+                } else {
+                    console.log("501 Post create failed");
+                    return res.status(501).json({ error: 'Post create failed' });
+                }
+            });
         }
     } catch (error) {
         console.error(error)
-        return res.status(500).json({ error: 'Internal server error' })
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
