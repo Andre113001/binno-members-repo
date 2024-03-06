@@ -392,7 +392,8 @@ const changeTitlePage = async (req, res) => {
     }
 }
 
-// Create & Update Pages
+// WARN: This function conflicts with nodemon, because it create changes in the project's
+// directory. Due to that, everytime it creates a page it restarts the server. - AL
 const createUpdatePage = async (req, res) => {
     console.log(`createUpdatePage() from ${req.ip}`);
     const { pageId, pageGuideId, pageTitle, pagePath } = req.body;
@@ -435,6 +436,7 @@ const createUpdatePage = async (req, res) => {
                     console.error('501 Error creating JSON file:', err);
                     return res.status(501).json({ error: 'Failed to create JSON file' });
                 }
+
 
                 const createGuidePageQuery = `
                     INSERT INTO guide_page (
