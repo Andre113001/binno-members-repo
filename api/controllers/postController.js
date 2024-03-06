@@ -366,37 +366,62 @@ const deletePost = async (req, res) => {
     }
 }
 
+/**
+ * Updates the pin status of a post, setting it as pinned, and unpinning all other posts by the same author.
+ *
+ * @function
+ * @async
+ * @param {Object} request - Express request object with body.
+ * @param {Object} request.body - The request body containing information about the post to pin.
+ * @param {string} request.body.postId - The unique identifier of the post to pin.
+ * @param {string} request.body.postAuthorId - The unique identifier of the post author.
+ * @param {Object} result - Express response object.
+ * @throws {Error} Throws an error if there is an issue with updating the pin status of the post, the database query, or any other error occurs.
+ * @returns {Object} Returns a JSON response indicating the success or failure of updating the pin status of the post.
+ */
 const updatePostPin = async (request, result) => {
     const { postId, postAuthorId } = request.body;
     try {
-        // unpin all author post
-        const unpinAllAuthorPostQuery = `
-            UPDATE post_i SET post_pin = 0 WHERE post_author = ?
-        `;
-        db.query(unpinAllAuthorPostQuery, postAuthorId, (unpinError, unpinResult) => {
-            if (unpinError)
-                console.error(unpinError);
-        });
+        const postDetails = await fetchPostById(postId);
+        if (postDetails.length > 0) {
+            // unpin all post of author
+            const unpinAllAuthorPostQuery = `
+                UPDATE post
+                SET pin = 0
+                WHERE author_id = ? and archive = 0
+            `;
+            db.query(unpinAllAuthorPostQuery, postAuthorId, (unpinError, unpinResult) => {
+                if (unpinError) {
+                    console.log("Failed to unpin all posts");
+                    console.error(unpinError);
+                }
+            });
 
-        const updatePostPinQuery = `
-            UPDATE post_i
-            SET post_pin = 1
-            WHERE post_id = ?
-        `;
-        db.query(updatePostPinQuery, [postId], (updateError, updateResult) => {
-            if (updateError) {
-                console.log(updateError)
-                return result.status(500).json({ error: 'Failed to update post pin' })
-            }
+            const updatePostPinQuery = `
+                UPDATE post
+                SET pin = 1
+                WHERE post_id = ? and archive = 0
+            `;
+            db.query(updatePostPinQuery, postId, (updateError, updateResult) => {
+                if (updateError) {
+                    console.log(`501 Post (${postId}) pin failed`);
+                    console.log(updateError);
+                    return result.status(501).json({ error: 'Post pin failed' });
+                }
 
-            if (updateResult.affectedRows > 0) {
-                return result.status(200).json(`Post Pinned: ${postId}`);
-            }
-        });
+                if (updateResult.affectedRows > 0) {
+                    console.log(`200 Post (${postId}) pinned successfully`);
+                    return result.status(200).json({ message: "Post pinned successfully" });
+                }
+            });
+        } else {
+            console.log(`404 Post (${postId}) does not exist`);
+            return result.status(404).json({ error: "Post does not exist" });
+        }
     }
     catch (error) {
-        console.error(error)
-        return result.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return result.status(500).json({ error: 'Internal server error' });
     }
 }
 
