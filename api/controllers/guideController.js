@@ -401,7 +401,6 @@ const createUpdatePage = async (req, res) => {
         const fetchProgramResult = await fetchGuidePageById(pageId);
 
         if (fetchProgramResult.length > 0) {
-            console.log("update page");
             const updateGuidePageQuery = `
                 UPDATE guide_page SET
                 guide_id = ?,
@@ -433,8 +432,8 @@ const createUpdatePage = async (req, res) => {
             // Write the JSON data to the file
             fs.writeFile(filePath, jsonData, (err) => {
                 if (err) {
-                    console.error('Error creating JSON file:', err);
-                    return res.status(500).json({ error: 'Failed to create JSON file' });
+                    console.error('501 Error creating JSON file:', err);
+                    return res.status(501).json({ error: 'Failed to create JSON file' });
                 }
 
                 const createGuidePageQuery = `
@@ -450,11 +449,11 @@ const createUpdatePage = async (req, res) => {
                 db.query(createGuidePageQuery, [newId, pageGuideId, 'Untitled', fileName], (createError, createRes) => {
                     if (createError) {
                         console.log(createError);
-                        return res.status(501).json({ error: 'Failed to create Page' });
+                        return res.status(501).json({ error: 'Failed to create Guide page' });
                     }
 
                     if (createRes.affectedRows > 0) {
-                        console.log(`Guide page (${newId}) created successfully`);
+                        console.log(`200 Guide page (${newId}) created successfully`);
                         return res.status(200).json({ message: 'Guide page created successfully' });
                     }
                 });
@@ -490,19 +489,19 @@ const deleteGuide = async (req, res) => {
             `;
             db.query(deleteGuideQuery, [guideId], (deleteError, deleteRes) => {
                 if (deleteError) {
-                    console.log(`Guide (${guideId}) delete failed`);
+                    console.log(`500 Guide (${guideId}) delete failed`);
                     console.log(deleteError)
                     return res.status(500).json({ error: 'Guide delete failed' });
                 }
 
                 if (deleteRes.affectedRows > 0) {
-                    console.log(`Guide (${guideId}) deleted successfully`);
-                    return res.json({ message: 'Guide deleted successfully' });
+                    console.log(`200 Guide (${guideId}) deleted successfully`);
+                    return res.status(200).json({ message: 'Guide deleted successfully' });
                 }
             });
         } else {
-            console.log(`Guide (${guideId}) does not exist`);
-            return res.status(500).json({ error: 'Guide does not exist!' });
+            console.log(`404 Guide (${guideId}) does not exist`);
+            return res.status(404).json({ error: 'Guide does not exist!' });
         }
     } catch (error) {
         console.error(error);
@@ -534,8 +533,8 @@ const deleteGuidePage = async (req, res) => {
             // Delete the JSON file
             fs.unlink(filePath, (err) => {
                 if (err) {
-                    console.error(`Error deleting JSON file (${pageId}.json):`, err);
-                    return res.status(500).json({ error: 'Failed to delete JSON file' });
+                    console.error(`501 Error deleting JSON file (${pageId}.json):`, err);
+                    return res.status(501).json({ error: 'Failed to delete JSON file' });
                 }
 
                 const deleteGuidePageQuery = `
@@ -543,19 +542,20 @@ const deleteGuidePage = async (req, res) => {
                 `;
                 db.query(deleteGuidePageQuery, [pageId], (deleteError, deleteRes) => {
                     if (deleteError) {
-                        console.log(`Guide page (${pageId}) delete failed`);
+                        console.log(`501 Guide page (${pageId}) delete failed`);
                         console.error(deleteError);
-                        return res.status(500).json({ error: 'Guide page delete failed' });
+                        return res.status(501).json({ error: 'Guide page delete failed' });
                     }
 
                     if (deleteRes.affectedRows > 0) {
-                        console.log(`Guide page (${pageId}) deleted successfully`);
-                        return res.status(201).json({ message: 'Guide page deleted successfully' });
+                        console.log(`200 Guide page (${pageId}) deleted successfully`);
+                        return res.status(200).json({ message: 'Guide page deleted successfully' });
                     }
                 });
             });
         } else {
-            return res.status(500).json({ error: 'Guide page does not exist!' });
+            console.log(`404 Guide page (${pageId}) does not exist`);
+            return res.status(404).json({ error: 'Guide page does not exist' });
         }
     } catch (error) {
         console.error(error);
