@@ -380,6 +380,7 @@ const deletePost = async (req, res) => {
  * @returns {Object} Returns a JSON response indicating the success or failure of updating the pin status of the post.
  */
 const updatePostPin = async (request, result) => {
+    console.log(`updatePostPin() from ${request.ip}`);
     const { postId, postAuthorId } = request.body;
     try {
         const postDetails = await fetchPostById(postId);
@@ -425,19 +426,32 @@ const updatePostPin = async (request, result) => {
     }
 }
 
-const getPostPinned = async (req, res) => {
+/**
+ * Fetches all posts that are currently pinned.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching pinned posts or any other error occurs.
+ * @returns {Object} Returns a JSON response containing information about the pinned posts.
+ */
+const getPinnedPosts = async (req, res) => {
+    console.log(`getPinnedPosts() from ${req.ip}`);
     try {
         const getAllPinnedPostQuery = `
             SELECT * FROM post WHERE pin = 1
         `;
         db.query(getAllPinnedPostQuery, (err, result) => {
             if (err) {
+                console.log("501 No post/s pinned");
                 console.log(err);
-                return res.status(500).json(err);
+                return res.status(501).json({ error: "No posts pinned"});
             }
             if (result.length > 0) {
                 return res.status(200).json(result[0]);
             } else {
+                console.log("404 No post/s pinned");
                 return res.status(404).json({ message: "No posts pinned" });
             }
         });
@@ -454,5 +468,5 @@ module.exports = {
     deletePost,
     getMemberPosts,
     updatePostPin,
-    getPostPinned
+    getPinnedPosts
 }
