@@ -1,5 +1,3 @@
-// WARN: filename should be renamed to postController.js - AL
-
 const db = require('../../database/db')
 
 // Middlewares
@@ -13,52 +11,74 @@ const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 
-// NOTE: should be renamed to fetchAllPost()
-const post = async (req, res) => {
+/**
+ * Fetches all posts that are not archived and belong to members who are not restricted or archived.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching posts or any other error occurs.
+ * @returns {void} Responds with a JSON array containing information about posts.
+ */
+const getAllPosts = async (req, res) => {
+    console.log(`getAllPosts() from ${req.ip}`);
     try {
-        const getAllPostQuery = "SELECT post_i.* FROM post_i INNER JOIN member_i ON member_i.member_id = post_i.post_author WHERE post_flag = 1 AND member_restrict IS NULL and member_flag = 1";
-        // NOTE: new query for the new database - AL
-        // const getAllPostQuery = "SELECT * FROM post WHERE archive = 0";
-        db.query(getAllPostQuery, [], (err, result) => {
+        const getAllPostQuery = `
+            SELECT post.* FROM post
+            INNER JOIN member_profile ON member_profile.member_id = post.author_id
+            WHERE post.archive = 0 AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
+        `;
+        db.query(getAllPostQuery, (err, result) => {
             if (err) {
-                return res.status(500).json(err)
+                console.error(err);
+                return res.status(500).json(err);
             }
 
             if (result.length > 0) {
-                return res.status(200).json(result)
+                return res.status(200).json(result);
             } else {
-                return res.status(500).json(err)
+                return res.status(404).json(err);
             }
-        })
+        });
     } catch (error) {
-        return res.status(500).json(error)
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error" });
     }
 }
 
-// Reusable function to get a post by ID
+/**
+ * Fetches all posts that are not archived and belong to members who are not restricted or archived.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching posts or any other error occurs.
+ * @returns {void} Responds with a JSON array containing information about posts.
+ */
 const fetchPostById = (postId) => {
+    console.log(`fetchPostById(${postId})`);
     return new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const getPostByIdQuery = `
-            SELECT post_i.* FROM post_i INNER JOIN member_i ON member_i.member_id = post_i.post_author WHERE post_id = ? AND post_flag = 1 AND member_restrict IS NULL and member_flag = 1
+            SELECT post.* FROM post
+            INNER JOIN member_profile ON member_profile.member_id = post.author_id
+            WHERE post.post_id = ? AND post.archive = 0
+            AND member_profile.date_restrict IS NULL AND member_profile.archive = 0
         `;
-        // NOTE: new query for the new database - AL
-        // const getPostByIdQuery = `
-        //     SELECT * FROM post WHERE post_id = ? AND archive = 0
-        // `;
         db.query(getPostByIdQuery, [sanitizeId(postId)], (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
-                resolve(data)
+                resolve(data);
             }
-        })
+        });
     })
 }
 
 // Reusable function to get a post by ID
 // NOTE: getPostByUserId() or getPostByAuthorId()
-const getUserPosts = (userId) => {
+const fetchMemberPosts = (userId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const getPostByUserIdQuery = `
@@ -83,28 +103,41 @@ const getUserPosts = (userId) => {
     })
 }
 
-// Controller to get a post by ID
-const fetchPost = async (req, res) => {
-    const { post_id } = req.params
+/**
+ * Fetches information about a specific post based on the provided post ID.
+ *
+ * @function
+ * @async
+ * @param {Object} req - Express request object with parameters.
+ * @param {Object} req.params - Parameters extracted from the request URL.
+ * @param {string} req.params.post_id - The unique identifier of the post to fetch.
+ * @param {Object} res - Express response object.
+ * @throws {Error} Throws an error if there is an issue with fetching the post or any other error occurs.
+ * @returns {Object} Returns a JSON response containing information about the requested post.
+ */
+const getPost = async (req, res) => {
+    console.log(`getPost() from ${req.ip}`);
+    const { post_id } = req.params;
 
     try {
-        const result = await fetchPostById(post_id)
+        const result = await fetchPostById(post_id);
         if (result.length > 0) {
-            return res.json(result)
+            return res.status(200).json(result);
         } else {
-            return res.status(500).json({ error: 'Post does not exist' })
+            console.log(`404 Post (${post_id}) does not exist`);
+            return res.status(404).json({ error: 'Post does not exist' });
         }
     } catch (error) {
-        console.error(error)
-        return res.status(500).json({ error: 'Internal server error' })
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
-const fetchMemberPosts = async (req, res) => {
+const getMemberPosts = async (req, res) => {
     const { user_id } = req.params
 
     try {
-        const result = await getUserPosts(user_id)
+        const result = await fetchMemberPosts(user_id);
         if (result.length > 0) {
             return res.json(result)
         } else {
@@ -407,11 +440,11 @@ const getPostPinned = async (req, res) => {
 }
 
 module.exports = {
-    post,
-    fetchPost,
+    getAllPosts,
+    getPost,
     updateCreatePost,
     deletePost,
-    fetchMemberPosts,
+    getMemberPosts,
     updatePostPin,
     getPostPinned
 }
