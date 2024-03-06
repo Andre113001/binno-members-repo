@@ -6,6 +6,7 @@ const db = require('../../database/db');
 * @returns {Promise<Array>} A Promise that resolves to an array containing the update or create result or rejects with an error.
 */
 const updateContentStat = async (content_type) => {
+	console.log(`updateContentStat(${content_type})`);
 	return new Promise((resolve, reject) => {
 		const currentDate = new Date();
 		let currentYear = currentDate.getFullYear();
@@ -56,6 +57,7 @@ const updateContentStat = async (content_type) => {
 * @returns {Promise<Array>} A Promise that resolves to an array containing the deduction result or rejects with an error.
 */
 const deductContentStat = async (stat_date, content_type) => {
+	console.log(`deductContentStat(${stat_date}, ${content_type})`);
 	return new Promise((resolve, reject) => {
 		const checkContentStatDateQuery = `
 			 SELECT * FROM content_stat WHERE
