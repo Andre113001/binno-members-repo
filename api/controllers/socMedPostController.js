@@ -303,16 +303,16 @@ const updatePostPin = async (request, result) => {
         const updatePostPinQuery = `
             UPDATE post_i
             SET post_pin = 1
-            WHERE post_id = ?
+            WHERE post_id = ? AND post_author = ?
         `;
-        db.query(updatePostPinQuery, [postId], (updateError, updateResult) => {
+        db.query(updatePostPinQuery, [postId, postAuthorId], (updateError, updateResult) => {
             if (updateError) {
                 console.log(updateError)
                 return result.status(500).json({ error: 'Failed to update post pin' })
             }
 
             if (updateResult.affectedRows > 0) {
-                return result.status(200).json(`Post Pinned: ${postId}`);
+                return result.status(200).json('Post Pinned');
             }
         });
     }
