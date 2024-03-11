@@ -21,4 +21,7 @@ router.post('/post', upload.single('image'), blogController.postBlog)
 
 router.post('/delete', blogController.deleteBlog)
 
+router.get("/class/enabler", blogController.getEnablerBlogs);
+router.get("/class/company", blogController.getCompanyBlogs);
+
 module.exports = router

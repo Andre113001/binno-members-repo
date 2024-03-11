@@ -121,7 +121,7 @@ const fetchAllBlogs = async (req, res) => {
             FROM blog_i
             INNER JOIN member_i ON blog_i.blog_author = member_i.member_id
             INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1 
+            WHERE blog_i.blog_author = ? AND blog_i.blog_flag = 1
             ORDER BY blog_dateadded DESC`,
             [userId],
             (blogError, blogRes) => {
@@ -149,7 +149,7 @@ function limitWords(text, limit) {
 function getFileExtensionFromDataURL(dataURL) {
     const match = dataURL.match(/^data:image\/([a-zA-Z+]+);base64,/);
     if (match && match[1]) {
-      return match[1];
+        return match[1];
     }
     return null;
 }
@@ -184,7 +184,7 @@ const postBlog = async (req, res) => {
                     } else {
                         // console.log('Old image deleted successfully');
                         // Continue with saving the new image
-                        fs.writeFile(blogImgPath, base64Image, { encoding: 'base64' }, function (err) {
+                        fs.writeFile(blogImgPath, base64Image, { encoding: 'base64' }, function(err) {
                             if (err) {
                                 console.log('Error saving blog image:', err);
                                 success = false;
@@ -256,7 +256,7 @@ const postBlog = async (req, res) => {
                         )
 
                         console.log("Posting Email Notification");
-                        
+
                         axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
                             username: username,
                             type: 'Blog',
@@ -292,7 +292,7 @@ const deleteBlog = async (req, res) => {
     try {
         const result = await getBlogById(blogId)
 
-        if (result.length > 0  && result[0].hasOwnProperty('blog_id')) {
+        if (result.length > 0 && result[0].hasOwnProperty('blog_id')) {
             db.query("UPDATE blog_i SET blog_flag = 0 WHERE blog_id = ?", [blogId], (deleteError, deleteRes) => {
                 if (deleteError) {
                     console.log(deleteError);
@@ -320,6 +320,66 @@ const deleteBlog = async (req, res) => {
     }
 }
 
+const getEnablerBlogs = async (request, response) => {
+    console.log(`getEnablerBlogs() from ${request.ip}`);
+    try {
+        const getEnablerBlogsQuery = `
+            SELECT blog_i.* FROM blog_i
+            INNER JOIN member_i ON member_i.member_id = blog_i.blog_author
+            WHERE member_i.member_restrict IS NULL AND member_i.member_flag = 1
+            AND member_i.member_type = 2 AND blog_i.blog_flag = 1
+        `;
+        db.query(getEnablerBlogsQuery, (error, result) => {
+            if (error) {
+                console.error(error);
+                return result.status(500).json({ error: 'Internal server error' });
+            }
+
+            if (result.length > 0) {
+                console.log("200 Enabler Blogs")
+                return response.status(200).json(result);
+            } else {
+                console.log("404 Enabler Blogs Does Not Exist")
+                return response.status(404).json({ error: "Enabler Blogs Does Not Exist"});
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const getCompanyBlogs = async (request, response) => {
+    console.log(`getCompanyBlogs() from ${request.ip}`);
+    try {
+        const getCompanyBlogsQuery = `
+            SELECT blog_i.* FROM blog_i
+            INNER JOIN member_i ON member_i.member_id = blog_i.blog_author
+            WHERE member_i.member_restrict IS NULL AND member_i.member_flag = 1
+            AND member_i.member_type = 1 AND blog_i.blog_flag = 1
+        `;
+        db.query(getCompanyBlogsQuery, (error, result) => {
+            if (error) {
+                console.error(error);
+                return result.status(500).json({ error: 'Internal server error' });
+            }
+
+            if (result.length > 0) {
+                console.log("200 Company Blogs")
+                return response.status(200).json(result);
+            } else {
+                console.log("404 Company Blogs Does Not Exist")
+                return response.status(404).json({ error: "Company Blogs Does Not Exist"});
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 module.exports = {
     blog,
     getBlog,
@@ -327,4 +387,6 @@ module.exports = {
     fetchAllBlogs,
     postBlog,
     deleteBlog,
+    getEnablerBlogs,
+    getCompanyBlogs
 }
