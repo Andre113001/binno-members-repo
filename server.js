@@ -49,6 +49,7 @@ const passwordRoute = require('./api/routes/passwordRoute')
 const registerRoute = require('./api/routes/registerRoute')
 const imageRoute = require('./api/routes/imageRoute')
 const newsletterRoute = require('./api/routes/newsletterRoute')
+const searchRoute = require('./api/routes/searchRoute')
 // const testRoute = require('./api/routes/testingRoute')
 
 // Use Routes
@@ -62,6 +63,7 @@ app.use('/api/login', loginRoute)
 app.use('/api/password', passwordRoute)
 app.use('/api/register', registerRoute)
 app.use('/api/newsletter', newsletterRoute)
+app.use('/api/search', searchRoute)
 // app.use('/test', testRoute)
 
 
