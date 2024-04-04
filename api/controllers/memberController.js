@@ -96,6 +96,7 @@ const fetchMemberByAccessToken = (accessToken) => {
         const sql = `SELECT 
                     member_i.member_id,
                     member_i.member_first_time,
+                    member_i.member_type,
                     member_settings.setting_address,
                     member_settings.setting_id,
                     member_settings.setting_bio, 
@@ -118,6 +119,20 @@ const fetchMemberByAccessToken = (accessToken) => {
                 reject(err)
             } else {
                 resolve(data)
+            }
+        })
+    })
+}
+
+const fetchCompanyLinks = async (member_id) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT url FROM member_web_link WHERE member_id = ?`;
+
+        db.query(sql, [member_id], (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
             }
         })
     })
@@ -167,6 +182,23 @@ const fetchProfileByToken = async (req, res) => {
         } else {
             console.log(result)
             return res.status(500).json({ error: 'Member does not exist' })
+        }
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({ error: 'Internal server error' })
+    }
+}
+
+const getCompanyLinks = async (req, res) => {
+    const { member_id } = req.params;
+
+    try {
+        const result = await fetchCompanyLinks(member_id);
+        if (result.length > 0) {
+            return res.json(result);
+        } else {
+            console.log(result);
+            return res.status(500).json({ error: 'Member does not have company links yet.' });
         }
     } catch (error) {
         console.error(error)
@@ -334,126 +366,10 @@ const changeStatus = async (req, res) => {
     }
 }
 
-const verifyChangePassword = async (req, res) => {
-    const { accesskey } = req.body
-
-    try {
-        const convertedAccessKey = sha256(accesskey)
-        db.query(
-            'SELECT email_i.email_address, member_settings.setting_institution FROM member_i INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_email INNER JOIN email_i ON member_contact.contact_email = email_i.email_id LEFT JOIN member_settings ON member_i.member_setting = member_settings.setting_id WHERE member_i.member_accesskey = ?',
-            [convertedAccessKey],
-            (err, result) => {
-                if (err) {
-                    return res.status(500).json({ err })
-                }
-
-                if (result.length > 0) {
-                    const email = result[0].email_address
-                    const name = result[0].setting_institution
-                    const token = generateToken(32)
-                    const convertedToken = sha256(token)
-
-                    // Assuming you have a MySQL connection named `db`
-                    // Make sure to replace 'your_table_name' with the actual table name
-                    const query =
-                        'UPDATE member_i SET member_resetpassword_token = ?, member_resetpassword_token_valid = DATE_ADD(NOW(), INTERVAL 3 HOUR) WHERE member_accesskey = ?'
-                    const values = [convertedToken, convertedAccessKey]
-
-                    db.query(query, values, (updateError, updateRes) => {
-                        if (updateError) {
-                            return res.status(500).json({ error: updateError })
-                        }
-
-                        if (updateRes.affectedRows > 0) {
-                            // Email notif here
-                            axios
-                                .post(
-                                    `http://localhost:3002/others/forgotPassword`,
-                                    {
-                                        receiver: email,
-                                        name: name,
-                                        token: token,
-                                    }
-                                )
-                                .then((response) => {
-                                    console.log(
-                                        'Response from localhost:3002',
-                                        response.data
-                                    )
-                                    // Add any additional logic here based on the response if needed
-                                    return res
-                                        .status(200)
-                                        .json({ message: 'Email Sent' })
-                                })
-                                .catch((error) => {
-                                    console.error(
-                                        'Error making request',
-                                        error.message
-                                    )
-                                    // Handle error
-                                    return res.status(500).json({
-                                        message: 'Failed to send email',
-                                    })
-                                })
-                        } else {
-                            res.status(500).json({
-                                result: 'Fields unsuccessfully updated',
-                            })
-                        }
-                    })
-                } else {
-                    return res
-                        .status(200)
-                        .json({ message: 'Email cannot be found' })
-                }
-            }
-        )
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json({ error: error })
-    }
-}
-
-// const changePassword = async (req, res) => {
-//     const { accesskey, newPassword } = req.body
-//     try {
-//         const result = await getMemberByAccessKey(accesskey)
-//         if (result.length > 0) {
-//             const convertedPassword = await bcryptConverter(newPassword)
-//             db.query(
-//                 'UPDATE member_i SET member_password = ? WHERE member_id = ?',
-//                 [convertedPassword, result[0].member_id],
-//                 (updateError, updateRes) => {
-//                     if (updateError) {
-//                         // console.log(updateError);
-//                         return res
-//                             .status(500)
-//                             .json({ error: 'Failed to change password' })
-//                     }
-
-//                     if (updateRes.affectedRows > 0) {
-//                         return res
-//                             .status(200)
-//                             .json({ message: 'Password Changed Successfully' })
-//                     } else {
-//                         return res
-//                             .status(500)
-//                             .json({ message: 'Failed to change password' })
-//                     }
-//                 }
-//             )
-//         } else {
-//             return res.status(500).json({ invalid: 'No user exist' })
-//         }
-//     } catch (error) {
-//         console.log(error)
-//         return res.status(500).json({ error: error })
-//     }
-// }
-
 module.exports = {
     getMember,
     fetchProfileByToken,
+    getCompanyLinks,
     updateProfile,
     changeStatus,
     fetchEnablers,

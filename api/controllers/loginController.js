@@ -208,7 +208,7 @@ function getFileExtensionFromDataURL(dataURL) {
 
 const firstTime = async (req, res) => {
     try {
-        const { token, password, contact, description, profileImg, coverImg } = req.body;
+        const { token, password, contact, description, profileImg, coverImg, email, address, links } = req.body;
         const newId = uniqueId.uniqueIdGenerator();
         let success = true;
 
@@ -240,30 +240,53 @@ const firstTime = async (req, res) => {
 
         const convertedPassword = await bcryptConverter(password);
 
+        const member_id = await new Promise((resolve, reject) => {
+            db.query("SELECT member_id from member_i WHERE member_access = ?", [hash(token)], (err, result) => {
+                if (err) {
+                    reject({ error: 'Internal server error' })
+                } else {
+                    // resolve(result);
+                    resolve(result[0].member_id);
+                }
+            })
+        })
+
         db.query("UPDATE member_i SET member_password = ? WHERE member_access = ?", [convertedPassword, hash(token)], (err, result) => {
             if (err) {
                 console.log('Error updating password:', err);
                 success = false;
-            } else {
-                console.log("No rows were affected");
             }
         });
 
-        db.query("UPDATE member_contact mc INNER JOIN member_i mi ON mi.member_contact_id = mc.contact_id SET mc.contact_number = ? WHERE mi.member_access = ?", [contact, hash(token)], (err, result) => {
+        db.query(`
+                UPDATE member_contact mc 
+                    INNER JOIN member_i mi ON mi.member_contact_id = mc.contact_id 
+                    INNER JOIN email_i ei ON mc.contact_email = ei.email_id 
+                SET 
+                    mc.contact_number = ?, 
+                    ei.email_address = ? 
+                WHERE 
+                    mi.member_access = ?`, [contact, email, hash(token)], (err, result) => {
             if (err) {
                 console.log('Error updating contact number:', err);
                 success = false;
-            } else {
-                console.log("No rows were affected");
             }
         });
 
-        db.query("UPDATE member_settings ms INNER JOIN member_i mi ON mi.member_setting = ms.setting_id SET ms.setting_bio = ?, ms.setting_profilepic = ?, ms.setting_coverpic = ? WHERE mi.member_access = ?", [description, newNameProfile, newNameCover, hash(token)], (err, result) => {
+        if (links.length > 0 && links[0] != '') {
+            links.forEach(element => {
+                db.query("INSERT INTO member_web_link (url, member_id, date_created) VALUES (?, ?, NOW())", [element, member_id], (err, result) => {
+                    if (err) {
+                        success = false;
+                    }
+                })
+            })
+        } 
+
+        db.query("UPDATE member_settings ms INNER JOIN member_i mi ON mi.member_setting = ms.setting_id SET ms.setting_bio = ?, ms.setting_profilepic = ?, ms.setting_coverpic = ?, ms.setting_address = ? WHERE mi.member_access = ?", [description, newNameProfile, newNameCover, address, hash(token)], (err, result) => {
             if (err) {
                 console.log('Error updating member settings:', err);
                 success = false;
-            } else {
-                console.log("No rows were affected");
             }
         });
 
@@ -271,8 +294,6 @@ const firstTime = async (req, res) => {
             if (err) {
                 console.log('Error updating member_first_time:', err);
                 success = false;
-            } else {
-                console.log("No rows were affected");
             }
         });
 

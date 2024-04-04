@@ -12,6 +12,7 @@ router.use(activityLogging)
 
 router.get('/member/:member_id', memberController.getMember)
 router.get('/profile/:accessToken', memberController.fetchProfileByToken)
+router.get('/company_links/:member_id', memberController.getCompanyLinks);
 router.get('/enablers', memberController.fetchEnablers)
 router.get('/companies', memberController.fetchCompanies)
 router.post('/update-profile', memberController.updateProfile)
