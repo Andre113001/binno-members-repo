@@ -207,7 +207,7 @@ const postBlog = async (req, res) => {
 
                     if (updateRes.affectedRows > 0) {
                         const logRes = uploadToLog(
-                            authorId, blogId, username, 'updated a', 'blog', blogTitle
+                            authorId, "UPDATE", blogId, username, 'updated a', 'blog', blogTitle
                         )
 
                         if (logRes) {
@@ -252,7 +252,7 @@ const postBlog = async (req, res) => {
 
                     if (createRes.affectedRows > 0) {
                         const logRes = uploadToLog(
-                            authorId, newId, username, 'posted a', 'blog', blogTitle
+                            authorId, "POST" , newId, username, 'posted a', 'blog', blogTitle
                         )
 
                         console.log("Posting Email Notification");
@@ -301,7 +301,7 @@ const deleteBlog = async (req, res) => {
 
                 if (deleteRes.affectedRows > 0) {
                     const logRes = uploadToLog(
-                        result[0].blog_author, result[0].blog_id, username, 'deleted a', 'blog', result[0].blog_title
+                        result[0].blog_author, "DELETE", result[0].blog_id, username, 'deleted a', 'blog', result[0].blog_title
                     )
 
                     if (logRes) {

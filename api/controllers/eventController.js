@@ -218,7 +218,7 @@ const create_update = async (req, res) => {
 
                     if (updateRes.affectedRows > 0) {
                         const logRes = uploadToLog(
-                            eventAuthor, eventId, username, 'updated an', 'event', eventTitle
+                            eventAuthor, "UPDATE", eventId, username, 'updated an', 'event', eventTitle
                         )
 
                         if (logRes) {
@@ -269,7 +269,7 @@ const create_update = async (req, res) => {
 
                     if (eventUploadResult.affectedRows > 0) {
                         const logRes = uploadToLog(
-                            eventAuthor, newId, username, 'posted an', 'event', eventTitle
+                            eventAuthor, "POST" , newId, username, 'posted an', 'event', eventTitle
                         );
 
                         axios.post(`${process.env.EMAIL_DOMAIN}/newsletter`, {
@@ -321,7 +321,7 @@ const deleteEvent = async (req, res) => {
 
                     if (eventDeleteResult.affectedRows > 0) {
                         const logRes = uploadToLog(
-                            result[0].event_author, result[0].event_id, username, 'deleted an', 'event', result[0].event_title
+                            result[0].event_author, "DELETE", result[0].event_id, username, 'deleted an', 'event', result[0].event_title
                         )
                         
                         if (logRes) {
