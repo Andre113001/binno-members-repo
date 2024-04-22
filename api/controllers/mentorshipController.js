@@ -23,6 +23,8 @@
 		enabler_id varchar(40) NOT NULL,
 		request_id varchar(40) NOT NULL,
 		date_created datetime NOT NULL,
+		mentor_end_partnership tinyint DEFAULT 0,
+		enabler_end_partnership tinyint DEFAULT 0,
 		archive tinyint DEFAULT 0,
 		primary key(mentor_id, enabler_id),
 		foreign key(mentor_id) references member_i(member_id),
@@ -347,6 +349,331 @@ async function cancelMentorshipRequest(req, res) {
 }
 
 /**
+ * Ends a mentor-enabler partnership.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The request body containing enablerId, mentorId, and requestor.
+ * @param {string} req.body.enablerId - The ID of the enabler.
+ * @param {string} req.body.mentorId - The ID of the mentor.
+ * @param {string} req.body.requestor - The role of the party requesting to end the partnership (either "enabler" or "mentor").
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with a response object indicating the success or failure of ending the partnership.
+ */
+async function endPartnership(req, res) {
+	console.log(`POST /api/mentor/partnership/end`);
+	const { enablerId, mentorId, requestor } = req.body;
+
+	try {
+		if (requestor != "enabler" && requestor != "mentor") {
+			console.log(`400 Wrong value ${requestor} for requestor, should be enabler or mentor`);
+			return res.status(400).json({
+				message: "Wrong value for requestor, should be enabler or mentor"
+			});
+		}
+
+		const partnership = await getMentorEnablerPartnership(mentorId, enablerId);
+		if (partnership.length == 0) {
+			console.log(`404 Partnership not found`);
+			return res.status(404).json({
+				message: "Partnership not found"
+			});
+		}
+
+		await new Promise((resolve, reject) => {
+			let endPartnershipQuery = `
+				UPDATE mentor_enabler SET
+				mentor_end_partnership = 1
+				WHERE mentor_id = ? AND enabler_id = ?
+			`;
+
+			if (requestor == "enabler") {
+				endPartnershipQuery = `
+					UPDATE mentor_enabler SET
+					enabler_end_partnership = 1
+					WHERE mentor_id = ? AND enabler_id = ?
+				`;
+			}
+
+			db.query(endPartnershipQuery, [mentorId, enablerId], (endError, endResult) => {
+				if (endError) reject(endError);
+				else resolve(endResult);
+			});
+		});
+
+		const updatedPartnership = await getMentorEnablerPartnership(mentorId, enablerId);
+		const bothPartyAgreed = (
+			updatedPartnership[0]["mentor_end_partnership"] == 1 &&
+			updatedPartnership[0]["enabler_end_partnership"] == 1
+		);
+
+		if (bothPartyAgreed) {
+			await deleteMentorEnablerPartnership(mentorId, enablerId);
+			await deleteMentorshipRequest(updatedPartnership[0]["request_id"]);
+			return res.status(200).json({
+				message: "Partnership for both party ended successfully"
+			});
+		}
+
+		return res.status(200).json({
+			message: "End partnership request created successfully"
+		});
+	} catch (error) {
+		console.error("500 Internal Server Error");
+		console.error(error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+			error: error
+		});
+	}
+}
+
+/**
+ * Cancels a request to end a mentor-enabler partnership.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The request body containing enablerId, mentorId, and requestor.
+ * @param {string} req.body.enablerId - The ID of the enabler.
+ * @param {string} req.body.mentorId - The ID of the mentor.
+ * @param {string} req.body.requestor - The role of the party requesting to cancel the end partnership request (either "enabler" or "mentor").
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with a response object indicating the success or failure of cancelling the end partnership request.
+ */
+async function cancelEndPartnership(req, res) {
+	console.log("POST /api/mentor/partnership/end/cancel")
+	const { enablerId, mentorId, requestor } = req.body;
+
+	try {
+		if (requestor != "enabler" && requestor != "mentor") {
+			console.log(`400 Wrong value ${requestor} for requestor, should be enabler or mentor`);
+			return res.status(400).json({
+				message: "Wrong value for requestor, should be enabler or mentor"
+			});
+		}
+
+		const partnership = await getMentorEnablerPartnership(mentorId, enablerId);
+		if (partnership.length == 0) {
+			console.log(`404 Partnership not found`);
+			return res.status(404).json({
+				message: "Partnership not found"
+			});
+		}
+
+		await new Promise((resolve, reject) => {
+			let cancelQuery = `
+				UPDATE mentor_enabler SET
+				mentor_end_partnership = 0
+				WHERE mentor_id = ? AND enabler_id = ?
+			`;
+
+			if (requestor == "enabler") {
+				cancelQuery = `
+					UPDATE mentor_enabler SET
+					enabler_end_partnership = 0
+					WHERE mentor_id = ? AND enabler_id = ?
+				`;
+			}
+
+			db.query(cancelQuery, [mentorId, enablerId], (error, result) => {
+				if (error) reject(error);
+				else resolve(result);
+			});
+		});
+
+		return res.status(200).json({
+			message: "End partnership request cancelled successfully"
+		});
+	} catch (error) {
+		console.error("500 Internal Server Error");
+		console.error(error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+			error: error
+		});
+	}
+}
+
+/**
+ * Lists mentors associated with a specific enabler.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The parameters object containing enablerId.
+ * @param {string} req.params.enablerId - The ID of the enabler.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with a response object containing the list of mentors associated with the enabler or an error message.
+ */
+async function listMentorsByEnabler(req, res) {
+	const { enablerId } = req.params;
+	console.log(`GET /api/mentor/list/enabler/${enablerId}`);
+
+	try {
+		const verifyEnabler = await fetchMemberById(enablerId);
+		if (verifyEnabler.length == 0 || verifyEnabler[0]["member_type"] != 2) {
+			console.log(`404 Enabler (${enablerId}) not found`);
+			return res.status(404).json({
+				message: "Enabler not found"
+			});
+		}
+
+		const mentorList = await new Promise((resolve, reject) => {
+			const listEnablerMentorsQuery = `
+				SELECT
+					me.*,
+					ms.setting_institution as mentor_name,
+					ms.setting_profilepic as mentor_profile_pic
+				FROM mentor_enabler AS me
+				INNER JOIN
+					member_i AS mi ON mi.member_id = me.mentor_id
+				INNER JOIN
+					member_settings AS ms ON ms.setting_memberId = mi.member_id
+				WHERE me.enabler_id = ?
+				ORDER BY mentor_name
+			`;
+			db.query(listEnablerMentorsQuery, enablerId, (error, result) => {
+				if (error) reject(error);
+				else resolve(result);
+			});
+		});
+
+		return res.status(200).json(mentorList);
+	} catch (error) {
+		console.error("500 Internal Server Error");
+		console.error(error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+			error: error
+		});
+	}
+}
+
+/**
+ * Lists mentorship requests sent by a specific sender.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The parameters object containing senderId.
+ * @param {string} req.params.senderId - The ID of the sender.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with a response object containing the list of mentorship requests sent by the sender or an error message.
+ */
+async function listMentorshipRequestBySender(req, res) {
+	const { senderId } = req.params;
+	console.log(`GET /api/mentor/request/list/sender/${senderId}`);
+
+	try {
+		const senderProfile = await fetchMemberById(senderId);
+		if (senderProfile.length == 0) {
+			console.log(`404 Sender (${senderId}) not found`);
+			return res.status(404).json({
+				message: "Sender not found"
+			});
+		}
+
+		const senderRequestList = await new Promise((resolve, reject) => {
+			const listRequestQuery = `
+				SELECT
+					mr.request_id,
+					mr.mentor_id,
+					mr.enabler_id,
+					mr.sender_id,
+					mr.message,
+					mr.docs_path,
+					mr.date_created,
+					CASE
+						WHEN mr.sender_id = mr.mentor_id THEN enabler_profile.setting_institution
+						WHEN mr.sender_id = mr.enabler_id THEN mentor_profile.setting_institution
+					END AS receiver_name,
+					CASE
+						WHEN mr.sender_id = mr.mentor_id THEN enabler_profile.setting_profilepic
+						WHEN mr.sender_id = mr.enabler_id THEN mentor_profile.setting_profilepic
+					END AS receiver_profile_pic
+				FROM mentorship_request mr
+				INNER JOIN
+					member_settings AS mentor_profile ON mr.mentor_id = mentor_profile.setting_memberId
+				INNER JOIN
+					member_settings AS enabler_profile ON mr.enabler_id = enabler_profile.setting_memberId
+				WHERE mr.sender_id = ?
+					AND mr.status = "Pending"
+				ORDER BY mr.date_created DESC
+			`;
+
+			db.query(listRequestQuery, senderId, (listError, listResult) => {
+				if (listError) reject(listError);
+				else resolve(listResult);
+			});
+		});
+
+		return res.status(200).json(senderRequestList);
+	} catch (error) {
+		console.error("500 Internal Server Error");
+		console.error(error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+			error: error
+		});
+	}
+}
+
+/**
+ * Lists mentorship requests received by a specific receiver (mentor or enabler).
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The parameters object containing receiverId.
+ * @param {string} req.params.receiverId - The ID of the receiver.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with a response object containing the list of mentorship requests received by the receiver or an error message.
+ */
+async function listMentorshipRequestByReceiver(req, res) {
+	const { receiverId } = req.params;
+	console.log(`GET /api/mentor/request/list/receiver/${receiverId}`);
+
+	try {
+		const receiverProfile = await fetchMemberById(receiverId);
+		if (receiverProfile.length == 0) {
+			console.log(`404 Receiver (${receiverId}) not found`);
+			return res.status(404).json({
+				message: "Receiver not found"
+			});
+		}
+
+		const receiverRequestList = await new Promise((resolve, reject) => {
+			const listRequestQuery = `
+				SELECT
+					mr.request_id,
+					mr.mentor_id,
+					mr.enabler_id,
+					mr.sender_id,
+					mr.message,
+					mr.docs_path,
+					mr.date_created,
+					sender_profile.setting_institution AS sender_name,
+					sender_profile.setting_profilepic AS sender_profile_pic
+				FROM
+					mentorship_request mr
+				LEFT JOIN
+					member_settings AS sender_profile ON mr.sender_id = sender_profile.setting_memberId
+				WHERE
+					(mr.mentor_id = ? OR mr.enabler_id = ?)
+					AND mr.sender_id != ?
+					AND mr.status = "Pending"
+				ORDER BY mr.date_created DESC
+			`;
+			db.query(listRequestQuery, [receiverId, receiverId, receiverId], (error, result) => {
+				if (error) reject(error);
+				else resolve(result);
+			});
+		});
+
+		return res.status(200).json(receiverRequestList);
+	} catch (error) {
+		console.error("500 Internal Server Error");
+		console.error(error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+			error: error
+		});
+	}
+}
+
+/**
  * Verifies the type of a member.
  *
  * @param {string} memberId - The ID of the member.
@@ -520,10 +847,57 @@ function deleteMentorshipRequest(requestId) {
 	});
 }
 
+/**
+ * Retrieves a mentor-enabler partnership.
+ *
+ * @param {string} mentorId - The ID of the mentor.
+ * @param {string} enablerId - The ID of the enabler.
+ * @returns {Promise<Array<Object>>} - A promise that resolves with an array of mentor-enabler partnership objects matching the specified IDs.
+ */
+function getMentorEnablerPartnership(mentorId, enablerId) {
+	console.log(`getMentorEnablerPartnership(${mentorId}, ${enablerId})`);
+	return new Promise((resolve, reject) => {
+		const getPartnershipQuery = `
+			SELECT * FROM mentor_enabler
+			WHERE mentor_id = ? AND enabler_id = ?
+		`;
+		db.query(getPartnershipQuery, [mentorId, enablerId], (error, result) => {
+			if (error) reject(error);
+			else resolve(result);
+		});
+	});
+}
+
+/**
+ * Deletes a mentor-enabler partnership.
+ *
+ * @param {string} mentorId - The ID of the mentor.
+ * @param {string} enablerId - The ID of the enabler.
+ * @returns {Promise<any>} - A promise that resolves once the partnership is deleted.
+ */
+function deleteMentorEnablerPartnership(mentorId, enablerId) {
+	console.log(`deleteMentorEnablerPartnership(${mentorId}, ${enablerId})`);
+	return new Promise((resolve, reject) => {
+		const deletePartnership = `
+			DELETE FROM mentor_enabler
+			WHERE mentor_id = ? AND enabler_id = ?
+		`;
+		db.query(deletePartnership, [mentorId, enablerId], (error, result) => {
+			if (error) reject(error);
+			else resolve(result);
+		});
+	});
+}
+
 module.exports = {
 	listAvailableMentors,
 	createMentorshipRequest,
 	acceptMentorshipRequest,
 	rejectMentorshipRequest,
-	cancelMentorshipRequest
+	cancelMentorshipRequest,
+	endPartnership,
+	cancelEndPartnership,
+	listMentorsByEnabler,
+	listMentorshipRequestBySender,
+	listMentorshipRequestByReceiver
 }
