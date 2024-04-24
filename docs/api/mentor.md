@@ -2,6 +2,8 @@
 
 Documentation for Mentorship API
 
+> WARNING: the json response attributes for 200 OK status code might be wrong due to the old database schema used. - AL
+
 - [GET endpoints](#get-endpoints)
     - [/api/mentor/list](#apimentorlist)
     - [/api/mentor/list/enabler/:enablerId](#apimentorlistenablerenablerid)
