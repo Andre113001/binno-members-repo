@@ -716,6 +716,61 @@ async function listMentorshipRequestByReceiver(req, res) {
 }
 
 /**
+ * Retrieves the attached file associated with a mentorship request.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The parameters object containing the requestId.
+ * @param {string} req.params.requestId - The ID of the mentorship request.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with the attached file or an error message.
+ */
+async function getRequestAttachedFile(req, res) {
+	const { requestId } = req.params;
+	console.log(`GET /api/mentor/request/${requestId}/file`);
+
+	try {
+		const mentorshipRequest = await new Promise((resolve, reject) => {
+			const verifyQuery = `
+				SELECT * FROM mentorship_request
+				WHERE request_id = ?
+				AND status = "Pending"
+			`;
+			db.query(verifyQuery, requestId, (error, result) => {
+				if (error) reject(error);
+				else resolve(result);
+			});
+		});
+
+		if (mentorshipRequest.length == 0) {
+			console.log(`404 Mentorship request (${requestId}) not found`);
+			return res.status(404).json({ message: "Mentorship request not found" });
+		}
+
+		if (!mentorshipRequest[0].docs_path) {
+			console.log(`404 File not found`);
+			return res.status(404).json({ message: "File not found" });
+		}
+
+		// NOTE: this logic is only good for one file, it should be refactored if multiple
+		// files are agreed upon
+		const filePath = path.join(__dirname, `../../private/docs/mentorship_request/${requestId}`);
+		if (!fs.existsSync(filePath)) {
+			console.log(`404 File not found`);
+			return res.status(404).json({ message: "File not found" });
+		}
+
+		return res.status(200).sendFile(filePath);
+	} catch (error) {
+		console.error("500 Internal Server Error");
+		console.error(error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+			error: error
+		});
+	}
+}
+
+/**
  * Verifies the type of a member.
  *
  * @param {string} memberId - The ID of the member.
@@ -942,5 +997,6 @@ module.exports = {
 	cancelEndPartnership,
 	listMentorsByEnabler,
 	listMentorshipRequestBySender,
-	listMentorshipRequestByReceiver
+	listMentorshipRequestByReceiver,
+	getRequestAttachedFile
 }

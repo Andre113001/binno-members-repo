@@ -14,6 +14,7 @@ router.get("/list/all", mentorshipController.listAllMentors);
 router.get("/list/enabler/:enablerId", mentorshipController.listMentorsByEnabler);
 router.get("/request/list/sender/:senderId", mentorshipController.listMentorshipRequestBySender);
 router.get("/request/list/receiver/:receiverId", mentorshipController.listMentorshipRequestByReceiver);
+router.get("/request/:requestId/file", mentorshipController.getRequestAttachedFile);
 
 router.post("/partnership/end", mentorshipController.endPartnership);
 router.post("/partnership/end/cancel", mentorshipController.cancelEndPartnership);
