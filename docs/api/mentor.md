@@ -6,6 +6,7 @@ Documentation for Mentorship API
 
 - [GET endpoints](#get-endpoints)
     - [/api/mentor/list](#apimentorlist)
+    - [/api/mentor/list/all](#apimentorlistall)
     - [/api/mentor/list/enabler/:enablerId](#apimentorlistenablerenablerid)
     - [/api/mentor/request/list/sender/:senderId](#apimentorrequestlistsendersenderid)
     - [/api/mentor/request/list/receiver/:receiverId](#apimentorrequestlistreceiverreceiverid)
@@ -33,6 +34,35 @@ Lists available mentors who are not associated with any enabler.
         "member_id": "string",
         "name": "string",
         "profile_pic": "string"
+    }
+]
+```
+
+500 Internal Server Error
+```json
+{
+    "message": "Internal Server Error",
+    "error": "[Error object]"
+}
+```
+
+<br>
+
+### /api/mentor/list/all
+Retrieves a list of all mentors.
+
+**Response:**
+
+200 OK
+```json
+[
+    {
+        "biography": "string",
+        "cover_pic": "string",
+        "member_id": "string",
+        "name": "string",
+        "profile_pic": "string",
+        "tagline": "string"
     }
 ]
 ```
