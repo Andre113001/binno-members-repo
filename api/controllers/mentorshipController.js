@@ -101,7 +101,7 @@ async function listAvailableMentors(req, res) {
 				FROM member_i AS mi
 				LEFT JOIN mentor_enabler AS me ON mi.member_id = me.mentor_id
 				INNER JOIN member_settings AS ms ON ms.setting_memberId = mi.member_id
-				WHERE mi.member_type = 3 AND mi.member_flag = 1 AND mi.member_restrict IS NULL
+				WHERE mi.member_type = 4 AND mi.member_flag = 1 AND mi.member_restrict IS NULL
 					AND me.mentor_id IS NULL
 				ORDER BY ms.setting_institution
 			`;
@@ -141,7 +141,7 @@ async function createMentorshipRequest(req, res) {
 	const { mentorId, enablerId, senderId, message } = req.body;
 
 	try {
-		const verifyMentor = await verifyMemberType(mentorId, 3);
+		const verifyMentor = await verifyMemberType(mentorId, 4);
 		if (verifyMentor.length == 0) {
 			console.log(`404 Mentor (${mentorId}) not found`);
 			return res.status(404).json({
@@ -359,7 +359,7 @@ async function cancelMentorshipRequest(req, res) {
 			});
 		}
 
-		const verifyMentor = await verifyMemberType(mentorId, 3);
+		const verifyMentor = await verifyMemberType(mentorId, 4);
 		if (verifyMentor.length == 0) {
 			console.log(`404 Mentor (${mentorId}) not found`);
 			return res.status(404).json({
