@@ -40,6 +40,48 @@ const { fetchMemberById } = require("./memberController");
 const { uniqueIdGenerator } = require("../middlewares/uniqueIdGeneratorMiddleware")
 
 /**
+ * Retrieves a list of all mentors.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with the list of mentors or an error message.
+ */
+async function listAllMentors(req, res) {
+	console.log("GET /api/mentor/list/all");
+
+	try {
+		const mentorsList = await new Promise((resolve, reject) => {
+			const listMentorsQuery = `
+				SELECT
+					mi.member_id,
+					ms.setting_institution AS name,
+					ms.setting_tagline AS tagline,
+					ms.setting_bio AS biography,
+					ms.setting_profilepic AS profile_pic,
+					ms.setting_coverpic AS cover_pic
+				FROM member_i AS mi
+				INNER JOIN member_settings AS ms ON ms.setting_memberId = mi.member_id
+				WHERE mi.member_type = 4 AND mi.member_flag = 1 AND mi.member_restrict IS NULL
+				ORDER BY name
+			`;
+			db.query(listMentorsQuery, (error, result) => {
+				if (error) reject(error);
+				else resolve(result);
+			});
+		});
+
+		return res.status(200).json(mentorsList);
+	} catch (error) {
+		console.error("500 Internal Server Error");
+		console.error(error);
+		return res.status(500).json({
+			message: "Internal Server Error",
+			error: error
+		});
+	}
+}
+
+/**
  * Lists available mentors who are not associated with any enabler.
  *
  * @param {Object} req - The request object.
@@ -54,7 +96,7 @@ async function listAvailableMentors(req, res) {
 			const listAvailableMentorsQuery = `
 				SELECT
 					mi.member_id,
-					ms.setting_profilepic AS profile_pic
+					ms.setting_profilepic AS profile_pic,
 					ms.setting_institution AS name
 				FROM member_i AS mi
 				LEFT JOIN mentor_enabler AS me ON mi.member_id = me.mentor_id
@@ -67,7 +109,7 @@ async function listAvailableMentors(req, res) {
 			db.query(listAvailableMentorsQuery, (error, result) => {
 				if (error) reject(error);
 				else resolve(result);
-			})
+			});
 		});
 
 		return res.status(200).json(availableMentors);
@@ -890,6 +932,7 @@ function deleteMentorEnablerPartnership(mentorId, enablerId) {
 }
 
 module.exports = {
+	listAllMentors,
 	listAvailableMentors,
 	createMentorshipRequest,
 	acceptMentorshipRequest,

@@ -10,6 +10,7 @@ router.use(express.json())
 router.use(express.urlencoded({ extended: true }))
 
 router.get("/list", mentorshipController.listAvailableMentors);
+router.get("/list/all", mentorshipController.listAllMentors);
 router.get("/list/enabler/:enablerId", mentorshipController.listMentorsByEnabler);
 router.get("/request/list/sender/:senderId", mentorshipController.listMentorshipRequestBySender);
 router.get("/request/list/receiver/:receiverId", mentorshipController.listMentorshipRequestByReceiver);
