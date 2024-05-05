@@ -43,7 +43,26 @@ const fetchEnablers = async (req, res) => {
             if (err) {
                 reject(err)
             } else {
-                resolve(data)
+                const enablerClass = data.map(i => i.enabler_class);
+                data.forEach((item, index) => {
+                    switch (enablerClass[index]) {
+                        case 'LGU':
+                            item.enabler_class = 'Local Government Unit';
+                            break;
+                        case "SUC":
+                            item.enabler_class = "State Universities & Colleges";
+                            break;
+                        case "TBI":
+                            item.enabler_class = "Technology Business Incubator";
+                            break;
+                        default:
+                            item.enabler_class = 'Startup Enabler';
+                            break;
+                    }
+                });
+
+                resolve(data);
+                // resolve(data[].enabler_class)
             }
         })
     })
@@ -52,14 +71,31 @@ const fetchEnablers = async (req, res) => {
 }
 const fetchCompanies = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
-        // Using parameterized query to prevent SQL injection
         const sql = `
-        SELECT member_i.member_id, member_settings.*, email_i.email_address, member_contact.contact_number FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id INNER JOIN email_i ON member_contact.contact_email = email_i.email_id WHERE member_type = '1' AND member_first_time = 0 AND member_restrict IS NULL AND member_flag = 1`
-        db.query(sql, (err, data) => {
+        SELECT member_i.member_id, member_settings.*, email_i.email_address, member_contact.contact_number 
+        FROM member_i 
+        INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
+        INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id 
+        INNER JOIN email_i ON member_contact.contact_email = email_i.email_id 
+        WHERE member_type = '1' AND member_first_time = 0 AND member_restrict IS NULL AND member_flag = 1`
+        db.query(sql, async (err, data) => {
             if (err) {
                 reject(err)
             } else {
-                resolve(data)
+                const promises = data.map(async (item) => {
+                    const links = await new Promise((resolve, reject) => {
+                        db.query(`SELECT url FROM member_web_link WHERE member_id = ?`, [item.member_id], (err, data) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve(data);
+                            }
+                        });
+                    });
+                    return { ...item, links };
+                });
+                const results = await Promise.all(promises);
+                resolve(results);
             }
         })
     })
