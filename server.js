@@ -54,6 +54,7 @@ const mentorRoute = require("./api/routes/mentorRoute")
 const profileRoute = require('./api/routes/profileRoute')
 const historyRoute = require('./api/routes/historyRoute')
 const publicRoute = require('./api/routes/publicRoute')
+const visitRoute = require("./api/routes/visitRoute");
 // const testRoute = require('./api/routes/testingRoute')
 
 // Use Routes
@@ -71,6 +72,7 @@ app.use('/api/search', searchRoute)
 app.use('/api/profile', profileRoute)
 app.use('/api/history', historyRoute);
 app.use('/api/public', publicRoute);
+app.use("/api/visit", visitRoute);
 // app.use('/test', testRoute)
 
 
