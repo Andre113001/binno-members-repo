@@ -6,3 +6,4 @@ Documentation and Guides related to the Backend code of **Member** user.
 ## API
 
 * [Mentor](./api/mentor.md)
+* [Visit](./api/visit.md)
