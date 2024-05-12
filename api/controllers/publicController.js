@@ -107,7 +107,7 @@ const fetchCompanyProfile = async (req, res) => {
 
 const fetchEnablerProfile = async (req, res) => {
     try {
-        db.query(`SELECT setting_id, setting_institution, setting_profilepic, setting_coverpic 
+        db.query(`SELECT setting_id, setting_institution, setting_profilepic, setting_coverpic, setting_bio 
         FROM member_settings 
         INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId 
         WHERE setting_status = 1 
@@ -131,12 +131,12 @@ const fetchEnablerProfile = async (req, res) => {
 
 const fetchMentorProfile = async (req, res) => {
     try {
-        db.query(`SELECT setting_id, setting_institution, setting_profilepic, setting_coverpic 
+        db.query(`SELECT setting_id, setting_bio, setting_institution, setting_profilepic, setting_coverpic 
         FROM member_settings 
         INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId 
         WHERE setting_status = 1 
         AND member_flag = 1 
-        AND member_type = 3
+        AND member_type = 4
         AND member_first_time = 0 
         ORDER BY setting_datecreated DESC 
         LIMIT 4`, [], (err, result) => {
@@ -252,6 +252,8 @@ const fetchEnablerClass = async (req, res) => {
         res.status(500).json(error);
     }
 };
+
+
 
 
 module.exports = {

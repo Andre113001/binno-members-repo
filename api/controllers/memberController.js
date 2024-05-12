@@ -39,7 +39,7 @@ const fetchEnablers = async (req, res) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
             SELECT member_i.member_id, member_settings.*, email_i.email_address, member_contact.contact_number FROM member_i INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id INNER JOIN email_i ON member_contact.contact_email = email_i.email_id WHERE member_type = '2' AND member_first_time = 0 AND member_restrict IS NULL AND member_flag = 1`
-        db.query(sql, (err, data) => {
+        db.query(sql, async (err, data) => {
             if (err) {
                 reject(err)
             } else {
@@ -61,7 +61,23 @@ const fetchEnablers = async (req, res) => {
                     }
                 });
 
-                resolve(data);
+                const promises = data.map(async (item) => {
+                    const links = await new Promise((resolve, reject) => {
+                        db.query(`SELECT url FROM member_web_link WHERE member_id = ?`, [item.member_id], (err, data) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve(data);
+                            }
+                        });
+                    });
+                    return { ...item, links };
+                });
+                const result = await Promise.all(promises);
+
+
+
+                resolve(result);
                 // resolve(data[].enabler_class)
             }
         })
