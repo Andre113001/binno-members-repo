@@ -73,6 +73,7 @@ app.use('/api/profile', profileRoute)
 app.use('/api/history', historyRoute);
 app.use('/api/public', publicRoute);
 app.use("/api/visit", visitRoute);
+app.use('/api/mentors', mentorRoute)
 // app.use('/test', testRoute)
 
 
