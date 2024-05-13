@@ -10,6 +10,7 @@ Documentation for Mentorship API
     - [/api/mentor/list/enabler/:enablerId](#apimentorlistenablerenablerid)
     - [/api/mentor/request/list/sender/:senderId](#apimentorrequestlistsendersenderid)
     - [/api/mentor/request/list/receiver/:receiverId](#apimentorrequestlistreceiverreceiverid)
+    - [/api/mentor/request/:requestId/file](#apimentorrequestrequestidfile)
 - [POST endpoints](#post-endpoints)
     - [/api/mentor/partnership/end](#apimentorpartnershipend)
     - [/api/mentor/partnership/end/cancel](#apimentorpartnershipendcancel)
@@ -190,6 +191,39 @@ Parameter/s:
 404 Not Found
 ```json
 { "message": "Receiver not found" }
+```
+
+500 Internal Server Error
+```json
+{
+    "message": "Internal Server Error",
+    "error": "[Error object]"
+}
+```
+
+<br>
+
+### /api/mentor/request/:requestId/file
+Retrieves the attached file associated with a mentorship request.
+
+**Request:**
+
+Parameter/s:
+* **requestId** - The ID of the mentorship request.
+
+**Response**
+
+200 OK
+```
+Request file blob
+```
+
+404 Not Found
+```json
+{ "message": "Mentorship request not found" }
+```
+```json
+{ "message": "File not found" }
 ```
 
 500 Internal Server Error

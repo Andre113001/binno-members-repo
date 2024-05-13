@@ -36,7 +36,7 @@
 const db = require("../../database/db");
 const fs = require("fs");
 const path = require("path");
-const { fetchMemberById } = require("./memberController");
+const { getMemberById } = require("../controllers/memberController.js");
 const { uniqueIdGenerator } = require("../middlewares/uniqueIdGeneratorMiddleware")
 
 /**
@@ -157,7 +157,7 @@ async function createMentorshipRequest(req, res) {
 			});
 		}
 
-		const verifySender = await fetchMemberById(senderId);
+		const verifySender = await getMemberById(senderId);
 		if (verifySender.length == 0) {
 			console.log(`404 Sender (${senderId}) not found`);
 			return res.status(404).json({
@@ -548,7 +548,7 @@ async function listMentorsByEnabler(req, res) {
 	console.log(`GET /api/mentor/list/enabler/${enablerId}`);
 
 	try {
-		const verifyEnabler = await fetchMemberById(enablerId);
+		const verifyEnabler = await getMemberById(enablerId);
 		if (verifyEnabler.length == 0 || verifyEnabler[0]["member_type"] != 2) {
 			console.log(`404 Enabler (${enablerId}) not found`);
 			return res.status(404).json({
@@ -601,7 +601,7 @@ async function listMentorshipRequestBySender(req, res) {
 	console.log(`GET /api/mentor/request/list/sender/${senderId}`);
 
 	try {
-		const senderProfile = await fetchMemberById(senderId);
+		const senderProfile = await getMemberById(senderId);
 		if (senderProfile.length == 0) {
 			console.log(`404 Sender (${senderId}) not found`);
 			return res.status(404).json({
@@ -668,7 +668,7 @@ async function listMentorshipRequestByReceiver(req, res) {
 	console.log(`GET /api/mentor/request/list/receiver/${receiverId}`);
 
 	try {
-		const receiverProfile = await fetchMemberById(receiverId);
+		const receiverProfile = await getMemberById(receiverId);
 		if (receiverProfile.length == 0) {
 			console.log(`404 Receiver (${receiverId}) not found`);
 			return res.status(404).json({
