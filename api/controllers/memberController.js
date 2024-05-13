@@ -19,8 +19,8 @@ const getMemberById = (memberId) => {
     return new Promise((resolve, reject) => {
         // Using parameterized query to prevent SQL injection
         const sql = `
-            SELECT member_i.*, member_settings.*, member_contact.contact_number , email_i.email_address FROM member_i 
-            INNER JOIN member_settings ON member_settings.setting_memberId = member_i.member_id 
+            SELECT member_i.*, member_settings.*, member_contact.contact_number , email_i.email_address FROM member_i
+            INNER JOIN member_settings ON member_settings.setting_memberId = member_i.member_id
             INNER JOIN member_contact ON member_contact.contact_id = member_i.member_contact_id
             INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
             WHERE member_id = ?`
@@ -88,11 +88,11 @@ const fetchEnablers = async (req, res) => {
 const fetchCompanies = async (req, res) => {
     const query = await new Promise((resolve, reject) => {
         const sql = `
-        SELECT member_i.member_id, member_settings.*, email_i.email_address, member_contact.contact_number 
-        FROM member_i 
+        SELECT member_i.member_id, member_settings.*, email_i.email_address, member_contact.contact_number
+        FROM member_i
         INNER JOIN member_settings ON member_i.member_setting = member_settings.setting_id
-        INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id 
-        INNER JOIN email_i ON member_contact.contact_email = email_i.email_id 
+        INNER JOIN member_contact ON member_i.member_contact_id = member_contact.contact_id
+        INNER JOIN email_i ON member_contact.contact_email = email_i.email_id
         WHERE member_type = '1' AND member_first_time = 0 AND member_restrict IS NULL AND member_flag = 1`
         db.query(sql, async (err, data) => {
             if (err) {
@@ -147,13 +147,13 @@ const getMemberByAccessKey = (accesskey) => {
 
 const fetchMemberByAccessToken = (accessToken) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT 
+        const sql = `SELECT
                     member_i.member_id,
                     member_i.member_first_time,
                     member_i.member_type,
                     member_settings.setting_address,
                     member_settings.setting_id,
-                    member_settings.setting_bio, 
+                    member_settings.setting_bio,
                     member_settings.setting_tagline,
                     member_settings.class_change_valid_date,
                     member_settings.institution_change_valid_date,
@@ -162,8 +162,8 @@ const fetchMemberByAccessToken = (accessToken) => {
                     member_settings.setting_institution,
                     member_settings.setting_profilepic,
                     member_settings.enabler_class,
-                    member_contact.contact_number, 
-                    member_contact.contact_facebook, 
+                    member_contact.contact_number,
+                    member_contact.contact_facebook,
                     member_type.user_type,
                     email_i.email_address
                     FROM member_i
@@ -318,7 +318,7 @@ const changePassword = async (req, res) => {
 
     try {
         const check_pw = await passwordChecker(current_password, member_id);
-        
+
         if (!check_pw) {
             res.json('Invalid Current Password');
             return;
@@ -419,7 +419,7 @@ const changeEnablerClass = async (req, res) => {
 const updateProfile = async (req, res) => {
     const {
         member_id,
-        bio, 
+        bio,
         contactNum,
         email,
         tagline,
@@ -445,7 +445,7 @@ const updateProfile = async (req, res) => {
                             console.error('Error deleting member_web_link records:', error);
                         }
                     });
-                    
+
                     if (companyLinks.length > 0) {
                         for (const link of companyLinks) {
                             db.query(
@@ -462,7 +462,7 @@ const updateProfile = async (req, res) => {
                             );
                         }
                     }
-                    
+
                     db.query(
                         'UPDATE member_settings SET setting_bio = ?, setting_address = ?, setting_tagline = ?, setting_datemodified = NOW() WHERE setting_id = ?',
                         [bio, address, tagline, result[0].member_setting],
@@ -501,8 +501,8 @@ const updateProfile = async (req, res) => {
                             );
                         }
                     );
-                });                
-                
+                });
+
             } else {
                 return res.send('No Setting ID Set')
             }
@@ -604,6 +604,7 @@ const changeStatus = async (req, res) => {
 }
 
 module.exports = {
+    getMemberById,
     getMember,
     fetchProfileByToken,
     getCompanyLinks,
