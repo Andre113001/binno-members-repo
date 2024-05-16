@@ -102,7 +102,7 @@ async function listAvailableMentors(req, res) {
 				LEFT JOIN mentor_enabler AS me ON mi.member_id = me.mentor_id
 				INNER JOIN member_settings AS ms ON ms.setting_memberId = mi.member_id
 				WHERE mi.member_type = 4 AND mi.member_flag = 1 AND mi.member_restrict IS NULL
-					AND me.mentor_id IS NULL
+					AND me.mentor_id IS NULL OR (me.mentor_end_partnership = 1 OR me.enabler_end_partnership = 1)
 				ORDER BY ms.setting_institution
 			`;
 
@@ -259,7 +259,7 @@ async function createMentorshipRequest(req, res) {
  * @returns {Promise<Object>} - A promise that resolves with a response object indicating the success or failure of the request acceptance.
  */
 async function acceptMentorshipRequest(req, res) {
-	console.log(`POST /api/mentor/request/accept`);
+	console.log(`POST /api/mentors/request/accept`);
 	const { requestId, mentorId, enablerId } = req.body;
 
 	try {
@@ -404,6 +404,12 @@ async function cancelMentorshipRequest(req, res) {
 async function endPartnership(req, res) {
 	console.log(`POST /api/mentor/partnership/end`);
 	const { enablerId, mentorId, requestor } = req.body;
+
+	// console.log({
+	// 	enablerId,
+	// 	mentorId,
+	// 	requestor
+	// });
 
 	try {
 		if (requestor != "enabler" && requestor != "mentor") {
@@ -567,7 +573,7 @@ async function listMentorsByEnabler(req, res) {
 					member_i AS mi ON mi.member_id = me.mentor_id
 				INNER JOIN
 					member_settings AS ms ON ms.setting_memberId = mi.member_id
-				WHERE me.enabler_id = ?
+				WHERE me.enabler_id = ? AND me.mentor_end_partnership = 0 AND  me.enabler_end_partnership = 0 				
 				ORDER BY mentor_name
 			`;
 			db.query(listEnablerMentorsQuery, enablerId, (error, result) => {
@@ -665,6 +671,7 @@ async function listMentorshipRequestBySender(req, res) {
  */
 async function listMentorshipRequestByReceiver(req, res) {
 	const { receiverId } = req.params;
+	console.log(receiverId);
 	console.log(`GET /api/mentor/request/list/receiver/${receiverId}`);
 
 	try {
@@ -696,6 +703,7 @@ async function listMentorshipRequestByReceiver(req, res) {
 					(mr.mentor_id = ? OR mr.enabler_id = ?)
 					AND mr.sender_id != ?
 					AND mr.status = "Pending"
+					
 				ORDER BY mr.date_created DESC
 			`;
 			db.query(listRequestQuery, [receiverId, receiverId, receiverId], (error, result) => {
