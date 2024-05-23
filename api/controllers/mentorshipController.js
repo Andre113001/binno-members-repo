@@ -405,12 +405,6 @@ async function endPartnership(req, res) {
 	console.log(`POST /api/mentor/partnership/end`);
 	const { enablerId, mentorId, requestor } = req.body;
 
-	// console.log({
-	// 	enablerId,
-	// 	mentorId,
-	// 	requestor
-	// });
-
 	try {
 		if (requestor != "enabler" && requestor != "mentor") {
 			console.log(`400 Wrong value ${requestor} for requestor, should be enabler or mentor`);
@@ -573,7 +567,7 @@ async function listMentorsByEnabler(req, res) {
 					member_i AS mi ON mi.member_id = me.mentor_id
 				INNER JOIN
 					member_settings AS ms ON ms.setting_memberId = mi.member_id
-				WHERE me.enabler_id = ? AND me.mentor_end_partnership = 0 AND  me.enabler_end_partnership = 0 				
+				WHERE me.enabler_id = ? AND me.mentor_end_partnership = 0 AND  me.enabler_end_partnership = 0
 				ORDER BY mentor_name
 			`;
 			db.query(listEnablerMentorsQuery, enablerId, (error, result) => {
@@ -671,7 +665,6 @@ async function listMentorshipRequestBySender(req, res) {
  */
 async function listMentorshipRequestByReceiver(req, res) {
 	const { receiverId } = req.params;
-	console.log(receiverId);
 	console.log(`GET /api/mentor/request/list/receiver/${receiverId}`);
 
 	try {
@@ -703,7 +696,6 @@ async function listMentorshipRequestByReceiver(req, res) {
 					(mr.mentor_id = ? OR mr.enabler_id = ?)
 					AND mr.sender_id != ?
 					AND mr.status = "Pending"
-					
 				ORDER BY mr.date_created DESC
 			`;
 			db.query(listRequestQuery, [receiverId, receiverId, receiverId], (error, result) => {
