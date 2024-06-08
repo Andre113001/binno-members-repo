@@ -27,9 +27,9 @@ const fetchEvents = async (req, res) => {
             res.json(result);
         });
     } catch (error) {
-        console.error(error);   
+        console.error(error);
         res.status(500).json(error);
-    }   
+    }
 }
 
 const fetchGuides = async (req, res) => {
@@ -48,33 +48,67 @@ const fetchGuides = async (req, res) => {
     }
 }
 
-const fetchFaq = async (req, res) => {
-    try {
-        db.query(`SELECT faq_id, faq_datecreated, faq_title, faq_content FROM faq_i WHERE faq_flag = 1 ORDER BY faq_datecreated DESC`, [], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+/**
+ * Retrieves the list of non-archived FAQs.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} A Promise that resolves to an object containing the FAQ details.
+ */
+async function fetchFaq(req, res) {
+    console.log("GET /api/public/uaq");
+    console.log("fetchFaq()");
 
-            res.json(result);
+    try {
+        const faqs = await new Promise((resolve, reject) => {
+            const query = `
+                SELECT faq_id, faq_datecreated, faq_title, faq_content
+                FROM faq_i
+                WHERE faq_flag = 1
+                ORDER BY faq_datecreated DESC
+            `;
+
+            db.query(query, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
         });
+        return res.status(200).json(faqs);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
 };
 
-const postUaq = async (req, res) => {
+/**
+ * Creates a user-submitted question (UAQ) and stores it in the database.
+ *
+ * @param {Object} req - The request object containing the question and sender's email.
+ * @param {Object} req.body - The body of the request.
+ * @param {string} req.body.email - The email of the sender (optional).
+ * @param {string} req.body.content - The question submitted by the user.
+ * @param {Object} res - The response object.
+ * @returns {boolean} A boolean signifying the succession of sending a UAQ.
+ */
+async function postUaq(req, res) {
+    console.log("POST /api/public/uaq");
+    console.log("postUaq()");
     const { email, content } = req.body;
-    try {
-        db.query(`INSERT INTO uaq_i (uaq_dateadded, uaq_email, uaq_content) VALUES (NOW(), ?, ?)`, [email, content], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
 
-            res.json(true);
+    try {
+        await new Promise((resolve, reject) => {
+            const query = `
+                INSERT INTO uaq_i (uaq_dateadded, uaq_email, uaq_content)
+                VALUES (NOW(), ?, ?)
+            `;
+
+            db.query(query, [email, content], (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
         });
+
+        return res.status(200).json(true);
     } catch (error) {
         console.error(error);
         res.status(500).json(error);
@@ -84,18 +118,18 @@ const postUaq = async (req, res) => {
 const fetchCompanyProfile = async (req, res) => {
     try {
         db.query(`SELECT setting_id, setting_institution, setting_tagline, setting_profilepic, setting_coverpic
-        FROM member_settings 
-        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId 
-        WHERE setting_status = 1 
-        AND member_flag = 1 
+        FROM member_settings
+        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId
+        WHERE setting_status = 1
+        AND member_flag = 1
         AND member_type = 1
-        AND member_first_time = 0 
-        ORDER BY setting_datecreated DESC 
+        AND member_first_time = 0
+        ORDER BY setting_datecreated DESC
         LIMIT 4`, [], (err, result) => {
             if (err) {
                 console.error(err);
                 return;
-            } 
+            }
 
             res.json(result);
         })
@@ -107,19 +141,19 @@ const fetchCompanyProfile = async (req, res) => {
 
 const fetchEnablerProfile = async (req, res) => {
     try {
-        db.query(`SELECT setting_id, setting_institution, setting_profilepic, setting_coverpic, setting_bio 
-        FROM member_settings 
-        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId 
-        WHERE setting_status = 1 
-        AND member_flag = 1 
+        db.query(`SELECT setting_id, setting_institution, setting_profilepic, setting_coverpic, setting_bio
+        FROM member_settings
+        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId
+        WHERE setting_status = 1
+        AND member_flag = 1
         AND member_type = 2
-        AND member_first_time = 0 
-        ORDER BY setting_datecreated DESC 
+        AND member_first_time = 0
+        ORDER BY setting_datecreated DESC
         LIMIT 4`, [], (err, result) => {
             if (err) {
                 console.error(err);
                 return;
-            } 
+            }
 
             res.json(result);
         })
@@ -131,19 +165,19 @@ const fetchEnablerProfile = async (req, res) => {
 
 const fetchMentorProfile = async (req, res) => {
     try {
-        db.query(`SELECT setting_id, setting_bio, setting_institution, setting_profilepic, setting_coverpic 
-        FROM member_settings 
-        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId 
-        WHERE setting_status = 1 
-        AND member_flag = 1 
+        db.query(`SELECT setting_id, setting_bio, setting_institution, setting_profilepic, setting_coverpic
+        FROM member_settings
+        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId
+        WHERE setting_status = 1
+        AND member_flag = 1
         AND member_type = 4
-        AND member_first_time = 0 
-        ORDER BY setting_datecreated DESC 
+        AND member_first_time = 0
+        ORDER BY setting_datecreated DESC
         LIMIT 4`, [], (err, result) => {
             if (err) {
                 console.error(err);
                 return;
-            } 
+            }
 
             res.json(result);
         })
@@ -161,7 +195,7 @@ const fetchCountMetrics = async (req, res) => {
                     reject(err);
                     return;
                 }
-    
+
                 resolve(result);
             })
         });
@@ -172,7 +206,7 @@ const fetchCountMetrics = async (req, res) => {
                     reject(err);
                     return;
                 }
-    
+
                 resolve(result);
             })
         });
@@ -183,13 +217,13 @@ const fetchCountMetrics = async (req, res) => {
                     reject(err);
                     return;
                 }
-    
+
                 resolve(result);
             })
         });
 
         res.json({
-            companies: companies[0].count, 
+            companies: companies[0].count,
             enablers: enablers[0].count,
             mentors: mentors[0].count
         })
@@ -245,16 +279,13 @@ const fetchEnablerClass = async (req, res) => {
                 }
             });
         });
-        
+
         res.json(enablerClass);
     } catch (error) {
         console.error(error);
         res.status(500).json(error);
     }
 };
-
-
-
 
 module.exports = {
     fetchBlogs,
