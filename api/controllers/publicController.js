@@ -1,50 +1,128 @@
 const db = require('../../database/db');
 
-const fetchBlogs = async (req, res) => {
-    try {
-        db.query(`SELECT blog_id, setting_institution,blog_dateadded, blog_title, blog_content, setting_profilepic FROM blog_i INNER JOIN member_settings ON blog_i.blog_author = member_settings.setting_memberId WHERE blog_flag = 1 ORDER BY blog_dateadded DESC LIMIT 5`, [], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+/**
+ * Retrieves the latest 5 non-archived blogs.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} A Promise that resolves to an object containing the blog details.
+ */
+async function fetchBlogs(req, res) {
+    console.log("GET /api/public/blogs");
+    console.log("fetchBlogs()");
 
-            res.json(result);
+    try {
+        const getBlogsQuery = `
+            SELECT
+                blog_id,
+                setting_institution,
+                blog_dateadded,
+                blog_title,
+                blog_content,
+                setting_profilepic
+            FROM blog_i
+            INNER JOIN member_settings
+                ON blog_i.blog_author = member_settings.setting_memberId
+            WHERE blog_flag = 1
+            ORDER BY blog_dateadded DESC
+            LIMIT 5
+        `;
+
+        const blogs = await new Promise((resolve, reject) => {
+            db.query(getBlogsQuery, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
         });
+
+        return res.status(200).json(blogs);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
-    }
-};
-
-const fetchEvents = async (req, res) => {
-    try {
-        db.query(`SELECT event_id, setting_institution, event_address, event_date, event_time, event_title, event_description, setting_profilepic FROM event_i INNER JOIN member_settings ON member_settings.setting_memberId = event_i.event_author WHERE event_flag = 1 ORDER BY event_datecreated DESC LIMIT 5`, [], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-
-            res.json(result);
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
 }
 
-const fetchGuides = async (req, res) => {
-    try {
-        db.query(`SELECT program_id, setting_institution, program_dateadded, program_heading, setting_profilepic FROM program_i INNER JOIN member_settings ON member_settings.setting_memberId = program_i.program_author WHERE program_flag = 1 ORDER BY program_dateadded DESC LIMIT 5`, [], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+/**
+ * Retrieves the latest 5 non-archived events.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} A Promise that resolves to an object containing the event details.
+ */
+async function fetchEvents(req, res) {
+    console.log("GET /api/public/events");
+    console.log("fetchEvents()");
 
-            res.json(result);
+    try {
+        const getEventsQuery = `
+            SELECT
+                event_id,
+                setting_institution,
+                event_address,
+                event_date,
+                event_time,
+                event_title,
+                event_description,
+                setting_profilepic
+            FROM event_i
+            INNER JOIN member_settings
+                ON member_settings.setting_memberId = event_i.event_author
+            WHERE event_flag = 1
+            ORDER BY event_datecreated DESC
+            LIMIT 5
+        `;
+
+        const events = await new Promise((resolve, reject) => {
+            db.query(getEventsQuery, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
         });
+
+        return res.status(200).json(events);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
+    }
+}
+
+/**
+ * Retrieves the latest 5 non-archived guides.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} A Promise that resolves to an object containing the guide details.
+ */
+async function fetchGuides(req, res) {
+    console.log("GET /api/public/guides");
+    console.log("fetchGuides()");
+    try {
+        const getGuidesQuery = `
+            SELECT
+                program_id,
+                setting_institution,
+                program_dateadded,
+                program_heading,
+                setting_profilepic
+            FROM program_i
+            INNER JOIN member_settings
+                ON member_settings.setting_memberId = program_i.program_author
+            WHERE program_flag = 1
+            ORDER BY program_dateadded DESC
+            LIMIT 5
+        `;
+
+        const guides = await new Promise((resolve, reject) => {
+            db.query(getGuidesQuery, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
+        });
+
+        return res.status(200).json(guides);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json(error);
     }
 }
 
