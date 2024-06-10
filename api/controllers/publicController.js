@@ -156,7 +156,7 @@ async function fetchFaq(req, res) {
         console.error(error);
         return res.status(500).json(error);
     }
-};
+}
 
 /**
  * Creates a user-submitted question (UAQ) and stores it in the database.
@@ -193,77 +193,137 @@ async function postUaq(req, res) {
     }
 }
 
-const fetchCompanyProfile = async (req, res) => {
-    try {
-        db.query(`SELECT setting_id, setting_institution, setting_tagline, setting_profilepic, setting_coverpic
-        FROM member_settings
-        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId
-        WHERE setting_status = 1
-        AND member_flag = 1
-        AND member_type = 1
-        AND member_first_time = 0
-        ORDER BY setting_datecreated DESC
-        LIMIT 4`, [], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+/**
+ * Fetches 4 profiles of companies.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves with the company profiles.
+ */
+async function fetchCompanyProfile(req, res) {
+    console.log("GET /api/public/profile/company");
+    console.log("fetchCompanyProfile()");
 
-            res.json(result);
-        })
+    try {
+        const getCompanyProfilesQuery = `
+            SELECT
+                setting_id,
+                setting_institution,
+                setting_tagline,
+                setting_profilepic,
+                setting_coverpic
+            FROM member_settings
+            INNER JOIN member_i
+                ON member_i.member_id = member_settings.setting_memberId
+            WHERE setting_status = 1
+                AND member_flag = 1
+                AND member_type = 1
+                AND member_first_time = 0
+            ORDER BY setting_datecreated DESC
+            LIMIT 4
+        `;
+
+        const profiles = await new Promise((resolve, reject) => {
+            db.query(getCompanyProfilesQuery, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
+        });
+
+        return res.status(200).json(profiles);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
-};
+}
 
-const fetchEnablerProfile = async (req, res) => {
+/**
+ * Fetches 4 profiles of enablers.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves with the company profiles.
+ */
+async function fetchEnablerProfile(req, res) {
+    console.log("GET /api/public/profile/enabler");
+    console.log("fetchEnablerProfile()");
+
     try {
-        db.query(`SELECT setting_id, setting_institution, setting_profilepic, setting_coverpic, setting_bio
-        FROM member_settings
-        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId
-        WHERE setting_status = 1
-        AND member_flag = 1
-        AND member_type = 2
-        AND member_first_time = 0
-        ORDER BY setting_datecreated DESC
-        LIMIT 4`, [], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+        const getEnablerProfilesQuery = `
+            SELECT
+                setting_id,
+                setting_institution,
+                setting_tagline,
+                setting_profilepic,
+                setting_coverpic
+            FROM member_settings
+            INNER JOIN member_i
+                ON member_i.member_id = member_settings.setting_memberId
+            WHERE setting_status = 1
+                AND member_flag = 1
+                AND member_type = 2
+                AND member_first_time = 0
+            ORDER BY setting_datecreated DESC
+            LIMIT 4
+        `;
 
-            res.json(result);
-        })
+        const profiles = await new Promise((resolve, reject) => {
+            db.query(getEnablerProfilesQuery, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
+        });
+
+        return res.status(200).json(profiles);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
-};
+}
 
-const fetchMentorProfile = async (req, res) => {
+/**
+ * Fetches 4 profiles of mentors.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves with the company profiles.
+ */
+async function fetchMentorProfile(req, res) {
+    console.log("GET /api/public/profile/mentor");
+    console.log("fetchMentorProfile()");
+
     try {
-        db.query(`SELECT setting_id, setting_bio, setting_institution, setting_profilepic, setting_coverpic
-        FROM member_settings
-        INNER JOIN member_i ON member_i.member_id = member_settings.setting_memberId
-        WHERE setting_status = 1
-        AND member_flag = 1
-        AND member_type = 4
-        AND member_first_time = 0
-        ORDER BY setting_datecreated DESC
-        LIMIT 4`, [], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+        const getMentorProfilesQuery = `
+            SELECT
+                setting_id,
+                setting_institution,
+                setting_tagline,
+                setting_profilepic,
+                setting_coverpic
+            FROM member_settings
+            INNER JOIN member_i
+                ON member_i.member_id = member_settings.setting_memberId
+            WHERE setting_status = 1
+                AND member_flag = 1
+                AND member_type = 4
+                AND member_first_time = 0
+            ORDER BY setting_datecreated DESC
+            LIMIT 4
+        `;
 
-            res.json(result);
-        })
+        const profiles = await new Promise((resolve, reject) => {
+            db.query(getMentorProfilesQuery, (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            });
+        });
+
+        return res.status(200).json(profiles);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
-};
+}
 
 const fetchCountMetrics = async (req, res) => {
     try {
