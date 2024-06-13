@@ -409,41 +409,46 @@ async function fetchCompanyLinks(req, res) {
     }
 }
 
-const fetchEnablerClass = async (req, res) => {
+/**
+ * Fetches the enabler class for a specific member.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.member_id - The ID of the member whose enabler class is being fetched.
+ * @param {Object} res - The response object.
+ * @returns {Promise<string>} - A promise that resolves with the member's enabler class.
+ */
+async function fetchEnablerClass(req, res) {
     const { member_id } = req.params;
+    console.log(`GET /api/public/class/${member_id}`);
+    console.log("fetchEnablerClass()");
 
     try {
-        const enablerClass = await new Promise((resolve, reject) => {
-            db.query(`SELECT enabler_class FROM member_settings WHERE setting_memberId = ?`, [member_id], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    let convertedClass;
-                    switch (result[0].enabler_class) {
-                        case "LGU":
-                            convertedClass = "Local Government Unit";
-                            break;
-                        case "SUC":
-                            convertedClass = "State Universities & Colleges";
-                            break;
-                        case "TBI":
-                            convertedClass = "Technology Business Incubator";
-                            break;
-                        default:
-                            convertedClass = "Startup Enabler";
-                            break;
-                    }
-                    resolve(convertedClass);
-                }
+        const getClassQuery = `
+            SELECT enabler_class FROM member_settings
+            WHERE setting_memberId = ?
+        `;
+
+        const enablerClassAcronym = await new Promise((resolve, reject) => {
+            db.query(getClassQuery, member_id, (err, result) => {
+                if (err) reject(err);
+                else resolve(result[0].enabler_class);
             });
         });
 
-        res.json(enablerClass);
+        const enablerClassMap = {
+            "LGU": "Local Government Unit",
+            "SUC": "State Universities & Colleges",
+            "TBI": "Technology Business Incubator"
+        }
+        const enablerClass = enablerClassMap[enablerClassAcronym] || "Startup Enabler";
+
+        return res.json(enablerClass);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
-};
+}
 
 module.exports = {
     fetchBlogs,
