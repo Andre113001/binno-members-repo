@@ -375,23 +375,39 @@ async function fetchCountMetrics(req, res) {
     }
 }
 
-const fetchCompanyLinks = async (req, res) => {
+/**
+ * Fetches web links associated with a specific company.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.params - The request parameters.
+ * @param {string} req.params.member_id - The ID of the member whose links are being fetched.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves with the member's web links.
+ */
+async function fetchCompanyLinks(req, res) {
     const { member_id } = req.params;
+    console.log(`GET /api/public/links/${member_id}`);
+    console.log("fetchCompanyLinks()");
 
     try {
-        db.query(`SELECT url FROM member_web_link WHERE member_id = ?`, [member_id], (err, result) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
+        const getLinksQuery = `
+            SELECT url FROM member_web_link
+            WHERE member_id = ?
+        `;
 
-            res.json(result)
-        })
+        const links = await new Promise((resolve, reject) => {
+            db.query(getLinksQuery, member_id, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+
+        return res.status(200).json(links);
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
-};
+}
 
 const fetchEnablerClass = async (req, res) => {
     const { member_id } = req.params;
