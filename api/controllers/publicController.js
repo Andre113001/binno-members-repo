@@ -325,51 +325,55 @@ async function fetchMentorProfile(req, res) {
     }
 }
 
-const fetchCountMetrics = async (req, res) => {
-    try {
-        const companies = await new Promise((resolve, reject) => {
-            db.query(`SELECT COUNT(member_id) as count FROM member_i WHERE member_flag = 1 AND member_type = 1`, [], (err, result) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+/**
+ * Fetches the count of companies, enablers, and mentors.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<Object>} - A promise that resolves with the counts of different member types.
+ */
+async function fetchCountMetrics(req, res) {
+    console.log("GET /api/public/metrics");
+    console.log("fetchCountMetrics()");
 
-                resolve(result);
-            })
+    try {
+        const memberCountQuery = `
+            SELECT COUNT(member_id) as count
+            FROM member_i
+            WHERE member_flag = 1 AND member_type = ?
+        `;
+
+        const companies = await new Promise((resolve, reject) => {
+            db.query(memberCountQuery, 1, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
         });
 
         const enablers = await new Promise((resolve, reject) => {
-            db.query(`SELECT COUNT(member_id) as count FROM member_i WHERE member_flag = 1 AND member_type = 2`, [], (err, result) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve(result);
-            })
+            db.query(memberCountQuery, 2, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
         });
 
         const mentors = await new Promise((resolve, reject) => {
-            db.query(`SELECT COUNT(member_id) as count FROM member_i WHERE member_flag = 1 AND member_type = 3`, [], (err, result) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve(result);
-            })
+            db.query(memberCountQuery, 3, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
         });
 
-        res.json({
+        return res.status(200).json({
             companies: companies[0].count,
             enablers: enablers[0].count,
             mentors: mentors[0].count
-        })
+        });
     } catch (error) {
         console.error(error);
-        res.status(500).json(error);
+        return res.status(500).json(error);
     }
-};
+}
 
 const fetchCompanyLinks = async (req, res) => {
     const { member_id } = req.params;
